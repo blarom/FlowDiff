@@ -372,8 +372,11 @@
     }
 
     function setupEventListeners() {
-        // Close banner
-        document.getElementById('close-banner').onclick = closeBanner;
+        // Close banner (optional)
+        const closeBannerBtn = document.getElementById('close-banner');
+        if (closeBannerBtn) {
+            closeBannerBtn.onclick = closeBanner;
+        }
 
         // Close info panel
         document.getElementById('close-info').onclick = closeInfoPanel;
@@ -401,60 +404,65 @@
             });
         };
 
-        // Toggle tests
-        document.getElementById('toggle-tests').onclick = toggleTests;
+        // Toggle tests (optional - only in index.html)
+        const toggleTestsBtn = document.getElementById('toggle-tests');
+        if (toggleTestsBtn) {
+            toggleTestsBtn.onclick = toggleTests;
+        }
 
-        // Show diff modal
-        document.getElementById('show-diff').onclick = () => {
-            document.getElementById('diff-modal').classList.remove('hidden');
-        };
+        // Diff modal elements (only in index.html)
+        const showDiffBtn = document.getElementById('show-diff');
+        if (showDiffBtn) {
+            showDiffBtn.onclick = () => {
+                document.getElementById('diff-modal').classList.remove('hidden');
+            };
 
-        // Close diff modal
-        document.getElementById('close-diff-modal').onclick = () => {
-            document.getElementById('diff-modal').classList.add('hidden');
-        };
-
-        document.getElementById('cancel-diff').onclick = () => {
-            document.getElementById('diff-modal').classList.add('hidden');
-        };
-
-        // Click outside modal to close
-        document.getElementById('diff-modal').onclick = (e) => {
-            if (e.target.id === 'diff-modal') {
+            document.getElementById('close-diff-modal').onclick = () => {
                 document.getElementById('diff-modal').classList.add('hidden');
-            }
-        };
+            };
 
-        // Load diff
-        document.getElementById('load-diff').onclick = async () => {
-            const beforeSelect = document.getElementById('diff-before');
-            const afterSelect = document.getElementById('diff-after');
-            const beforeCustom = document.getElementById('diff-before-custom').value.trim();
-            const afterCustom = document.getElementById('diff-after-custom').value.trim();
+            document.getElementById('cancel-diff').onclick = () => {
+                document.getElementById('diff-modal').classList.add('hidden');
+            };
 
-            const beforeRef = beforeCustom || beforeSelect.value;
-            const afterRef = afterCustom || afterSelect.value;
-
-            console.log('Loading diff:', beforeRef, 'vs', afterRef);
-
-            try {
-                const response = await fetch('/api/diff', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ before: beforeRef, after: afterRef })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to load diff');
+            // Click outside modal to close
+            document.getElementById('diff-modal').onclick = (e) => {
+                if (e.target.id === 'diff-modal') {
+                    document.getElementById('diff-modal').classList.add('hidden');
                 }
+            };
 
-                const diffData = await response.json();
-                displayDiff(diffData);
-                document.getElementById('diff-modal').classList.add('hidden');
-            } catch (error) {
-                alert('Error loading diff: ' + error.message);
-            }
-        };
+            // Load diff
+            document.getElementById('load-diff').onclick = async () => {
+                const beforeSelect = document.getElementById('diff-before');
+                const afterSelect = document.getElementById('diff-after');
+                const beforeCustom = document.getElementById('diff-before-custom').value.trim();
+                const afterCustom = document.getElementById('diff-after-custom').value.trim();
+
+                const beforeRef = beforeCustom || beforeSelect.value;
+                const afterRef = afterCustom || afterSelect.value;
+
+                console.log('Loading diff:', beforeRef, 'vs', afterRef);
+
+                try {
+                    const response = await fetch('/api/diff', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ before: beforeRef, after: afterRef })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to load diff');
+                    }
+
+                    const diffData = await response.json();
+                    displayDiff(diffData);
+                    document.getElementById('diff-modal').classList.add('hidden');
+                } catch (error) {
+                    alert('Error loading diff: ' + error.message);
+                }
+            };
+        }
 
         // Search with Enter to navigate
         const searchInput = document.getElementById('search');
