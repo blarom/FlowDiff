@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(tree:*)",
+      "Bash(python validate_phase1a.py:*)",
+      "Bash(python3:*)",
+      "Bash(chmod:*)",
+      "Bash(pip3 install:*)",
+      "Bash(dot:*)",
+      "Bash(source venv/bin/activate)",
+      "Bash(python src/cli.py snapshot:*)",
+      "Bash(claude:*)",
+      "Bash(echo:*)",
+      "Bash(grep:*)",
+      "Bash(curl:*)",
+      "Bash(python -m src.cli:*)",
+      "Bash(/usr/bin/python3:*)",
+      "Bash(python test_comprehensive.py:*)",
+      "Bash(find:*)"
+    ]
+  }
+}

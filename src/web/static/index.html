@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowDiff - Function Call Tree</title>
+    <link rel="stylesheet" href="/static/tree.css">
+</head>
+<body>
+    <!-- Saved Report Banner -->
+    <div id="saved-report-banner" class="saved-report-banner hidden">
+        <span>📄 Saved report: <a id="saved-report-link" href="#" target="_blank"></a></span>
+        <button id="close-banner" class="close-banner-btn">&times;</button>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>FlowDiff - Function Call Tree</h1>
+            <div class="stats" id="stats">
+                <span id="project-name"></span>
+                <span id="function-count"></span>
+                <span id="entry-points"></span>
+            </div>
+        </header>
+
+        <div class="controls">
+            <button id="expand-all">Expand All</button>
+            <button id="collapse-all">Collapse All</button>
+            <button id="toggle-tests" class="toggle-btn">Hide Tests</button>
+            <button id="show-diff" class="diff-btn">Show Diff</button>
+            <input type="text" id="search" placeholder="Search functions..." />
+        </div>
+
+        <main>
+            <div class="tree-container">
+                <div id="call-tree" class="call-tree"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Diff Selection Modal -->
+    <div id="diff-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Select Diff Versions</h2>
+                <button id="close-diff-modal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="diff-before">Before (baseline):</label>
+                    <select id="diff-before" class="form-control">
+                        <option value="HEAD">HEAD (current commit)</option>
+                        <option value="HEAD~1">HEAD~1 (previous commit)</option>
+                        <option value="HEAD~2">HEAD~2 (2 commits ago)</option>
+                    </select>
+                    <input type="text" id="diff-before-custom" placeholder="Or enter custom ref (e.g., main, abc123)" class="form-control" style="margin-top: 10px;">
+                </div>
+                <div class="form-group">
+                    <label for="diff-after">After (comparison):</label>
+                    <select id="diff-after" class="form-control">
+                        <option value="working">Working Directory (uncommitted changes)</option>
+                        <option value="HEAD">HEAD (current commit)</option>
+                        <option value="HEAD~1">HEAD~1 (previous commit)</option>
+                    </select>
+                    <input type="text" id="diff-after-custom" placeholder="Or enter custom ref (e.g., feature-branch)" class="form-control" style="margin-top: 10px;">
+                </div>
+                <div class="modal-footer">
+                    <button id="cancel-diff" class="btn-secondary">Cancel</button>
+                    <button id="load-diff" class="btn-primary">Load Diff</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Panel Overlay (for click-outside-to-close) -->
+    <div id="info-panel-overlay" class="info-panel-overlay"></div>
+
+    <!-- Info Panel (modal/side panel) -->
+    <div id="info-panel" class="info-panel hidden">
+        <div class="info-panel-header">
+            <h2 id="info-title">Function Info</h2>
+            <button id="close-info" class="close-btn">&times;</button>
+        </div>
+        <div class="info-panel-content">
+            <div class="info-section">
+                <h3>Location</h3>
+                <div id="info-location"></div>
+            </div>
+            <div class="info-section">
+                <h3>Signature</h3>
+                <div id="info-signature"></div>
+            </div>
+            <div class="info-section">
+                <h3>Parameters</h3>
+                <div id="info-parameters"></div>
+            </div>
+            <div class="info-section">
+                <h3>Documentation</h3>
+                <div id="info-documentation"></div>
+            </div>
+            <div class="info-section">
+                <h3>Local Variables</h3>
+                <div id="info-locals"></div>
+            </div>
+            <div class="info-section">
+                <h3>Calls</h3>
+                <div id="info-calls"></div>
+            </div>
+            <div class="info-section">
+                <h3>Called By</h3>
+                <div id="info-called-by"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/tree.js"></script>
+</body>
+</html>
