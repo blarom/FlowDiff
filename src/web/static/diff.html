@@ -88,11 +88,19 @@
                 <span id="function-count"></span>
                 <span id="entry-points"></span>
             </div>
+            <div class="stats" id="comparison-info" style="margin-top: 8px; font-size: 13px;">
+                <span id="before-ref"></span>
+                <span style="color: #95a5a6;">→</span>
+                <span id="after-ref"></span>
+            </div>
         </header>
 
         <div class="controls">
             <button id="expand-all">Expand All</button>
             <button id="collapse-all">Collapse All</button>
+            <button id="prev-change" class="diff-btn" title="Jump to previous changed function (← or P)">◀ Prev</button>
+            <span id="change-counter" style="padding: 0 8px; color: #7f8c8d; font-size: 14px; font-weight: 500;">-</span>
+            <button id="next-change" class="diff-btn" title="Jump to next changed function (→ or N)">Next ▶</button>
             <button id="toggle-tests" class="toggle-btn">Hide Tests</button>
             <input type="text" id="search" placeholder="Search functions..." />
         </div>

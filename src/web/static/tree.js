@@ -2,12 +2,14 @@
 (function() {
     'use strict';
 
-    // Make window.treeData global for diff-panel.js
-    window.window.treeData = null;
+    // Make treeData global for diff-panel.js
+    window.treeData = null;
     let expandedNodes = new Set();
     let searchMatches = [];
     let currentSearchIndex = 0;
     let testsHidden = false;
+    let changedNodes = [];
+    let currentChangedIndex = 0;
 
     // Initialize
     async function init() {
@@ -17,7 +19,7 @@
             if (!response.ok) {
                 throw new Error('Failed to load call tree data');
             }
-            window.window.treeData = await response.json();
+            window.treeData = await response.json();
 
             // Update stats
             updateStats();
@@ -84,6 +86,14 @@
         document.getElementById('project-name').textContent = window.treeData.metadata.project;
         document.getElementById('function-count').textContent = `${window.treeData.metadata.function_count} functions`;
         document.getElementById('entry-points').textContent = `${window.treeData.trees.length} entry points`;
+
+        // Update comparison info if available (diff.html only)
+        const beforeRef = document.getElementById('before-ref');
+        const afterRef = document.getElementById('after-ref');
+        if (beforeRef && afterRef && window.treeData.metadata.before_ref) {
+            beforeRef.textContent = `Before: ${window.treeData.metadata.before_ref}`;
+            afterRef.textContent = `After: ${window.treeData.metadata.after_ref}`;
+        }
     }
 
     function renderTree() {
@@ -109,6 +119,37 @@
             treeSection.appendChild(treeElement);
 
             container.appendChild(treeSection);
+        });
+
+        // Mark paths to changed nodes
+        markPathsToChanges();
+
+        // Collect all changed nodes for jump navigation
+        changedNodes = Array.from(document.querySelectorAll('.tree-node.has-changes'));
+        currentChangedIndex = 0;
+
+        // Update change counter
+        updateChangeCounter();
+    }
+
+    function markPathsToChanges() {
+        // Find all nodes with changes
+        const changedNodes = document.querySelectorAll('.tree-node.has-changes');
+
+        changedNodes.forEach(changedNode => {
+            // Walk up the tree and mark all parents
+            let container = changedNode.closest('.tree-node-container');
+            while (container) {
+                const parent = container.parentElement.closest('.tree-node-container');
+                if (parent) {
+                    const parentNode = parent.querySelector('.tree-node');
+                    if (parentNode && !parentNode.classList.contains('has-changes')) {
+                        // Mark as part of path to change
+                        parentNode.classList.add('path-to-change');
+                    }
+                }
+                container = parent;
+            }
         });
     }
 
@@ -410,6 +451,14 @@
             toggleTestsBtn.onclick = toggleTests;
         }
 
+        // Jump to next change (only in diff.html)
+        const jumpToNextChangeBtn = document.getElementById('next-change');
+        const jumpToPrevChangeBtn = document.getElementById('prev-change');
+        if (jumpToNextChangeBtn && jumpToPrevChangeBtn) {
+            jumpToNextChangeBtn.onclick = jumpToNextChange;
+            jumpToPrevChangeBtn.onclick = jumpToPrevChange;
+        }
+
         // Diff modal elements (only in index.html)
         const showDiffBtn = document.getElementById('show-diff');
         if (showDiffBtn) {
@@ -478,6 +527,22 @@
                 navigateToNextMatch();
             }
         };
+
+        // Keyboard shortcuts for change navigation (only in diff.html)
+        if (document.getElementById('next-change')) {
+            document.addEventListener('keydown', (e) => {
+                // Only if not typing in search box
+                if (e.target.tagName === 'INPUT') return;
+
+                if (e.key === 'n' || e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    jumpToNextChange();
+                } else if (e.key === 'p' || e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    jumpToPrevChange();
+                }
+            });
+        }
     }
 
     function displayDiff(diffData) {
@@ -557,6 +622,80 @@
                 top: scrollOffset,
                 behavior: 'smooth'
             });
+        }
+    }
+
+    function updateChangeCounter() {
+        const counterElem = document.getElementById('change-counter');
+        if (counterElem) {
+            if (changedNodes.length === 0) {
+                counterElem.textContent = 'No changes';
+                counterElem.style.color = '#aaa';
+            } else {
+                counterElem.textContent = `${currentChangedIndex + 1} of ${changedNodes.length}`;
+                counterElem.style.color = '#f0ad4e';
+                counterElem.style.fontWeight = '600';
+            }
+        }
+    }
+
+    function jumpToPrevChange() {
+        if (changedNodes.length === 0) {
+            return;
+        }
+
+        // Move to previous changed node (with wrap-around)
+        currentChangedIndex = (currentChangedIndex - 1 + changedNodes.length) % changedNodes.length;
+        scrollToChange(changedNodes[currentChangedIndex]);
+        updateChangeCounter();
+    }
+
+    function jumpToNextChange() {
+        if (changedNodes.length === 0) {
+            return;
+        }
+
+        // Move to next changed node
+        currentChangedIndex = (currentChangedIndex + 1) % changedNodes.length;
+        scrollToChange(changedNodes[currentChangedIndex]);
+        updateChangeCounter();
+    }
+
+    function scrollToChange(targetNode) {
+        // Expand parents to reveal the node
+        let container = targetNode.closest('.tree-node-container');
+        while (container) {
+            const parent = container.parentElement.closest('.tree-node-container');
+            if (parent) {
+                const expand = parent.querySelector('.tree-expand');
+                const children = parent.querySelector('.tree-children');
+                if (expand && children && expand.classList.contains('collapsed')) {
+                    expand.classList.remove('collapsed');
+                    expand.classList.add('expanded');
+                    children.classList.remove('collapsed');
+                }
+            }
+            container = parent;
+        }
+
+        // Scroll to the changed node
+        const treeContainer = document.querySelector('.tree-container');
+        if (treeContainer) {
+            const containerRect = treeContainer.getBoundingClientRect();
+            const nodeRect = targetNode.getBoundingClientRect();
+            const scrollOffset = nodeRect.top - containerRect.top - (containerRect.height / 2) + (nodeRect.height / 2);
+
+            treeContainer.scrollBy({
+                top: scrollOffset,
+                behavior: 'smooth'
+            });
+
+            // Flash highlight
+            const originalBoxShadow = targetNode.style.boxShadow;
+            targetNode.style.boxShadow = '0 0 0 4px #f0ad4e, 0 0 20px rgba(240, 173, 78, 0.4)';
+            setTimeout(() => {
+                targetNode.style.boxShadow = originalBoxShadow;
+            }, 1000);
         }
     }
 

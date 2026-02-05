@@ -72,6 +72,14 @@ class PythonASTVisitor(ast.NodeVisitor):
                 )
                 class_symbol.methods[method_symbol.name] = method_symbol
 
+                # Extract instance variables from __init__ method
+                if method_symbol.name == "__init__":
+                    init_bindings = method_symbol.metadata.get("local_bindings", {})
+                    for var_name, type_name in init_bindings.items():
+                        if var_name.startswith("self."):
+                            # Store instance variable (remove "self." prefix for storage)
+                            class_symbol.instance_vars[var_name[5:]] = type_name
+
         self.current_class = old_class
 
         # Add class to symbol table
@@ -197,6 +205,7 @@ class PythonASTVisitor(ast.NodeVisitor):
         Tracks patterns like:
             analyzer = StockAnalyzer()
             request = AnalysisRequest(...)
+            self.computation_layer = get_computation_layer()
 
         Returns:
             Dict mapping variable name to type/class name
@@ -204,13 +213,26 @@ class PythonASTVisitor(ast.NodeVisitor):
         bindings = {}
         for node in ast.walk(func_node):
             if isinstance(node, ast.Assign):
-                # Handle simple assignment: var = Constructor()
-                if len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
-                    var_name = node.targets[0].id
-                    if isinstance(node.value, ast.Call):
-                        constructor_name = self._get_call_name(node.value.func)
-                        if constructor_name:
-                            bindings[var_name] = constructor_name
+                if len(node.targets) == 1:
+                    target = node.targets[0]
+
+                    # Handle simple assignment: var = Constructor()
+                    if isinstance(target, ast.Name):
+                        var_name = target.id
+                        if isinstance(node.value, ast.Call):
+                            constructor_name = self._get_call_name(node.value.func)
+                            if constructor_name:
+                                bindings[var_name] = constructor_name
+
+                    # Handle instance variable assignment: self.var = Constructor()
+                    elif isinstance(target, ast.Attribute):
+                        # Check if it's self.something
+                        if isinstance(target.value, ast.Name) and target.value.id == 'self':
+                            var_name = f"self.{target.attr}"
+                            if isinstance(node.value, ast.Call):
+                                constructor_name = self._get_call_name(node.value.func)
+                                if constructor_name:
+                                    bindings[var_name] = constructor_name
         return bindings
 
     def _extract_function_local_imports(self, func_node: ast.FunctionDef) -> Dict[str, str]:

@@ -426,16 +426,57 @@ main {
     border-radius: 3px;
 }
 
-/* Changed function highlighting */
+/* Path to changed function highlighting */
+.tree-node.path-to-change {
+    position: relative;
+    background: linear-gradient(to right, #fff9e6 0%, #fffdf5 100%);
+    border-left: 3px solid #ffd966;
+    padding-left: 6px;
+    margin: 1px 0;
+}
+
+.tree-node.path-to-change .function-name {
+    font-weight: 600;
+    color: #997404;
+}
+
+.tree-node.path-to-change .tree-icon {
+    filter: brightness(1.2);
+}
+
+.tree-node.path-to-change .tree-indent {
+    color: #ffd966;
+    font-weight: 700;
+}
+
+/* Changed function highlighting (stronger than path) */
 .tree-node.has-changes {
-    background: #fff3cd;
-    border-left: 3px solid #ffc107;
-    padding-left: 5px;
+    position: relative;
+    background: linear-gradient(to right, #fff3cd 0%, #fff9e6 100%);
+    border-left: 4px solid #f0ad4e;
+    padding-left: 8px;
+    margin: 2px 0;
+    border-radius: 3px;
+    box-shadow: 0 1px 3px rgba(240, 173, 78, 0.2);
 }
 
 .tree-node.has-changes .function-name {
-    font-weight: 600;
+    font-weight: 700;
     color: #856404;
+}
+
+.tree-node.has-changes .tree-icon {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.tree-node.has-changes .tree-indent {
+    color: #f0ad4e;
+    font-weight: 700;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.1); }
 }
 
 /* Loading state */

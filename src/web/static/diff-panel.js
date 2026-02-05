@@ -18,11 +18,19 @@
     function populateDiffPanel() {
         const changedFunctions = extractChangedFunctions(window.treeData.trees);
 
-        // Update stats
-        const stats = countChanges(changedFunctions);
-        document.getElementById('stat-modified').textContent = stats.modified;
-        document.getElementById('stat-added').textContent = stats.added;
-        document.getElementById('stat-deleted').textContent = stats.deleted;
+        // Update stats from metadata if available
+        const metadata = window.treeData.metadata;
+        if (metadata && metadata.functions_modified !== undefined) {
+            document.getElementById('stat-modified').textContent = metadata.functions_modified;
+            document.getElementById('stat-added').textContent = metadata.functions_added;
+            document.getElementById('stat-deleted').textContent = metadata.functions_deleted;
+        } else {
+            // Fallback to local counting
+            const stats = countChanges(changedFunctions);
+            document.getElementById('stat-modified').textContent = stats.modified;
+            document.getElementById('stat-added').textContent = stats.added;
+            document.getElementById('stat-deleted').textContent = stats.deleted;
+        }
 
         // Render changed functions list
         renderChangedFunctions(changedFunctions);
@@ -58,7 +66,20 @@
         const container = document.getElementById('changed-functions');
 
         if (functions.length === 0) {
-            container.innerHTML = '<p style="color: #999; text-align: center; padding: 2rem;">No changes detected</p>';
+            const metadata = window.treeData.metadata;
+            let message = '<div style="color: #999; text-align: center; padding: 2rem; line-height: 1.6;">';
+            message += '<div style="font-size: 48px; margin-bottom: 1rem;">✓</div>';
+            message += '<div style="font-weight: 600; margin-bottom: 0.5rem;">No changes detected</div>';
+
+            if (metadata && metadata.before_ref === 'HEAD' && metadata.after_ref === 'working') {
+                message += '<div style="font-size: 0.9rem; color: #aaa;">No uncommitted changes in working directory</div>';
+                message += '<div style="font-size: 0.85rem; color: #aaa; margin-top: 1rem;">Try comparing commits:<br/>--before HEAD~1 --after HEAD</div>';
+            } else if (metadata) {
+                message += `<div style="font-size: 0.9rem; color: #aaa;">Comparing ${metadata.before_ref} → ${metadata.after_ref}</div>`;
+            }
+
+            message += '</div>';
+            container.innerHTML = message;
             return;
         }
 
@@ -94,34 +115,43 @@
 
     function scrollToFunction(qualifiedName) {
         // Find the function node in the tree
-        const nodes = document.querySelectorAll('.tree-node');
-        for (const node of nodes) {
-            const nameElem = node.querySelector('.node-name');
-            if (nameElem && nameElem.dataset.qualifiedName === qualifiedName) {
-                // Expand parents if needed
-                expandToNode(node);
-                // Scroll into view
-                node.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // Highlight briefly
-                node.style.backgroundColor = '#ffe69c';
-                setTimeout(() => {
-                    node.style.backgroundColor = '';
-                }, 2000);
+        const functionNames = document.querySelectorAll('.function-name');
+        for (const nameElem of functionNames) {
+            if (nameElem.dataset.qualifiedName === qualifiedName) {
+                const node = nameElem.closest('.tree-node');
+                if (node) {
+                    // Expand parents if needed
+                    expandToNode(node);
+                    // Scroll into view
+                    node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Highlight briefly
+                    node.style.backgroundColor = '#ffe69c';
+                    setTimeout(() => {
+                        node.style.backgroundColor = '';
+                    }, 2000);
+                }
                 break;
             }
         }
     }
 
     function expandToNode(node) {
-        let current = node.parentElement;
-        while (current) {
-            if (current.classList.contains('tree-node')) {
-                const toggle = current.querySelector('.node-toggle');
-                if (toggle && toggle.textContent === '▶') {
-                    toggle.click();
+        // Walk up the tree and expand all parent containers
+        let container = node.closest('.tree-node-container');
+        while (container) {
+            const parent = container.parentElement.closest('.tree-node-container');
+            if (parent) {
+                const expand = parent.querySelector('.tree-expand');
+                const children = parent.querySelector('.tree-children');
+
+                // If collapsed, expand it
+                if (expand && children && expand.classList.contains('collapsed')) {
+                    expand.classList.remove('collapsed');
+                    expand.classList.add('expanded');
+                    children.classList.remove('collapsed');
                 }
             }
-            current = current.parentElement;
+            container = parent;
         }
     }
 

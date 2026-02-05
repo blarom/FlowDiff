@@ -2,6 +2,7 @@
 from pathlib import Path
 from typing import List, Dict, Optional
 from dataclasses import dataclass
+import sys
 
 from ..legacy import CallTreeNode
 from ..call_tree_adapter import CallTreeAdapter
@@ -28,11 +29,12 @@ class DiffResult:
 class GitDiffAnalyzer:
     """Analyze git diffs and build before/after call trees."""
 
-    def __init__(self, project_root: Path):
+    def __init__(self, project_root: Path, debug_log_path: Optional[Path] = None):
         self.project_root = project_root
         self.ref_resolver = GitRefResolver(project_root)
         self.file_detector = FileChangeDetector(project_root)
         self.symbol_mapper = SymbolChangeMapper(project_root)
+        self.debug_log_path = debug_log_path
 
     def analyze_diff(
         self,
@@ -69,10 +71,64 @@ class GitDiffAnalyzer:
         symbol_changes: Dict[str, SymbolChange],
         is_before: bool
     ) -> List[CallTreeNode]:
-        """Build call tree with has_changes populated."""
+        """Build call tree with has_changes populated.
+
+        Note: We always build the tree from the current working directory,
+        but mark which nodes have changes based on symbol_changes.
+        """
         adapter = CallTreeAdapter(self.project_root)
-        trees = adapter.analyze_project()
-        self._mark_changed_nodes(trees, symbol_changes)
+
+        # First, run analysis to populate symbol tables
+        adapter.symbol_tables = adapter.orchestrator.analyze()
+
+        # Build unified symbol map
+        for table in adapter.symbol_tables.values():
+            for symbol in table.get_all_symbols():
+                adapter.all_symbols[symbol.qualified_name] = symbol
+
+        # Build called_by relationships
+        adapter._build_called_by_relationships()
+
+        # Get entry points FIRST
+        entry_point_qnames = adapter.orchestrator.get_entry_points(adapter.symbol_tables)
+
+        # PRE-MARK symbols with changes BEFORE building tree
+        # This allows the tree builder to track max depth of changed nodes
+        for qname in symbol_changes.keys():
+            if qname in adapter.all_symbols:
+                adapter.all_symbols[qname].has_changes = True
+
+        # Build trees from entry points in all_symbols (which now have has_changes marked)
+        # This ensures we use the marked symbols, not new instances
+        adapter.max_changed_depth = 0
+        trees = []
+        for symbol in entry_point_qnames:
+            if symbol.qualified_name in adapter.all_symbols:
+                marked_symbol = adapter.all_symbols[symbol.qualified_name]
+                tree = adapter._build_tree_recursive(marked_symbol, depth=0, visited=set())
+                trees.append(tree)
+
+        # Apply expansion state based on calculated depth
+        expansion_depth = max(adapter.DEFAULT_EXPANSION_DEPTH, adapter.max_changed_depth)
+        for tree in trees:
+            adapter._apply_expansion_state(tree, expansion_depth)
+
+        # NOTE: Orphan function detection disabled - we now properly resolve instance method calls
+        # trees = self._add_orphan_changed_functions(trees, symbol_changes, adapter)
+
+        # Debug logging
+        if self.debug_log_path:
+            with open(self.debug_log_path, 'a', encoding='utf-8') as f:
+                f.write(f"\n{'='*60}\n")
+                f.write(f"Building tree at ref: {ref} (is_before={is_before})\n")
+                f.write(f"Symbol changes detected: {len(symbol_changes)}\n")
+                f.write(f"Sample symbol changes (first 10):\n")
+                for i, (qname, change) in enumerate(list(symbol_changes.items())[:10]):
+                    f.write(f"  {i+1}. {qname} [{change.change_type.value}]\n")
+                f.write(f"\nTree entry points: {len(trees)}\n")
+                f.write(f"Max changed depth detected: {adapter.max_changed_depth}\n")
+                f.write(f"Expansion depth: {expansion_depth}\n")
+
         return trees
 
     def _mark_changed_nodes(
@@ -81,14 +137,80 @@ class GitDiffAnalyzer:
         symbol_changes: Dict[str, SymbolChange]
     ) -> None:
         """Mark nodes with changes."""
+        marked_count = 0
+
         def mark_recursive(node: CallTreeNode):
+            nonlocal marked_count
             if node.function.qualified_name in symbol_changes:
                 node.function.has_changes = True
+                marked_count += 1
             for child in node.children:
                 mark_recursive(child)
 
         for tree in trees:
             mark_recursive(tree)
+
+        # Debug logging
+        if self.debug_log_path:
+            with open(self.debug_log_path, 'a', encoding='utf-8') as f:
+                f.write(f"\nMarked {marked_count} nodes with changes\n")
+
+    def _add_orphan_changed_functions(
+        self,
+        trees: List[CallTreeNode],
+        symbol_changes: Dict[str, SymbolChange],
+        adapter
+    ) -> List[CallTreeNode]:
+        """Add changed functions that aren't in the tree as separate entry points.
+
+        This happens when the analyzer can't resolve certain call patterns
+        (e.g., instance method calls like self.instance.method()).
+        """
+        # Find all qualified names in the existing tree
+        existing_qnames = set()
+
+        def collect_qnames(node):
+            existing_qnames.add(node.function.qualified_name)
+            for child in node.children:
+                collect_qnames(child)
+
+        for tree in trees:
+            collect_qnames(tree)
+
+        # Find changed functions not in the tree
+        orphan_changes = {}
+        for qname, change in symbol_changes.items():
+            if qname not in existing_qnames:
+                orphan_changes[qname] = change
+
+        # Debug logging
+        if self.debug_log_path:
+            with open(self.debug_log_path, 'a', encoding='utf-8') as f:
+                f.write(f"\nOrphan changed functions (not in tree): {len(orphan_changes)}\n")
+                for qname in list(orphan_changes.keys())[:10]:
+                    f.write(f"  - {qname}\n")
+
+        # Try to add orphans by looking them up in the adapter's symbol table
+        orphan_trees = []
+        all_symbols = adapter.all_symbols  # Dict[str, Symbol]
+
+        for qname in orphan_changes.keys():
+            if qname in all_symbols:
+                symbol = all_symbols[qname]
+                # Mark it as having changes
+                symbol.has_changes = True
+                # Convert to FunctionInfo and CallTreeNode
+                func_info = adapter._symbol_to_function_info(symbol)
+                func_info.has_changes = True
+                # Create a standalone node (expanded, no children for orphans)
+                orphan_node = CallTreeNode(function=func_info, depth=0, is_expanded=True)
+                orphan_trees.append(orphan_node)
+
+        if self.debug_log_path:
+            with open(self.debug_log_path, 'a', encoding='utf-8') as f:
+                f.write(f"Added {len(orphan_trees)} orphan nodes to tree\n")
+
+        return trees + orphan_trees
 
     def _calculate_stats(self, symbol_changes: Dict[str, SymbolChange]) -> Dict[str, int]:
         """Calculate summary statistics."""

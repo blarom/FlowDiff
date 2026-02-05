@@ -13,6 +13,7 @@ class ClassSymbol:
     qualified_name: str                     # Full name (e.g., "src.stock_analyzer.StockAnalyzer")
     methods: Dict[str, Symbol] = field(default_factory=dict)  # method_name -> Symbol
     base_classes: List[str] = field(default_factory=list)     # Base class names
+    instance_vars: Dict[str, str] = field(default_factory=dict)  # self.var -> type_name
 
 
 class PythonSymbolTable(SymbolTable):

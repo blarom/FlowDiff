@@ -31,7 +31,10 @@ from output.report_generator import (
 )
 
 app = typer.Typer(help="FlowDiff - Multi-language call tree analyzer with diff visualization")
+
+# Global console for logging
 console = Console()
+log_file = None
 
 
 @app.command()
@@ -44,7 +47,7 @@ def analyze(
     no_llm: bool = typer.Option(False, "--no-llm", help="Disable LLM-based entry point filtering"),
     llm_provider: Optional[str] = typer.Option(None, "--llm-provider", help="LLM provider: 'anthropic-api', 'claude-code-cli', 'auto'"),
     llm_model: Optional[str] = typer.Option(None, "--llm-model", help="LLM model name (provider-specific)"),
-    output_dir: Optional[Path] = typer.Option(None, "--output", "-o", help="Save reports to directory (default: ./output)")
+    output_dir: Path = typer.Option("./output", "--output", "-o", help="Save reports to directory (default: ./output)")
 ):
     """
     Analyze codebase and visualize call tree with git diff highlighting.
@@ -62,8 +65,11 @@ def analyze(
         flowdiff analyze . --llm-provider claude-code-cli  # Use LLM filtering
         flowdiff analyze . --output reports/       # Save to custom directory
     """
-    # Resolve path
+    global log_file
+
+    # Resolve paths
     project_path = path.resolve()
+    output_dir = output_dir.resolve()
 
     if not project_path.exists():
         console.print(f"[red]Error: Path does not exist: {project_path}[/red]")
@@ -73,9 +79,28 @@ def analyze(
         console.print(f"[red]Error: Path is not a directory: {project_path}[/red]")
         raise typer.Exit(1)
 
-    console.print(f"\n[bold]FlowDiff[/bold] - Call Tree Analyzer with Diff Visualization")
-    console.print(f"[dim]Project: {project_path.name}[/dim]")
-    console.print()
+    # Setup output directory and logging
+    output_dir.mkdir(parents=True, exist_ok=True)
+    log_path = output_dir / "run.log"
+    log_file = open(log_path, 'w', encoding='utf-8')
+
+    def log_print(msg: str, style: str = ""):
+        """Print to both console and log file."""
+        if style:
+            console.print(msg)
+        else:
+            console.print(msg)
+        # Strip ANSI codes for log file
+        import re
+        clean_msg = re.sub(r'\[.*?\]', '', msg)  # Remove rich markup
+        clean_msg = re.sub(r'\x1b\[[0-9;]*m', '', clean_msg)  # Remove ANSI codes
+        log_file.write(clean_msg + '\n')
+        log_file.flush()
+
+    log_print(f"\n[bold]FlowDiff[/bold] - Call Tree Analyzer with Diff Visualization")
+    log_print(f"[dim]Project: {project_path.name}[/dim]")
+    log_print(f"[dim]Output: {output_dir}[/dim]")
+    log_print("")
 
     try:
         with Progress(
@@ -87,96 +112,131 @@ def analyze(
             # Step 1: Analyze diff
             task1 = progress.add_task("🔍 Analyzing git diff...", total=None)
 
-            analyzer = GitDiffAnalyzer(project_path)
+            debug_log_path = output_dir / "debug.log"
+            analyzer = GitDiffAnalyzer(project_path, debug_log_path=debug_log_path)
             diff_result = analyzer.analyze_diff(before, after)
 
             progress.update(task1, completed=True)
 
             # Display summary
-            console.print(f"\n[bold]Analysis Complete:[/bold]")
-            console.print(f"[dim]Before: {diff_result.before_description}[/dim]")
-            console.print(f"[dim]After:  {diff_result.after_description}[/dim]")
-            console.print()
-            console.print(f"[green]🟢 {diff_result.functions_added} functions added[/green]")
-            console.print(f"[yellow]🟡 {diff_result.functions_modified} functions modified[/yellow]")
-            console.print(f"[red]🔴 {diff_result.functions_deleted} functions deleted[/red]")
+            log_print(f"\n[bold]Analysis Complete:[/bold]")
+            log_print(f"[dim]Before: {diff_result.before_description}[/dim]")
+            log_print(f"[dim]After:  {diff_result.after_description}[/dim]")
+            log_print(f"[dim]Files changed: {len(diff_result.file_changes)}[/dim]")
+            log_print("")
 
-            # Step 2: Save outputs (optional)
-            if output_dir:
-                task2 = progress.add_task("💾 Saving reports...", total=None)
+            total_changes = diff_result.functions_added + diff_result.functions_modified + diff_result.functions_deleted
+            if total_changes == 0:
+                log_print("[dim]ℹ️  No function changes detected[/dim]")
+                if before == "HEAD" and after == "working":
+                    log_print("[dim]   (Try --before HEAD~1 to compare against previous commit)[/dim]")
+            else:
+                log_print(f"[green]🟢 {diff_result.functions_added} functions added[/green]")
+                log_print(f"[yellow]🟡 {diff_result.functions_modified} functions modified[/yellow]")
+                log_print(f"[red]🔴 {diff_result.functions_deleted} functions deleted[/red]")
 
-                output_dir = output_dir.resolve()
-                output_dir.mkdir(parents=True, exist_ok=True)
+            # Save reports (always, not optional)
+            task2 = progress.add_task("💾 Saving reports...", total=None)
 
-                # Generate timestamp-based filenames
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                project_name = project_path.name
+            project_name = project_path.name
 
-                # Build tree data for reports
-                adapter = CallTreeAdapter(project_path)
-                trees = adapter.analyze_project()
-
-                tree_data = {
-                    "trees": [_serialize_tree_node(tree) for tree in trees],
-                    "metadata": {
-                        "project": project_path.name,
-                        "before_ref": diff_result.before_ref,
-                        "after_ref": diff_result.after_ref,
-                        "functions_added": diff_result.functions_added,
-                        "functions_modified": diff_result.functions_modified,
-                        "functions_deleted": diff_result.functions_deleted
-                    }
+            # Build tree data from diff result (has changes marked)
+            tree_data = {
+                "trees": [_serialize_tree_node(tree) for tree in diff_result.after_tree],
+                "metadata": {
+                    "project": project_path.name,
+                    "before_ref": diff_result.before_ref,
+                    "after_ref": diff_result.after_ref,
+                    "functions_added": diff_result.functions_added,
+                    "functions_modified": diff_result.functions_modified,
+                    "functions_deleted": diff_result.functions_deleted
                 }
+            }
 
-                # Save outputs
-                json_path = output_dir / f"{project_name}_{timestamp}.json"
-                text_path = output_dir / f"{project_name}_{timestamp}.txt"
-                md_path = output_dir / f"{project_name}_{timestamp}.md"
-                html_path = output_dir / f"{project_name}_{timestamp}.html"
+            # Save outputs (no timestamps - files get overwritten)
+            json_path = output_dir / f"{project_name}.json"
+            text_path = output_dir / f"{project_name}.txt"
+            md_path = output_dir / f"{project_name}.md"
+            html_path = output_dir / f"{project_name}.html"
 
-                static_dir = Path(__file__).parent / "web" / "static"
+            static_dir = Path(__file__).parent / "web" / "static"
 
-                save_json_output(tree_data, json_path)
-                save_text_report(tree_data, text_path)
-                save_markdown_report(tree_data, md_path)
-                save_html_output(tree_data, html_path, static_dir)
+            save_json_output(tree_data, json_path)
+            save_text_report(tree_data, text_path)
+            save_markdown_report(tree_data, md_path)
+            save_html_output(tree_data, html_path, static_dir)
 
-                progress.update(task2, completed=True)
+            progress.update(task2, completed=True)
 
-                console.print(f"\n[dim]📄 Reports saved to:[/dim]")
-                console.print(f"[dim]   JSON:     {json_path}[/dim]")
-                console.print(f"[dim]   Text:     {text_path}[/dim]")
-                console.print(f"[dim]   Markdown: {md_path}[/dim]")
-                console.print(f"[dim]   HTML:     {html_path}[/dim]")
+            log_print(f"\n[dim]📄 Reports saved:[/dim]")
+            log_print(f"[dim]   JSON:     {json_path.name}[/dim]")
+            log_print(f"[dim]   Text:     {text_path.name}[/dim]")
+            log_print(f"[dim]   Markdown: {md_path.name}[/dim]")
+            log_print(f"[dim]   HTML:     {html_path.name}[/dim]")
+            log_print(f"[dim]   Log:      {log_path.name}[/dim]")
+            log_print(f"[dim]   Debug:    {debug_log_path.name}[/dim]")
 
     except ValueError as e:
-        console.print(f"\n[red]Error: {e}[/red]")
+        log_print(f"\n[red]Error: {e}[/red]")
+        if log_file:
+            log_file.close()
         raise typer.Exit(1)
     except Exception as e:
-        console.print(f"\n[red]Error: {e}[/red]")
+        log_print(f"\n[red]Error: {e}[/red]")
         import traceback
-        traceback.print_exc()
+        tb = traceback.format_exc()
+        log_print(tb)
+        if log_file:
+            log_file.close()
         raise typer.Exit(1)
 
     # Start server
-    console.print()
-    console.print("[green]✓ Opening visualization...[/green]")
-    console.print()
+    log_print("")
+    log_print("[green]✓ Preparing visualization data...[/green]")
 
-    # Create minimal tree_data (server needs it for legacy compatibility)
-    tree_data = {"trees": [], "metadata": {}}
+    # Use the after_tree from diff_result (already has changes marked)
+    trees = diff_result.after_tree
+
+    # Count total functions
+    def count_functions(nodes):
+        count = 0
+        for node in nodes:
+            count += 1
+            count += count_functions(node.children)
+        return count
+
+    tree_data = {
+        "trees": [_serialize_tree_node(tree) for tree in trees],
+        "metadata": {
+            "project": project_path.name,
+            "function_count": count_functions(trees),
+            "entry_point_count": len(trees),
+            "before_ref": diff_result.before_ref,
+            "after_ref": diff_result.after_ref,
+            "functions_added": diff_result.functions_added,
+            "functions_modified": diff_result.functions_modified,
+            "functions_deleted": diff_result.functions_deleted
+        }
+    }
+
+    log_print("[green]✓ Opening visualization...[/green]")
+    log_print("")
 
     try:
         if not no_browser:
             url = f"http://localhost:{port}/diff.html"
-            console.print(f"🌐 Opening browser at {url}")
+            log_print(f"🌐 Opening browser at {url}")
             webbrowser.open(url)
+
+        # Close log file before starting server
+        if log_file:
+            log_file.close()
 
         start_server(tree_data, port=port, open_browser=False, project_path=project_path)
     except KeyboardInterrupt:
-        console.print("\n\n[yellow]Server stopped[/yellow]")
+        log_print("\n\n[yellow]Server stopped[/yellow]")
     except Exception as e:
-        console.print(f"\n[red]Server error: {e}[/red]")
+        log_print(f"\n[red]Server error: {e}[/red]")
         raise typer.Exit(1)
 
 
@@ -193,8 +253,10 @@ def _serialize_tree_node(node) -> dict:
             "return_type": node.function.return_type,
             "calls": node.function.calls,
             "called_by": node.function.called_by,
+            "local_variables": node.function.local_variables,
             "is_entry_point": node.function.is_entry_point,
-            "has_changes": node.function.has_changes
+            "has_changes": node.function.has_changes,
+            "documentation": node.function.documentation or ""
         },
         "children": [_serialize_tree_node(child) for child in node.children],
         "depth": node.depth
