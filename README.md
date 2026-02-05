@@ -4,12 +4,12 @@ Multi-language call tree analyzer with git diff visualization.
 
 ## Features
 
-- 📊 Interactive call tree visualization
-- 🔀 Git diff analysis with before/after comparison
+- 📊 Interactive call tree visualization with change highlighting
+- 🔀 Git diff analysis (any commit, branch, or tag)
 - 🌐 Multi-language support (Python, Shell)
-- 🎨 Professional split-pane UI
+- 🎨 Unified split-pane UI (tree on left, changes on right)
 - ⚡ Fast analysis (<5 seconds)
-- 🔍 Symbol-based architecture with cross-language bridge system
+- 🤖 Optional LLM-powered entry point filtering
 
 ## Quick Start
 
@@ -23,39 +23,53 @@ pip install -e .
 
 ### Usage
 
+**Single unified command:**
+
 ```bash
-# View call tree snapshot
-flowdiff snapshot .
+# Analyze current directory (default: HEAD vs working directory)
+flowdiff analyze .
 
-# View git diff (uncommitted vs HEAD)
-flowdiff diff
+# Analyze specific project
+flowdiff analyze ../MyProject
 
-# Compare specific commits/branches
-flowdiff diff --before HEAD~1          # Working vs previous commit
-flowdiff diff --before main --after dev # Compare branches
-flowdiff diff --before v1.0 --after v2.0 # Compare tags
+# Compare with previous commit
+flowdiff analyze . --before HEAD~1
+
+# Compare branches
+flowdiff analyze . --before main --after dev
+
+# Compare tags
+flowdiff analyze . --before v1.0 --after v2.0
+
+# Use LLM filtering for entry points
+flowdiff analyze . --llm-provider claude-code-cli
+
+# Save reports to custom directory
+flowdiff analyze . --output reports/
 
 # Custom port
-flowdiff snapshot . --port 9000
-flowdiff diff --port 9000
+flowdiff analyze . --port 9000
 ```
 
-## Diff Visualization
+## How It Works
 
-The diff view shows before/after call trees side-by-side with color-coded changes:
+**Unified View:**
+- **Left pane**: Full call tree with changes highlighted in yellow
+- **Right pane**: Summary of changed functions only
+- **Smart defaults**: Compares HEAD vs working directory (shows your uncommitted changes)
+
+### Git Diff Analysis
+
+1. **Ref Resolution**: Convert git refs (HEAD, branches, tags) to commit SHAs
+2. **File Detection**: Find changed files using `git diff`
+3. **Symbol Mapping**: Build symbol tables at both refs and compare
+4. **Tree Building**: Generate call tree with changes marked
+
+### Change Highlighting
 
 - 🟢 Green: Added functions
+- 🟡 Yellow: Modified functions (shown in both panes)
 - 🔴 Red: Deleted functions
-- 🟡 Yellow: Modified functions
-
-### Comparison Options
-
-FlowDiff supports any-vs-any git comparisons:
-- **Commits**: `--before abc123 --after def456`
-- **Branches**: `--before main --after feature-branch`
-- **Tags**: `--before v1.0 --after v2.0`
-- **Working directory**: `--after working` (default)
-- **HEAD**: `--before HEAD` (default)
 
 ## Architecture
 

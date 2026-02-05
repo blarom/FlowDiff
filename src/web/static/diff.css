@@ -99,8 +99,14 @@ body {
 }
 
 .pane-header h3 {
-    margin: 0;
+    margin: 0 0 0.25rem 0;
     font-size: 1rem;
+}
+
+.pane-subtitle {
+    font-size: 0.85rem;
+    color: #bdc3c7;
+    font-weight: normal;
 }
 
 .tree-container {

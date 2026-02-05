@@ -46,16 +46,18 @@
         <div id="diff-split-view" class="diff-split-view hidden">
             <div class="split-pane">
                 <div class="pane-header">
-                    <h3 id="before-title">Before</h3>
+                    <h3>📊 Full Call Tree</h3>
+                    <span class="pane-subtitle" id="after-title">Current state</span>
                 </div>
-                <div id="before-tree" class="tree-container"></div>
+                <div id="after-tree" class="tree-container"></div>
             </div>
 
             <div class="split-pane">
                 <div class="pane-header">
-                    <h3 id="after-title">After</h3>
+                    <h3>🔍 Changes</h3>
+                    <span class="pane-subtitle" id="before-title">What changed</span>
                 </div>
-                <div id="after-tree" class="tree-container"></div>
+                <div id="changes-summary" class="tree-container"></div>
             </div>
         </div>
 
