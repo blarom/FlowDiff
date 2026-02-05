@@ -2,41 +2,10 @@
 
 from pathlib import Path
 from typing import List, Dict, Set
-from dataclasses import dataclass, field
 
 from .orchestrator import FlowDiffOrchestrator
 from .core.symbol import Symbol
-
-
-# Legacy FunctionInfo and CallTreeNode for backward compatibility
-@dataclass
-class FunctionInfo:
-    """Legacy FunctionInfo for backward compatibility with UI."""
-    name: str
-    qualified_name: str
-    file_path: str
-    file_name: str
-    line_number: int
-    parameters: List[str]
-    return_type: str
-    calls: List[str]
-    called_by: List[str] = field(default_factory=list)
-    local_variables: List[str] = field(default_factory=list)
-    is_entry_point: bool = False
-    language: str = "python"
-    http_method: str = None
-    http_route: str = None
-    has_changes: bool = False        # NEW: For diff tracking
-    documentation: str = None        # NEW: Docstring/comments
-
-
-@dataclass
-class CallTreeNode:
-    """Legacy CallTreeNode for backward compatibility with UI."""
-    function: FunctionInfo
-    children: List['CallTreeNode'] = field(default_factory=list)
-    depth: int = 0
-    is_expanded: bool = False
+from .legacy import FunctionInfo, CallTreeNode
 
 
 class CallTreeAdapter:

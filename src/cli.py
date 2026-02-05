@@ -241,6 +241,99 @@ def snapshot(
 
 
 @app.command()
+def diff(
+    path: Path = typer.Argument(".", help="Path to git repository"),
+    before: str = typer.Option("HEAD", "--before", "-b", help="Before ref (commit, branch, tag)"),
+    after: str = typer.Option("working", "--after", "-a", help="After ref (commit, branch, tag, or 'working')"),
+    port: int = typer.Option(8080, "--port", "-p", help="Server port"),
+    no_browser: bool = typer.Option(False, "--no-browser", help="Don't open browser automatically")
+):
+    """
+    Show git diff visualization with before/after call trees.
+
+    Compare any two git references (commits, branches, tags) or uncommitted changes.
+
+    Examples:
+        flowdiff diff                          # Uncommitted vs HEAD
+        flowdiff diff --before HEAD~1          # Working directory vs previous commit
+        flowdiff diff --before main --after dev # Compare branches
+        flowdiff diff --before v1.0 --after v2.0 # Compare tags
+        flowdiff diff /path/to/repo --port 9000
+    """
+    from analyzer.git.diff_analyzer import GitDiffAnalyzer
+
+    # Resolve path
+    project_path = path.resolve()
+
+    if not project_path.exists():
+        console.print(f"[red]Error: Path does not exist: {project_path}[/red]")
+        raise typer.Exit(1)
+
+    if not project_path.is_dir():
+        console.print(f"[red]Error: Path is not a directory: {project_path}[/red]")
+        raise typer.Exit(1)
+
+    console.print(f"\n[bold]FlowDiff[/bold] - Git Diff Visualization")
+    console.print(f"[dim]Project: {project_path.name}[/dim]")
+    console.print()
+
+    try:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console
+        ) as progress:
+
+            # Analyze diff
+            task = progress.add_task("🔍 Analyzing diff...", total=None)
+
+            analyzer = GitDiffAnalyzer(project_path)
+            diff_result = analyzer.analyze_diff(before, after)
+
+            progress.update(task, completed=True)
+
+            # Display summary
+            console.print(f"\n[bold]Diff Summary:[/bold]")
+            console.print(f"[dim]Before: {diff_result.before_description}[/dim]")
+            console.print(f"[dim]After:  {diff_result.after_description}[/dim]")
+            console.print()
+            console.print(f"[green]🟢 {diff_result.functions_added} functions added[/green]")
+            console.print(f"[yellow]🟡 {diff_result.functions_modified} functions modified[/yellow]")
+            console.print(f"[red]🔴 {diff_result.functions_deleted} functions deleted[/red]")
+
+    except ValueError as e:
+        console.print(f"\n[red]Error: {e}[/red]")
+        raise typer.Exit(1)
+    except Exception as e:
+        console.print(f"\n[red]Error: {e}[/red]")
+        import traceback
+        traceback.print_exc()
+        raise typer.Exit(1)
+
+    # Start server
+    console.print()
+    console.print("[green]✓ Opening diff view...[/green]")
+    console.print()
+
+    # Create empty tree_data (not used for diff view)
+    tree_data = {"trees": [], "metadata": {}}
+
+    try:
+        import webbrowser
+        if not no_browser:
+            url = f"http://localhost:{port}/diff.html"
+            console.print(f"🌐 Opening browser at {url}")
+            webbrowser.open(url)
+
+        start_server(tree_data, port=port, open_browser=False, project_path=project_path)
+    except KeyboardInterrupt:
+        console.print("\n\n[yellow]Server stopped[/yellow]")
+    except Exception as e:
+        console.print(f"\n[red]Server error: {e}[/red]")
+        raise typer.Exit(1)
+
+
+@app.command()
 def init(
     global_config: bool = typer.Option(False, "--global", "-g", help="Create config in home directory instead of current directory")
 ):

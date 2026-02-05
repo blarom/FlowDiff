@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FlowDiff - Diff View</title>
+    <link rel="stylesheet" href="/static/diff.css">
+</head>
+<body>
+    <div class="diff-container">
+        <div class="diff-header">
+            <h1>FlowDiff - Diff View</h1>
+            <div class="diff-actions">
+                <button id="close-diff" class="btn">← Back</button>
+                <button id="export-diff" class="btn" disabled>Export</button>
+            </div>
+        </div>
+
+        <div class="ref-selector">
+            <div class="ref-input">
+                <label>Before:</label>
+                <select id="before-ref">
+                    <option value="HEAD~1">HEAD~1</option>
+                    <option value="HEAD" selected>HEAD</option>
+                    <option value="custom">Custom...</option>
+                </select>
+                <input type="text" id="before-custom" placeholder="Branch/commit" style="display:none;">
+            </div>
+            <div class="ref-input">
+                <label>After:</label>
+                <select id="after-ref">
+                    <option value="HEAD">HEAD</option>
+                    <option value="working" selected>Working directory</option>
+                    <option value="custom">Custom...</option>
+                </select>
+                <input type="text" id="after-custom" placeholder="Branch/commit" style="display:none;">
+            </div>
+            <button id="load-diff" class="btn btn-primary">Load Diff</button>
+        </div>
+
+        <div id="diff-summary" class="diff-summary hidden">
+            <span class="stat">🟢 <span id="stat-added">0</span> Added</span>
+            <span class="stat">🔴 <span id="stat-deleted">0</span> Deleted</span>
+            <span class="stat">🟡 <span id="stat-modified">0</span> Modified</span>
+        </div>
+
+        <div id="diff-split-view" class="diff-split-view hidden">
+            <div class="split-pane">
+                <div class="pane-header">
+                    <h3 id="before-title">Before</h3>
+                </div>
+                <div id="before-tree" class="tree-container"></div>
+            </div>
+
+            <div class="split-pane">
+                <div class="pane-header">
+                    <h3 id="after-title">After</h3>
+                </div>
+                <div id="after-tree" class="tree-container"></div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Analyzing diff...</p>
+        </div>
+    </div>
+
+    <script src="/static/diff.js"></script>
+</body>
+</html>

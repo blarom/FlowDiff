@@ -83,11 +83,67 @@ gh repo create FlowDiff --public --source=. --remote=origin \
   --description="Multi-language call tree analyzer with git diff visualization"
 ```
 
-### Push to GitHub
+### Setup GitHub Authentication & Push
 
+GitHub no longer accepts passwords. Choose one authentication method:
+
+**Method A: Personal Access Token (HTTPS) - Recommended for beginners**
+
+1. Create token:
+   - Go to: https://github.com/settings/tokens
+   - Click "Generate new token" → "Generate new token (classic)"
+   - Name: "FlowDiff Development"
+   - Expiration: 90 days (or your preference)
+   - Scopes: Check `repo` (full control)
+   - Click "Generate token"
+   - **IMPORTANT: Copy the token immediately** (won't be shown again)
+
+2. Push to GitHub:
 ```bash
-# Replace YOUR_USERNAME with your GitHub username
 git remote add origin https://github.com/YOUR_USERNAME/FlowDiff.git
+git branch -M main
+git push -u origin main
+# When prompted:
+# Username: YOUR_USERNAME
+# Password: <paste your token here, not your GitHub password>
+```
+
+**Method B: SSH Keys - More secure, no expiration**
+
+1. Check for existing SSH key:
+```bash
+ls -la ~/.ssh
+# Look for id_ed25519.pub or id_rsa.pub
+```
+
+2. If no key exists, generate one:
+```bash
+ssh-keygen -t ed25519 -C "your_email@example.com"
+# Press Enter to accept default location
+# Enter passphrase (optional but recommended)
+```
+
+3. Add SSH key to ssh-agent:
+```bash
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+```
+
+4. Copy public key to clipboard:
+```bash
+pbcopy < ~/.ssh/id_ed25519.pub
+```
+
+5. Add to GitHub:
+   - Go to: https://github.com/settings/keys
+   - Click "New SSH key"
+   - Title: "FlowDiff Development"
+   - Paste the key
+   - Click "Add SSH key"
+
+6. Push to GitHub:
+```bash
+git remote add origin git@github.com:YOUR_USERNAME/FlowDiff.git
 git branch -M main
 git push -u origin main
 ```

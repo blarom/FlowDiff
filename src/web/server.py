@@ -4,9 +4,9 @@ FastAPI web server for FlowDiff visualization.
 Serves the interactive call tree viewer and provides API endpoints for tree data.
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from pathlib import Path
 import sys
 import webbrowser
@@ -15,10 +15,14 @@ from typing import Optional, Dict
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from analyzer.git.diff_analyzer import GitDiffAnalyzer, DiffResult
+from analyzer.legacy import CallTreeNode
+
 
 # Global state for tree data
 _current_tree_data: Optional[Dict] = None
 _saved_html_path: Optional[str] = None
+_project_path: Optional[Path] = None
 
 
 def create_app() -> FastAPI:
@@ -79,22 +83,86 @@ def create_app() -> FastAPI:
         """Health check endpoint."""
         return {"status": "ok"}
 
+    @app.post("/api/diff")
+    async def get_diff(request: Request):
+        """Get diff between two git refs."""
+        try:
+            body = await request.json()
+            before_ref = body.get("before", "HEAD")
+            after_ref = body.get("after", "working")
+
+            if _project_path is None:
+                raise HTTPException(status_code=500, detail="Project path not set")
+
+            analyzer = GitDiffAnalyzer(_project_path)
+            diff_result = analyzer.analyze_diff(before_ref, after_ref)
+
+            return JSONResponse(content=_serialize_diff_result(diff_result))
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
+    @app.get("/diff.html")
+    async def diff_page():
+        """Serve diff visualization page."""
+        html_path = static_dir / "diff.html"
+        if not html_path.exists():
+            raise HTTPException(status_code=404, detail="diff.html not found")
+        return FileResponse(html_path)
+
     return app
 
 
-def set_tree_data(tree_data: Dict, html_path: Optional[str] = None):
+def _serialize_diff_result(diff: DiffResult) -> dict:
+    """Convert DiffResult to JSON."""
+    return {
+        "before_ref": diff.before_ref,
+        "after_ref": diff.after_ref,
+        "before_description": diff.before_description,
+        "after_description": diff.after_description,
+        "summary": {
+            "added": diff.functions_added,
+            "deleted": diff.functions_deleted,
+            "modified": diff.functions_modified
+        },
+        "before_tree": [_serialize_tree_node(n) for n in diff.before_tree],
+        "after_tree": [_serialize_tree_node(n) for n in diff.after_tree]
+    }
+
+
+def _serialize_tree_node(node: CallTreeNode) -> dict:
+    """Convert CallTreeNode to JSON."""
+    return {
+        "function": {
+            "name": node.function.name,
+            "qualified_name": node.function.qualified_name,
+            "file_path": node.function.file_path,
+            "line_number": node.function.line_number,
+            "has_changes": node.function.has_changes
+        },
+        "children": [_serialize_tree_node(c) for c in node.children],
+        "is_expanded": node.is_expanded,
+        "depth": node.depth
+    }
+
+
+def set_tree_data(tree_data: Dict, html_path: Optional[str] = None, project_path: Optional[Path] = None):
     """Set the current tree data to be served.
 
     Args:
         tree_data: Tree data dictionary with function call hierarchy
         html_path: Path to saved HTML file (optional)
+        project_path: Path to the project root (optional)
     """
-    global _current_tree_data, _saved_html_path
+    global _current_tree_data, _saved_html_path, _project_path
     _current_tree_data = tree_data
     _saved_html_path = html_path
+    if project_path:
+        _project_path = project_path
 
 
-def start_server(tree_data: Dict, port: int = 8080, open_browser: bool = True, html_path: Optional[str] = None):
+def start_server(tree_data: Dict, port: int = 8080, open_browser: bool = True, html_path: Optional[str] = None, project_path: Optional[Path] = None):
     """Start the web server and optionally open browser.
 
     Args:
@@ -102,9 +170,10 @@ def start_server(tree_data: Dict, port: int = 8080, open_browser: bool = True, h
         port: Port number (default: 8080)
         open_browser: Whether to auto-open browser (default: True)
         html_path: Path to saved HTML file (optional)
+        project_path: Path to the project root (optional)
     """
     # Set tree data
-    set_tree_data(tree_data, html_path)
+    set_tree_data(tree_data, html_path, project_path)
 
     # Create app
     app = create_app()
