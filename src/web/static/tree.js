@@ -2,7 +2,8 @@
 (function() {
     'use strict';
 
-    let treeData = null;
+    // Make window.treeData global for diff-panel.js
+    window.window.treeData = null;
     let expandedNodes = new Set();
     let searchMatches = [];
     let currentSearchIndex = 0;
@@ -16,7 +17,7 @@
             if (!response.ok) {
                 throw new Error('Failed to load call tree data');
             }
-            treeData = await response.json();
+            window.window.treeData = await response.json();
 
             // Update stats
             updateStats();
@@ -80,9 +81,9 @@
     }
 
     function updateStats() {
-        document.getElementById('project-name').textContent = treeData.metadata.project;
-        document.getElementById('function-count').textContent = `${treeData.metadata.function_count} functions`;
-        document.getElementById('entry-points').textContent = `${treeData.trees.length} entry points`;
+        document.getElementById('project-name').textContent = window.treeData.metadata.project;
+        document.getElementById('function-count').textContent = `${window.treeData.metadata.function_count} functions`;
+        document.getElementById('entry-points').textContent = `${window.treeData.trees.length} entry points`;
     }
 
     function renderTree() {
@@ -90,7 +91,7 @@
         container.innerHTML = '';
 
         // Render each entry point tree as a separate collapsed section
-        treeData.trees.forEach((tree, index) => {
+        window.treeData.trees.forEach((tree, index) => {
             const treeSection = document.createElement('div');
             treeSection.className = 'entry-point-tree';
 
@@ -122,6 +123,10 @@
         nodeDiv.dataset.depth = depth;
         if (node.children && node.children.length > 0) {
             nodeDiv.classList.add('has-children');
+        }
+        // Highlight changed functions
+        if (node.function.has_changes) {
+            nodeDiv.classList.add('has-changes');
         }
 
         // Indentation
@@ -165,6 +170,7 @@
         // Function name with file prefix (e.g., "test_sqlite::main")
         const funcName = document.createElement('span');
         funcName.className = 'function-name';
+        funcName.dataset.qualifiedName = node.function.qualified_name;  // For diff-panel click navigation
         const fileName = node.function.file_name.replace('.py', '');
 
         // Handle script entry points specially

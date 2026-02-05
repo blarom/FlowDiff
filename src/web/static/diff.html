@@ -2,71 +2,168 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>FlowDiff - Diff View</title>
-    <link rel="stylesheet" href="/static/diff.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowDiff - Call Tree with Diff</title>
+    <link rel="stylesheet" href="/static/tree.css">
+    <style>
+        /* Override for unified diff view */
+        main {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 0;
+            height: calc(100vh - 200px);
+        }
+
+        .tree-container {
+            border-right: 2px solid #ddd;
+            overflow-y: auto;
+        }
+
+        .diff-panel {
+            background: #f8f9fa;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .diff-panel h2 {
+            margin: 0 0 1rem 0;
+            font-size: 1.2rem;
+            color: #2c3e50;
+        }
+
+        .diff-summary {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .diff-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .changed-function {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .changed-function:hover {
+            background: #ffe69c;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .changed-function-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .changed-function-location {
+            font-size: 0.85rem;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
-    <div class="diff-container">
-        <div class="diff-header">
-            <h1>FlowDiff - Diff View</h1>
-            <div class="diff-actions">
-                <button id="close-diff" class="btn">← Back</button>
-                <button id="export-diff" class="btn" disabled>Export</button>
+    <!-- Saved Report Banner -->
+    <div id="saved-report-banner" class="saved-report-banner hidden">
+        <span>📄 Saved report: <a id="saved-report-link" href="#" target="_blank"></a></span>
+        <button id="close-banner" class="close-banner-btn">&times;</button>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>FlowDiff - Call Tree with Diff</h1>
+            <div class="stats" id="stats">
+                <span id="project-name"></span>
+                <span id="function-count"></span>
+                <span id="entry-points"></span>
             </div>
+        </header>
+
+        <div class="controls">
+            <button id="expand-all">Expand All</button>
+            <button id="collapse-all">Collapse All</button>
+            <button id="toggle-tests" class="toggle-btn">Hide Tests</button>
+            <input type="text" id="search" placeholder="Search functions..." />
         </div>
 
-        <div class="ref-selector">
-            <div class="ref-input">
-                <label>Before:</label>
-                <select id="before-ref">
-                    <option value="HEAD~1">HEAD~1</option>
-                    <option value="HEAD" selected>HEAD</option>
-                    <option value="custom">Custom...</option>
-                </select>
-                <input type="text" id="before-custom" placeholder="Branch/commit" style="display:none;">
+        <main>
+            <!-- Left: Full Call Tree -->
+            <div class="tree-container">
+                <div id="call-tree" class="call-tree"></div>
             </div>
-            <div class="ref-input">
-                <label>After:</label>
-                <select id="after-ref">
-                    <option value="HEAD">HEAD</option>
-                    <option value="working" selected>Working directory</option>
-                    <option value="custom">Custom...</option>
-                </select>
-                <input type="text" id="after-custom" placeholder="Branch/commit" style="display:none;">
-            </div>
-            <button id="load-diff" class="btn btn-primary">Load Diff</button>
-        </div>
 
-        <div id="diff-summary" class="diff-summary hidden">
-            <span class="stat">🟢 <span id="stat-added">0</span> Added</span>
-            <span class="stat">🔴 <span id="stat-deleted">0</span> Deleted</span>
-            <span class="stat">🟡 <span id="stat-modified">0</span> Modified</span>
-        </div>
-
-        <div id="diff-split-view" class="diff-split-view hidden">
-            <div class="split-pane">
-                <div class="pane-header">
-                    <h3>📊 Full Call Tree</h3>
-                    <span class="pane-subtitle" id="after-title">Current state</span>
+            <!-- Right: Diff Summary -->
+            <div class="diff-panel">
+                <h2>🔍 Changes</h2>
+                <div class="diff-summary">
+                    <div class="diff-stat">
+                        <span>🟡 <strong id="stat-modified">0</strong> functions modified</span>
+                    </div>
+                    <div class="diff-stat">
+                        <span>🟢 <strong id="stat-added">0</strong> functions added</span>
+                    </div>
+                    <div class="diff-stat">
+                        <span>🔴 <strong id="stat-deleted">0</strong> functions deleted</span>
+                    </div>
                 </div>
-                <div id="after-tree" class="tree-container"></div>
+                <div id="changed-functions"></div>
             </div>
+        </main>
+    </div>
 
-            <div class="split-pane">
-                <div class="pane-header">
-                    <h3>🔍 Changes</h3>
-                    <span class="pane-subtitle" id="before-title">What changed</span>
-                </div>
-                <div id="changes-summary" class="tree-container"></div>
-            </div>
+    <!-- Info Panel Overlay -->
+    <div id="info-panel-overlay" class="info-panel-overlay"></div>
+
+    <!-- Info Panel -->
+    <div id="info-panel" class="info-panel hidden">
+        <div class="info-panel-header">
+            <h2 id="info-title">Function Info</h2>
+            <button id="close-info" class="close-btn">&times;</button>
         </div>
-
-        <div id="loading" class="loading hidden">
-            <div class="spinner"></div>
-            <p>Analyzing diff...</p>
+        <div class="info-panel-content">
+            <div class="info-section">
+                <h3>Location</h3>
+                <div id="info-location"></div>
+            </div>
+            <div class="info-section">
+                <h3>Signature</h3>
+                <div id="info-signature"></div>
+            </div>
+            <div class="info-section">
+                <h3>Parameters</h3>
+                <div id="info-parameters"></div>
+            </div>
+            <div class="info-section">
+                <h3>Documentation</h3>
+                <div id="info-documentation"></div>
+            </div>
+            <div class="info-section">
+                <h3>Local Variables</h3>
+                <div id="info-locals"></div>
+            </div>
+            <div class="info-section">
+                <h3>Calls</h3>
+                <div id="info-calls"></div>
+            </div>
+            <div class="info-section">
+                <h3>Called By</h3>
+                <div id="info-called-by"></div>
+            </div>
         </div>
     </div>
 
-    <script src="/static/diff.js"></script>
+    <script src="/static/tree.js"></script>
+    <script src="/static/diff-panel.js"></script>
 </body>
 </html>

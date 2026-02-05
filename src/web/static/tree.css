@@ -426,6 +426,18 @@ main {
     border-radius: 3px;
 }
 
+/* Changed function highlighting */
+.tree-node.has-changes {
+    background: #fff3cd;
+    border-left: 3px solid #ffc107;
+    padding-left: 5px;
+}
+
+.tree-node.has-changes .function-name {
+    font-weight: 600;
+    color: #856404;
+}
+
 /* Loading state */
 .loading {
     display: flex;
