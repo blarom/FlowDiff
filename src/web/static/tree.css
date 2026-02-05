@@ -250,7 +250,7 @@ main {
     border-radius: 4px;
     font-size: 12px;
     cursor: pointer;
-    opacity: 0;
+    opacity: 1;
     transition: opacity 0.2s, background 0.2s;
     flex-shrink: 0;
 }
@@ -261,19 +261,6 @@ main {
 
 .diff-icon {
     background: #e67e22;
-}
-
-/* Show diff icon by default for changed nodes */
-.tree-node.has-changes .diff-icon {
-    opacity: 1;
-}
-
-/* Show both icons on hover */
-.tree-node:hover .info-icon,
-.tree-node:hover .diff-icon,
-.info-icon:hover,
-.diff-icon:hover {
-    opacity: 1;
 }
 
 .info-icon:hover {

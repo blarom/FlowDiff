@@ -237,16 +237,6 @@
 
         nodeDiv.appendChild(label);
 
-        // Info icon
-        const infoIcon = document.createElement('span');
-        infoIcon.className = 'info-icon';
-        infoIcon.textContent = 'ⓘ';
-        infoIcon.onclick = (e) => {
-            e.stopPropagation();
-            showInfo(node.function);
-        };
-        nodeDiv.appendChild(infoIcon);
-
         // Diff icon (only for changed functions)
         if (node.function.has_changes) {
             const diffIcon = document.createElement('span');
@@ -259,6 +249,16 @@
             };
             nodeDiv.appendChild(diffIcon);
         }
+
+        // Info icon (always shown)
+        const infoIcon = document.createElement('span');
+        infoIcon.className = 'info-icon';
+        infoIcon.textContent = 'ⓘ';
+        infoIcon.onclick = (e) => {
+            e.stopPropagation();
+            showInfo(node.function);
+        };
+        nodeDiv.appendChild(infoIcon);
 
         div.appendChild(nodeDiv);
 
@@ -522,6 +522,13 @@
 
         // Highlight the clicked node
         nodeElement.classList.add('selected');
+
+        // Update the change counter to reflect which change this is
+        const clickedIndex = changedNodes.indexOf(nodeElement);
+        if (clickedIndex !== -1) {
+            currentChangedIndex = clickedIndex;
+            updateChangeCounter();
+        }
 
         // Sync with diff panel if it exists (in diff-panel.js)
         if (window.highlightChangeInPanel) {

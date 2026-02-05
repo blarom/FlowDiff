@@ -93,6 +93,7 @@
     function createChangedFunctionElement(func) {
         const div = document.createElement('div');
         div.className = 'changed-function';
+        div.dataset.qualifiedName = func.qualified_name;  // Store for matching
 
         const name = document.createElement('div');
         name.className = 'changed-function-name';
@@ -164,14 +165,9 @@
             elem.classList.remove('selected');
         });
 
-        // Find and highlight the matching function
+        // Find and highlight the matching function by exact qualified name match
         for (const elem of changedFunctions) {
-            const nameElem = elem.querySelector('.changed-function-name');
-            const locationElem = elem.querySelector('.changed-function-location');
-
-            // Check if this is the matching function by comparing qualified name
-            // We need to reconstruct the qualified name from the displayed info
-            if (locationElem && locationElem.textContent.includes(qualifiedName.split('.').pop())) {
+            if (elem.dataset.qualifiedName === qualifiedName) {
                 elem.classList.add('selected');
                 elem.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 break;
