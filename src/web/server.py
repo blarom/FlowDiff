@@ -4,7 +4,7 @@ FastAPI web server for FlowDiff visualization.
 Serves the interactive call tree viewer and provides API endpoints for tree data.
 """
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from pathlib import Path
@@ -42,6 +42,16 @@ def create_app() -> FastAPI:
     # Get paths
     web_dir = Path(__file__).parent
     static_dir = web_dir / "static"
+
+    # Add middleware to disable caching for static files (development mode)
+    @app.middleware("http")
+    async def add_no_cache_headers(request: Request, call_next):
+        response = await call_next(request)
+        if request.url.path.startswith("/static/"):
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+        return response
 
     # Mount static files
     if static_dir.exists():
