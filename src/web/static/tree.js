@@ -240,6 +240,19 @@
         };
         nodeDiv.appendChild(infoIcon);
 
+        // Diff icon (only for changed functions)
+        if (node.function.has_changes) {
+            const diffIcon = document.createElement('span');
+            diffIcon.className = 'diff-icon';
+            diffIcon.textContent = '⎆';  // Diff symbol
+            diffIcon.title = 'View diff';
+            diffIcon.onclick = (e) => {
+                e.stopPropagation();
+                viewDiff(node.function);
+            };
+            nodeDiv.appendChild(diffIcon);
+        }
+
         div.appendChild(nodeDiv);
 
         // Children container
@@ -391,6 +404,107 @@
     function closeInfoPanel() {
         document.getElementById('info-panel').classList.add('hidden');
         document.getElementById('info-panel-overlay').classList.remove('active');
+    }
+
+    async function viewDiff(func) {
+        try {
+            // Show loading state
+            console.log('[FlowDiff] Fetching diff for:', func.qualified_name);
+
+            // Fetch diff from server
+            const response = await fetch(`/api/diff/${encodeURIComponent(func.qualified_name)}`);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch diff: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            // Open diff in external viewer
+            if (data.success && data.method === 'external') {
+                // Diff opened in external viewer
+                console.log('[FlowDiff] Diff opened in external viewer');
+
+                // Optionally show a toast notification
+                showToast(`Diff opened in external viewer for ${func.name}`);
+            } else if (data.diff_content) {
+                // Show inline diff (fallback)
+                showInlineDiff(func, data.diff_content);
+            } else {
+                throw new Error(data.error || 'No diff available');
+            }
+
+        } catch (error) {
+            console.error('[FlowDiff] Error viewing diff:', error);
+            showToast(`Error: ${error.message}`, 'error');
+        }
+    }
+
+    function showInlineDiff(func, diffContent) {
+        // Create or show diff modal
+        let modal = document.getElementById('diff-modal');
+        if (!modal) {
+            modal = createDiffModal();
+        }
+
+        document.getElementById('diff-modal-title').textContent = `Diff: ${func.name}`;
+        document.getElementById('diff-modal-content').innerHTML = `<pre><code>${escapeHtml(diffContent)}</code></pre>`;
+        modal.classList.remove('hidden');
+    }
+
+    function createDiffModal() {
+        const modal = document.createElement('div');
+        modal.id = 'diff-modal';
+        modal.className = 'modal hidden';
+        modal.innerHTML = `
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="diff-modal-title">Diff</h3>
+                    <button class="modal-close" onclick="document.getElementById('diff-modal').classList.add('hidden')">×</button>
+                </div>
+                <div class="modal-body">
+                    <div id="diff-modal-content"></div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Close on overlay click
+        modal.querySelector('.modal-overlay').onclick = () => {
+            modal.classList.add('hidden');
+        };
+
+        return modal;
+    }
+
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: ${type === 'error' ? '#e74c3c' : '#3498db'};
+            color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+        `;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     function toggleTests() {

@@ -11,6 +11,8 @@ from pathlib import Path
 import sys
 import webbrowser
 import uvicorn
+import subprocess
+import os
 from typing import Optional, Dict
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -77,6 +79,51 @@ def create_app() -> FastAPI:
             "html_path": _saved_html_path,
             "file_url": f"file://{_saved_html_path}" if _saved_html_path else None
         })
+
+    @app.get("/api/diff/{qualified_name:path}")
+    async def get_function_diff(qualified_name: str):
+        """Get diff for a specific function.
+
+        Args:
+            qualified_name: Qualified function name (e.g., "src.analyzer.StockAnalyzer.analyze")
+
+        Returns:
+            JSON with diff content or indication that external viewer was opened
+        """
+        try:
+            if _project_path is None:
+                raise HTTPException(status_code=500, detail="Project path not set")
+
+            if _current_tree_data is None:
+                raise HTTPException(status_code=404, detail="No tree data loaded")
+
+            # Find the function in the tree data
+            func_info = _find_function_in_tree(qualified_name)
+            if func_info is None:
+                raise HTTPException(status_code=404, detail=f"Function {qualified_name} not found in tree")
+
+            file_path = func_info["file_path"]
+
+            # Try to open in external diff viewer
+            external_result = _open_external_diff(file_path, _project_path)
+            if external_result["success"]:
+                return JSONResponse({
+                    "success": True,
+                    "method": "external",
+                    "viewer": external_result["viewer"]
+                })
+
+            # Fallback: Get raw diff content
+            diff_content = _get_file_diff(file_path, _project_path)
+            return JSONResponse({
+                "success": True,
+                "method": "inline",
+                "diff_content": diff_content,
+                "file_path": file_path
+            })
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
     @app.get("/health")
     async def health():
@@ -145,6 +192,120 @@ def _serialize_tree_node(node: CallTreeNode) -> dict:
         "is_expanded": node.is_expanded,
         "depth": node.depth
     }
+
+
+def _find_function_in_tree(qualified_name: str) -> Optional[Dict]:
+    """Find a function in the tree data by qualified name.
+
+    Args:
+        qualified_name: Qualified function name to search for
+
+    Returns:
+        Function info dict if found, None otherwise
+    """
+    if _current_tree_data is None:
+        return None
+
+    def search_tree(trees):
+        for tree in trees:
+            if tree["function"]["qualified_name"] == qualified_name:
+                return tree["function"]
+            # Search children
+            result = search_tree(tree.get("children", []))
+            if result:
+                return result
+        return None
+
+    return search_tree(_current_tree_data.get("trees", []))
+
+
+def _open_external_diff(file_path: str, project_path: Path) -> Dict:
+    """Try to open diff in an external viewer.
+
+    Tries in order:
+    1. VS Code diff (if `code` is available)
+    2. Difftastic (if `difft` is available)
+    3. Git difftool (with configured or default tool)
+
+    Args:
+        file_path: Path to the file to diff
+        project_path: Root path of the git repository
+
+    Returns:
+        Dict with "success" bool and "viewer" name
+    """
+    # Convert absolute path to relative path from project root
+    rel_path = Path(file_path).relative_to(project_path) if file_path.startswith(str(project_path)) else file_path
+
+    # Try VS Code
+    try:
+        # code --diff <before> <after>
+        result = subprocess.run(
+            ["code", "--diff", f"HEAD:{rel_path}", rel_path],
+            cwd=str(project_path),
+            capture_output=True,
+            timeout=2
+        )
+        if result.returncode == 0:
+            return {"success": True, "viewer": "VS Code"}
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        pass
+
+    # Try Difftastic
+    try:
+        subprocess.Popen(
+            ["difft", f"HEAD:{rel_path}", rel_path],
+            cwd=str(project_path),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        return {"success": True, "viewer": "Difftastic"}
+    except FileNotFoundError:
+        pass
+
+    # Try git difftool
+    try:
+        subprocess.Popen(
+            ["git", "difftool", "--no-prompt", "HEAD", "--", rel_path],
+            cwd=str(project_path),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        return {"success": True, "viewer": "git difftool"}
+    except Exception:
+        pass
+
+    return {"success": False, "viewer": None}
+
+
+def _get_file_diff(file_path: str, project_path: Path) -> str:
+    """Get raw diff content for a file.
+
+    Args:
+        file_path: Path to the file to diff
+        project_path: Root path of the git repository
+
+    Returns:
+        Diff content as string
+    """
+    rel_path = Path(file_path).relative_to(project_path) if file_path.startswith(str(project_path)) else file_path
+
+    try:
+        result = subprocess.run(
+            ["git", "diff", "HEAD", "--", str(rel_path)],
+            cwd=str(project_path),
+            capture_output=True,
+            text=True,
+            timeout=5
+        )
+        if result.returncode == 0:
+            return result.stdout or "No changes detected"
+        else:
+            return f"Error getting diff: {result.stderr}"
+    except subprocess.TimeoutExpired:
+        return "Error: Timeout getting diff"
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 
 def set_tree_data(tree_data: Dict, html_path: Optional[str] = None, project_path: Optional[Path] = None):

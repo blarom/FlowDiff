@@ -242,10 +242,10 @@ main {
 }
 
 /* Info Icon */
-.info-icon {
-    margin-left: auto;
+.info-icon,
+.diff-icon {
+    margin-left: 6px;
     padding: 4px 8px;
-    background: #3498db;
     color: white;
     border-radius: 4px;
     font-size: 12px;
@@ -255,12 +255,27 @@ main {
     flex-shrink: 0;
 }
 
-.tree-node:hover .info-icon {
+.info-icon {
+    background: #3498db;
+}
+
+.diff-icon {
+    background: #e67e22;
+}
+
+.tree-node:hover .info-icon,
+.tree-node:hover .diff-icon,
+.info-icon:hover,
+.diff-icon:hover {
     opacity: 1;
 }
 
 .info-icon:hover {
     background: #2980b9;
+}
+
+.diff-icon:hover {
+    background: #d35400;
 }
 
 /* Tree Children */
