@@ -273,9 +273,14 @@ main {
 
 /* Selected node highlighting */
 .tree-node.selected {
-    background: #fff3cd;
-    border-left: 3px solid #f0ad4e;
-    padding-left: 2px;
+    box-shadow: 0 0 0 3px #3498db, 0 0 12px rgba(52, 152, 219, 0.4);
+    outline: 2px solid #3498db;
+    outline-offset: -2px;
+}
+
+/* Ensure selected highlighting works with changed nodes */
+.tree-node.has-changes.selected {
+    box-shadow: 0 0 0 3px #3498db, 0 0 12px rgba(52, 152, 219, 0.4);
 }
 
 /* Tree Children */
