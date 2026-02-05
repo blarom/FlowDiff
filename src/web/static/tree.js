@@ -427,15 +427,19 @@
 
             const data = await response.json();
 
-            // Open diff in external viewer
-            if (data.success && data.method === 'external') {
-                // Diff opened in external viewer
-                console.log('[FlowDiff] Diff opened in external viewer');
+            // If external viewer was attempted, show toast and also show inline diff as fallback
+            if (data.method === 'external' && data.viewer) {
+                console.log('[FlowDiff] Attempted to open in external viewer:', data.viewer);
+                showToast(`Opening in ${data.viewer}...`, 'info');
 
-                // Optionally show a toast notification
-                showToast(`Diff opened in external viewer for ${func.name}`);
+                // Give the external viewer a moment to open, then show inline fallback
+                setTimeout(() => {
+                    if (data.diff_content) {
+                        showInlineDiff(func, data.diff_content);
+                    }
+                }, 1000);
             } else if (data.diff_content) {
-                // Show inline diff (fallback)
+                // No external viewer, show inline diff immediately
                 showInlineDiff(func, data.diff_content);
             } else {
                 throw new Error(data.error || 'No diff available');

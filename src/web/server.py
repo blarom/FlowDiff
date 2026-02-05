@@ -13,6 +13,7 @@ import webbrowser
 import uvicorn
 import subprocess
 import os
+import shutil
 from typing import Optional, Dict
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -98,7 +99,7 @@ def create_app() -> FastAPI:
             qualified_name: Qualified function name (e.g., "src.analyzer.StockAnalyzer.analyze")
 
         Returns:
-            JSON with diff content or indication that external viewer was opened
+            JSON with diff content and external viewer status
         """
         try:
             if _project_path is None:
@@ -114,20 +115,16 @@ def create_app() -> FastAPI:
 
             file_path = func_info["file_path"]
 
+            # Always get diff content as fallback
+            diff_content = _get_file_diff(file_path, _project_path)
+
             # Try to open in external diff viewer
             external_result = _open_external_diff(file_path, _project_path)
-            if external_result["success"]:
-                return JSONResponse({
-                    "success": True,
-                    "method": "external",
-                    "viewer": external_result["viewer"]
-                })
 
-            # Fallback: Get raw diff content
-            diff_content = _get_file_diff(file_path, _project_path)
             return JSONResponse({
                 "success": True,
-                "method": "inline",
+                "method": "external" if external_result["success"] else "inline",
+                "viewer": external_result.get("viewer"),
                 "diff_content": diff_content,
                 "file_path": file_path
             })
@@ -245,38 +242,42 @@ def _open_external_diff(file_path: str, project_path: Path) -> Dict:
         Dict with "success" bool and "viewer" name
     """
     # Convert absolute path to relative path from project root
-    rel_path = Path(file_path).relative_to(project_path) if file_path.startswith(str(project_path)) else file_path
-
-    # Try VS Code
     try:
-        # code --diff <before> <after>
-        result = subprocess.run(
-            ["code", "--diff", f"HEAD:{rel_path}", rel_path],
-            cwd=str(project_path),
-            capture_output=True,
-            timeout=2
-        )
-        if result.returncode == 0:
-            return {"success": True, "viewer": "VS Code"}
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        pass
+        rel_path = Path(file_path).relative_to(project_path)
+    except ValueError:
+        rel_path = file_path
 
-    # Try Difftastic
+    # Try VS Code - check if it exists first
+    if shutil.which("code"):
+        try:
+            result = subprocess.run(
+                ["code", "--diff", f"HEAD:{rel_path}", str(rel_path)],
+                cwd=str(project_path),
+                capture_output=True,
+                timeout=2
+            )
+            if result.returncode == 0:
+                return {"success": True, "viewer": "VS Code"}
+        except (subprocess.TimeoutExpired, Exception):
+            pass
+
+    # Try Difftastic - check if it exists first
+    if shutil.which("difft"):
+        try:
+            subprocess.Popen(
+                ["difft", f"HEAD:{rel_path}", str(rel_path)],
+                cwd=str(project_path),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            return {"success": True, "viewer": "Difftastic"}
+        except Exception:
+            pass
+
+    # Try git difftool - git should always be available
     try:
         subprocess.Popen(
-            ["difft", f"HEAD:{rel_path}", rel_path],
-            cwd=str(project_path),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-        return {"success": True, "viewer": "Difftastic"}
-    except FileNotFoundError:
-        pass
-
-    # Try git difftool
-    try:
-        subprocess.Popen(
-            ["git", "difftool", "--no-prompt", "HEAD", "--", rel_path],
+            ["git", "difftool", "--no-prompt", "HEAD", "--", str(rel_path)],
             cwd=str(project_path),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
