@@ -10,6 +10,7 @@
     let testsHidden = false;
     let changedNodes = [];
     let currentChangedIndex = 0;
+    let currentSelectedNode = null;  // Track currently selected node for keyboard nav
 
     // Initialize
     async function init() {
@@ -522,6 +523,7 @@
 
         // Highlight the clicked node
         nodeElement.classList.add('selected');
+        currentSelectedNode = nodeElement;  // Track for keyboard nav
 
         // Update the change counter to reflect which change this is
         const clickedIndex = changedNodes.indexOf(nodeElement);
@@ -674,21 +676,36 @@
             }
         };
 
-        // Keyboard shortcuts for change navigation (only in diff.html)
-        if (document.getElementById('next-change')) {
-            document.addEventListener('keydown', (e) => {
-                // Only if not typing in search box
-                if (e.target.tagName === 'INPUT') return;
+        // Global keyboard shortcuts for navigation
+        document.addEventListener('keydown', (e) => {
+            // Only if not typing in input/textarea
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-                if (e.key === 'n' || e.key === 'ArrowRight') {
+            // Arrow key navigation
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                navigateDown();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                navigateUp();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                collapseCurrentNode();
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                expandCurrentNode();
+            }
+            // n/p shortcuts for change navigation (only in diff.html)
+            else if (document.getElementById('next-change')) {
+                if (e.key === 'n') {
                     e.preventDefault();
                     jumpToNextChange();
-                } else if (e.key === 'p' || e.key === 'ArrowLeft') {
+                } else if (e.key === 'p') {
                     e.preventDefault();
                     jumpToPrevChange();
                 }
-            });
-        }
+            }
+        });
     }
 
     function displayDiff(diffData) {
@@ -782,6 +799,125 @@
                 counterElem.style.color = '#f0ad4e';
                 counterElem.style.fontWeight = '600';
             }
+        }
+    }
+
+    function getVisibleTreeNodes() {
+        // Get all tree nodes that are currently visible (not in collapsed children)
+        const allNodes = document.querySelectorAll('.tree-node');
+        return Array.from(allNodes).filter(node => {
+            // Check if any parent container is collapsed
+            let parent = node.closest('.tree-children');
+            while (parent) {
+                if (parent.classList.contains('collapsed')) {
+                    return false;
+                }
+                parent = parent.parentElement.closest('.tree-children');
+            }
+            return true;
+        });
+    }
+
+    function selectNode(nodeElement) {
+        // Remove previous selection
+        document.querySelectorAll('.tree-node.selected').forEach(node => {
+            node.classList.remove('selected');
+        });
+
+        // Select the new node
+        nodeElement.classList.add('selected');
+        currentSelectedNode = nodeElement;
+
+        // Get the function data
+        const container = nodeElement.closest('.tree-node-container');
+        const funcNameElem = nodeElement.querySelector('.function-name');
+
+        if (funcNameElem && funcNameElem.dataset.qualifiedName) {
+            // Find function in tree data
+            const qualifiedName = funcNameElem.dataset.qualifiedName;
+
+            // Update change counter if this is a changed node
+            const clickedIndex = changedNodes.indexOf(nodeElement);
+            if (clickedIndex !== -1) {
+                currentChangedIndex = clickedIndex;
+                updateChangeCounter();
+            }
+
+            // Sync with diff panel if it exists
+            if (window.highlightChangeInPanel && nodeElement.classList.contains('has-changes')) {
+                window.highlightChangeInPanel(qualifiedName);
+            }
+        }
+
+        // Scroll to center the node
+        const treeContainer = document.querySelector('.tree-container');
+        if (treeContainer) {
+            const containerRect = treeContainer.getBoundingClientRect();
+            const nodeRect = nodeElement.getBoundingClientRect();
+            const scrollOffset = nodeRect.top - containerRect.top - (containerRect.height / 2) + (nodeRect.height / 2);
+
+            treeContainer.scrollBy({
+                top: scrollOffset,
+                behavior: 'smooth'
+            });
+        }
+    }
+
+    function navigateDown() {
+        const visibleNodes = getVisibleTreeNodes();
+        if (visibleNodes.length === 0) return;
+
+        if (!currentSelectedNode) {
+            // No selection yet, select first node
+            selectNode(visibleNodes[0]);
+        } else {
+            const currentIndex = visibleNodes.indexOf(currentSelectedNode);
+            if (currentIndex >= 0 && currentIndex < visibleNodes.length - 1) {
+                selectNode(visibleNodes[currentIndex + 1]);
+            }
+        }
+    }
+
+    function navigateUp() {
+        const visibleNodes = getVisibleTreeNodes();
+        if (visibleNodes.length === 0) return;
+
+        if (!currentSelectedNode) {
+            // No selection yet, select first node
+            selectNode(visibleNodes[0]);
+        } else {
+            const currentIndex = visibleNodes.indexOf(currentSelectedNode);
+            if (currentIndex > 0) {
+                selectNode(visibleNodes[currentIndex - 1]);
+            }
+        }
+    }
+
+    function expandCurrentNode() {
+        if (!currentSelectedNode) return;
+
+        const container = currentSelectedNode.closest('.tree-node-container');
+        if (!container) return;
+
+        const expand = container.querySelector('.tree-expand');
+        const children = container.querySelector('.tree-children');
+
+        if (expand && children && expand.classList.contains('collapsed')) {
+            toggleNode(container.dataset.path);
+        }
+    }
+
+    function collapseCurrentNode() {
+        if (!currentSelectedNode) return;
+
+        const container = currentSelectedNode.closest('.tree-node-container');
+        if (!container) return;
+
+        const expand = container.querySelector('.tree-expand');
+        const children = container.querySelector('.tree-children');
+
+        if (expand && children && expand.classList.contains('expanded')) {
+            toggleNode(container.dataset.path);
         }
     }
 
