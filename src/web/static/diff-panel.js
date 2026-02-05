@@ -155,4 +155,31 @@
         }
     }
 
+    function highlightChangeInPanel(qualifiedName) {
+        // Find the corresponding changed function in the diff panel
+        const changedFunctions = document.querySelectorAll('.changed-function');
+
+        // Remove previous selection
+        changedFunctions.forEach(elem => {
+            elem.classList.remove('selected');
+        });
+
+        // Find and highlight the matching function
+        for (const elem of changedFunctions) {
+            const nameElem = elem.querySelector('.changed-function-name');
+            const locationElem = elem.querySelector('.changed-function-location');
+
+            // Check if this is the matching function by comparing qualified name
+            // We need to reconstruct the qualified name from the displayed info
+            if (locationElem && locationElem.textContent.includes(qualifiedName.split('.').pop())) {
+                elem.classList.add('selected');
+                elem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                break;
+            }
+        }
+    }
+
+    // Expose function for tree.js to call
+    window.highlightChangeInPanel = highlightChangeInPanel;
+
 })();

@@ -263,6 +263,12 @@ main {
     background: #e67e22;
 }
 
+/* Show diff icon by default for changed nodes */
+.tree-node.has-changes .diff-icon {
+    opacity: 1;
+}
+
+/* Show both icons on hover */
 .tree-node:hover .info-icon,
 .tree-node:hover .diff-icon,
 .info-icon:hover,
@@ -276,6 +282,13 @@ main {
 
 .diff-icon:hover {
     background: #d35400;
+}
+
+/* Selected node highlighting */
+.tree-node.selected {
+    background: #fff3cd;
+    border-left: 3px solid #f0ad4e;
+    padding-left: 2px;
 }
 
 /* Tree Children */
