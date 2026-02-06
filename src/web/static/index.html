@@ -30,7 +30,11 @@
         <div class="controls">
             <button id="expand-all">Expand All</button>
             <button id="collapse-all">Collapse All</button>
-            <button id="toggle-tests" class="toggle-btn">Hide Tests</button>
+            <input type="text" id="filter-regex" placeholder="Filter regex..." style="width: 150px;" title="Enter regex to filter tree nodes" />
+            <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; margin-left: 4px;">
+                <input type="checkbox" id="filter-top-level-only" title="Filter only top-level entry points" />
+                <span>Top-level only</span>
+            </label>
             <button id="show-diff" class="diff-btn">Show Diff</button>
             <input type="text" id="search" placeholder="Search functions..." />
         </div>

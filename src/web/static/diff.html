@@ -111,7 +111,11 @@
             <button id="prev-change" class="diff-btn" title="Jump to previous changed function (← or P)">◀ Prev</button>
             <span id="change-counter" style="padding: 0 8px; color: #7f8c8d; font-size: 14px; font-weight: 500;">-</span>
             <button id="next-change" class="diff-btn" title="Jump to next changed function (→ or N)">Next ▶</button>
-            <button id="toggle-tests" class="toggle-btn">Hide Tests</button>
+            <input type="text" id="filter-regex" placeholder="Filter regex..." style="width: 150px;" title="Enter regex to filter tree nodes" />
+            <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; margin-left: 4px;">
+                <input type="checkbox" id="filter-top-level-only" title="Filter only top-level entry points" />
+                <span>Top-level only</span>
+            </label>
             <input type="text" id="search" placeholder="Search functions..." />
         </div>
 

@@ -7,7 +7,8 @@
     let expandedNodes = new Set();
     let searchMatches = [];
     let currentSearchIndex = 0;
-    let testsHidden = false;
+    let filterRegex = null;
+    let filterTopLevelOnly = false;
     let changedNodes = [];
     let currentChangedIndex = 0;
     let currentSelectedNode = null;  // Track currently selected node for keyboard nav
@@ -103,18 +104,16 @@
 
         // Render each entry point tree as a separate collapsed section
         window.treeData.trees.forEach((tree, index) => {
-            const treeSection = document.createElement('div');
-            treeSection.className = 'entry-point-tree';
-
-            // Mark test trees
-            const fileName = tree.function.file_name.toLowerCase();
-            const funcName = tree.function.name.toLowerCase();
-            if (fileName.includes('test') || funcName.includes('test')) {
-                treeSection.dataset.isTest = 'true';
-                if (testsHidden) {
-                    treeSection.classList.add('hidden-test');
+            // Apply filter if set
+            if (filterRegex && filterTopLevelOnly) {
+                // Filter top-level only: hide if root doesn't match
+                if (!filterRegex.test(tree.function.name) && !filterRegex.test(tree.function.file_name)) {
+                    return; // Skip this tree
                 }
             }
+
+            const treeSection = document.createElement('div');
+            treeSection.className = 'entry-point-tree';
 
             const treeElement = renderNode(tree, 0, `tree-${index}`);
             treeSection.appendChild(treeElement);
@@ -155,6 +154,15 @@
     }
 
     function renderNode(node, depth, path) {
+        // Apply filter if set (for all nodes, not just top-level)
+        if (filterRegex && !filterTopLevelOnly) {
+            // Check if this node matches
+            if (!filterRegex.test(node.function.name) && !filterRegex.test(node.function.file_name)) {
+                // Node doesn't match - don't render it
+                return document.createDocumentFragment(); // Return empty fragment
+            }
+        }
+
         const div = document.createElement('div');
         div.className = 'tree-node-container';
         div.dataset.path = path;
@@ -574,23 +582,31 @@
         nodeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    function toggleTests() {
-        testsHidden = !testsHidden;
-        const btn = document.getElementById('toggle-tests');
+    function applyFilter() {
+        const regexInput = document.getElementById('filter-regex');
+        const topLevelOnlyCheckbox = document.getElementById('filter-top-level-only');
 
-        if (testsHidden) {
-            btn.textContent = 'Show Tests';
-            btn.classList.add('active');
-            document.querySelectorAll('.entry-point-tree[data-is-test="true"]').forEach(tree => {
-                tree.classList.add('hidden-test');
-            });
+        const regexStr = regexInput ? regexInput.value.trim() : '';
+        filterTopLevelOnly = topLevelOnlyCheckbox ? topLevelOnlyCheckbox.checked : false;
+
+        // Update filter regex
+        if (regexStr) {
+            try {
+                filterRegex = new RegExp(regexStr, 'i'); // Case-insensitive
+            } catch (e) {
+                // Invalid regex, show error briefly
+                regexInput.style.borderColor = '#e74c3c';
+                setTimeout(() => {
+                    regexInput.style.borderColor = '';
+                }, 1000);
+                return;
+            }
         } else {
-            btn.textContent = 'Hide Tests';
-            btn.classList.remove('active');
-            document.querySelectorAll('.entry-point-tree[data-is-test="true"]').forEach(tree => {
-                tree.classList.remove('hidden-test');
-            });
+            filterRegex = null;
         }
+
+        // Re-render tree with filter applied
+        renderTree();
     }
 
     function setupEventListeners() {
@@ -626,10 +642,14 @@
             });
         };
 
-        // Toggle tests (optional - only in index.html)
-        const toggleTestsBtn = document.getElementById('toggle-tests');
-        if (toggleTestsBtn) {
-            toggleTestsBtn.onclick = toggleTests;
+        // Filter controls
+        const filterRegexInput = document.getElementById('filter-regex');
+        const filterTopLevelCheckbox = document.getElementById('filter-top-level-only');
+        if (filterRegexInput) {
+            filterRegexInput.oninput = applyFilter;
+        }
+        if (filterTopLevelCheckbox) {
+            filterTopLevelCheckbox.onchange = applyFilter;
         }
 
         // Jump to next change (only in diff.html)
