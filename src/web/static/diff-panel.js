@@ -101,7 +101,8 @@
 
         const location = document.createElement('div');
         location.className = 'changed-function-location';
-        location.textContent = `${func.file_path}:${func.line_number}`;
+        // Show only filename:line instead of full path
+        location.textContent = `${func.file_name}:${func.line_number}`;
 
         div.appendChild(name);
         div.appendChild(location);

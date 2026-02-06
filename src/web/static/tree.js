@@ -459,22 +459,39 @@
         }
 
         document.getElementById('diff-modal-title').textContent = `Diff: ${func.name}`;
-        document.getElementById('diff-modal-content').innerHTML = `<pre><code>${escapeHtml(diffContent)}</code></pre>`;
+
+        const contentDiv = document.getElementById('diff-modal-content');
+        contentDiv.innerHTML = ''; // Clear previous content
+
+        // Use diff2html to render the diff with syntax highlighting
+        if (window.Diff2Html) {
+            const diffHtml = Diff2Html.html(diffContent, {
+                drawFileList: false,
+                matching: 'lines',
+                outputFormat: 'side-by-side',
+                renderNothingWhenEmpty: false,
+            });
+            contentDiv.innerHTML = diffHtml;
+        } else {
+            // Fallback if diff2html isn't loaded
+            contentDiv.innerHTML = `<pre><code>${escapeHtml(diffContent)}</code></pre>`;
+        }
+
         modal.classList.remove('hidden');
     }
 
     function createDiffModal() {
         const modal = document.createElement('div');
         modal.id = 'diff-modal';
-        modal.className = 'modal hidden';
+        modal.className = 'diff-modal';
         modal.innerHTML = `
-            <div class="modal-overlay"></div>
-            <div class="modal-content">
-                <div class="modal-header">
+            <div class="diff-modal-overlay"></div>
+            <div class="diff-modal-content">
+                <div class="diff-modal-header">
                     <h3 id="diff-modal-title">Diff</h3>
-                    <button class="modal-close" onclick="document.getElementById('diff-modal').classList.add('hidden')">×</button>
+                    <button class="diff-modal-close" id="close-diff-modal-btn">×</button>
                 </div>
-                <div class="modal-body">
+                <div class="diff-modal-body">
                     <div id="diff-modal-content"></div>
                 </div>
             </div>
@@ -482,9 +499,21 @@
         document.body.appendChild(modal);
 
         // Close on overlay click
-        modal.querySelector('.modal-overlay').onclick = () => {
+        modal.querySelector('.diff-modal-overlay').onclick = () => {
             modal.classList.add('hidden');
         };
+
+        // Close on close button click
+        modal.querySelector('#close-diff-modal-btn').onclick = () => {
+            modal.classList.add('hidden');
+        };
+
+        // Close on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+            }
+        });
 
         return modal;
     }
