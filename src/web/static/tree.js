@@ -150,13 +150,15 @@
                 }
             }
 
-            const treeSection = document.createElement('div');
-            treeSection.className = 'entry-point-tree';
-
             const treeElement = renderNode(tree, 0, `tree-${index}`);
-            treeSection.appendChild(treeElement);
 
-            container.appendChild(treeSection);
+            // Only create container if node was actually rendered (not filtered out)
+            if (treeElement.childNodes.length > 0) {
+                const treeSection = document.createElement('div');
+                treeSection.className = 'entry-point-tree';
+                treeSection.appendChild(treeElement);
+                container.appendChild(treeSection);
+            }
         });
 
         // Mark paths to changed nodes
