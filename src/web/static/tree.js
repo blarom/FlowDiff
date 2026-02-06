@@ -246,10 +246,10 @@
         const label = document.createElement('span');
         label.className = 'tree-label';
         label.onclick = () => {
-            // If this is a changed node, select it and sync with diff panel
-            if (node.function.has_changes) {
-                selectChangedNode(nodeDiv, node.function);
-            }
+            // Always select the node (changed or not)
+            // selectNode already handles diff panel sync for changed nodes
+            selectNode(nodeDiv);
+
             // Always toggle node expansion
             toggleNode(path);
         };
@@ -627,32 +627,6 @@
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
-    }
-
-    function selectChangedNode(nodeElement, func) {
-        // Remove previous selection
-        document.querySelectorAll('.tree-node.selected').forEach(node => {
-            node.classList.remove('selected');
-        });
-
-        // Highlight the clicked node
-        nodeElement.classList.add('selected');
-        currentSelectedNode = nodeElement;  // Track for keyboard nav
-
-        // Update the change counter to reflect which change this is
-        const clickedIndex = changedNodes.indexOf(nodeElement);
-        if (clickedIndex !== -1) {
-            currentChangedIndex = clickedIndex;
-            updateChangeCounter();
-        }
-
-        // Sync with diff panel if it exists (in diff-panel.js)
-        if (window.highlightChangeInPanel) {
-            window.highlightChangeInPanel(func.qualified_name);
-        }
-
-        // Scroll to the node to make sure it's visible
-        nodeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function applyFilter() {
