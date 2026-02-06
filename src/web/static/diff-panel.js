@@ -17,6 +17,7 @@
 
     function populateDiffPanel() {
         const changedFunctions = extractChangedFunctions(window.treeData.trees);
+        const deletedFunctions = window.treeData.deleted_functions || [];
 
         // Update stats from metadata if available
         const metadata = window.treeData.metadata;
@@ -26,14 +27,14 @@
             document.getElementById('stat-deleted').textContent = metadata.functions_deleted;
         } else {
             // Fallback to local counting
-            const stats = countChanges(changedFunctions);
+            const stats = countChanges(changedFunctions, deletedFunctions);
             document.getElementById('stat-modified').textContent = stats.modified;
             document.getElementById('stat-added').textContent = stats.added;
             document.getElementById('stat-deleted').textContent = stats.deleted;
         }
 
         // Render changed functions list
-        renderChangedFunctions(changedFunctions);
+        renderChangedFunctions(changedFunctions, deletedFunctions);
     }
 
     function extractChangedFunctions(trees) {
@@ -57,20 +58,56 @@
         return changed;
     }
 
-    function countChanges(functions) {
+    function extractDeletedFunctions(beforeTrees, afterTrees) {
+        if (!beforeTrees || !afterTrees) {
+            return [];
+        }
+
+        // Build a set of all qualified names in after_tree
+        const afterNames = new Set();
+        function collectAfterNames(node) {
+            afterNames.add(node.function.qualified_name);
+            if (node.children) {
+                node.children.forEach(child => collectAfterNames(child));
+            }
+        }
+        afterTrees.forEach(tree => collectAfterNames(tree));
+
+        // Find functions in before_tree that have changes but don't exist in after_tree
+        const deleted = [];
+        const seen = new Set();
+
+        function findDeleted(node) {
+            // If this function has changes AND doesn't exist in after tree, it's deleted
+            if (node.function.has_changes && !afterNames.has(node.function.qualified_name)) {
+                if (!seen.has(node.function.qualified_name)) {
+                    seen.add(node.function.qualified_name);
+                    deleted.push(node.function);
+                }
+            }
+            if (node.children) {
+                node.children.forEach(child => findDeleted(child));
+            }
+        }
+
+        beforeTrees.forEach(tree => findDeleted(tree));
+        return deleted;
+    }
+
+    function countChanges(functions, deletedFunctions) {
         // For now, we only track modified
         // Can enhance later to distinguish added/deleted
         return {
             modified: functions.length,
             added: 0,
-            deleted: 0
+            deleted: deletedFunctions ? deletedFunctions.length : 0
         };
     }
 
-    function renderChangedFunctions(functions) {
+    function renderChangedFunctions(functions, deletedFunctions) {
         const container = document.getElementById('changed-functions');
 
-        if (functions.length === 0) {
+        if (functions.length === 0 && (!deletedFunctions || deletedFunctions.length === 0)) {
             const metadata = window.treeData.metadata;
             let message = '<div style="color: #999; text-align: center; padding: 2rem; line-height: 1.6;">';
             message += '<div style="font-size: 48px; margin-bottom: 1rem;">✓</div>';
@@ -96,10 +133,34 @@
         }
 
         container.innerHTML = '';
-        functions.forEach(func => {
-            const elem = createChangedFunctionElement(func);
-            container.appendChild(elem);
-        });
+
+        // Render deleted functions first (if any)
+        if (deletedFunctions && deletedFunctions.length > 0) {
+            const deletedHeader = document.createElement('div');
+            deletedHeader.className = 'changes-section-header';
+            deletedHeader.style.cssText = 'padding: 0.5rem 1rem; background: #2a1a1a; color: #ff6b6b; font-weight: 600; font-size: 0.9rem; border-left: 3px solid #ff6b6b;';
+            deletedHeader.textContent = `🔴 Deleted (${deletedFunctions.length})`;
+            container.appendChild(deletedHeader);
+
+            deletedFunctions.forEach(func => {
+                const elem = createDeletedFunctionElement(func);
+                container.appendChild(elem);
+            });
+        }
+
+        // Render modified/added functions
+        if (functions.length > 0) {
+            const changedHeader = document.createElement('div');
+            changedHeader.className = 'changes-section-header';
+            changedHeader.style.cssText = 'padding: 0.5rem 1rem; background: #1a251a; color: #90ee90; font-weight: 600; font-size: 0.9rem; border-left: 3px solid #90ee90; margin-top: 0.5rem;';
+            changedHeader.textContent = `🟡 Modified/Added (${functions.length})`;
+            container.appendChild(changedHeader);
+
+            functions.forEach(func => {
+                const elem = createChangedFunctionElement(func);
+                container.appendChild(elem);
+            });
+        }
     }
 
     function getTimeAgo(date) {
@@ -131,6 +192,46 @@
         // Click to scroll to function in tree
         div.addEventListener('click', () => {
             scrollToFunction(func.qualified_name);
+        });
+
+        return div;
+    }
+
+    function createDeletedFunctionElement(func) {
+        const div = document.createElement('div');
+        div.className = 'changed-function deleted-function';
+        div.dataset.qualifiedName = func.qualified_name;  // Store for matching
+        div.style.cssText = 'background: #2a1a1a; border-left: 3px solid #ff6b6b; opacity: 0.9; cursor: pointer;';
+
+        const name = document.createElement('div');
+        name.className = 'changed-function-name';
+        name.style.cssText = 'text-decoration: line-through; color: #ff6b6b;';
+        name.textContent = func.name;
+
+        const location = document.createElement('div');
+        location.className = 'changed-function-location';
+        location.style.cssText = 'color: #ff9999;';
+        // Show only filename:line instead of full path
+        location.textContent = `${func.file_name}:${func.line_number}`;
+
+        div.appendChild(name);
+        div.appendChild(location);
+
+        // Add click handler to switch to before view and show this function
+        div.addEventListener('click', () => {
+            if (window.showInBeforeTree) {
+                window.showInBeforeTree(func.qualified_name);
+            }
+        });
+
+        // Add hover effect
+        div.addEventListener('mouseenter', () => {
+            div.style.opacity = '1';
+            div.style.boxShadow = '0 2px 4px rgba(255, 107, 107, 0.3)';
+        });
+        div.addEventListener('mouseleave', () => {
+            div.style.opacity = '0.9';
+            div.style.boxShadow = 'none';
         });
 
         return div;

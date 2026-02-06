@@ -14,6 +14,7 @@
     let changedNodes = [];
     let currentChangedIndex = 0;
     let currentSelectedNode = null;  // Track currently selected node for keyboard nav
+    let currentTreeView = 'after';  // 'before' or 'after'
 
     // Initialize
     async function init() {
@@ -155,8 +156,11 @@
         const container = document.getElementById('call-tree');
         container.innerHTML = '';
 
+        // Choose which tree to render based on current view
+        const trees = currentTreeView === 'before' ? window.treeData.before_trees : window.treeData.trees;
+
         // Render each entry point tree as a separate collapsed section
-        window.treeData.trees.forEach((tree, index) => {
+        trees.forEach((tree, index) => {
             // Apply top-level filters
             if (includeFilterTopLevelOnly && includeFilterRegex) {
                 // Include filter: skip if root doesn't match
@@ -639,24 +643,36 @@
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
         toast.textContent = message;
+
+        let bgColor, duration;
+        if (type === 'error') {
+            bgColor = '#e74c3c';
+            duration = 3000;
+        } else {
+            bgColor = '#3498db';
+            duration = 5000; // Longer for info messages
+        }
+
         toast.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
             padding: 12px 20px;
-            background: ${type === 'error' ? '#e74c3c' : '#3498db'};
+            background: ${bgColor};
             color: white;
             border-radius: 4px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             z-index: 10000;
             animation: slideIn 0.3s ease;
+            max-width: 400px;
+            line-height: 1.4;
         `;
         document.body.appendChild(toast);
 
         setTimeout(() => {
             toast.style.animation = 'slideOut 0.3s ease';
             setTimeout(() => toast.remove(), 300);
-        }, 3000);
+        }, duration);
     }
 
     function escapeHtml(text) {
@@ -751,6 +767,30 @@
                 }
             });
         };
+
+        // Toggle tree view (before/after)
+        const toggleBtn = document.getElementById('toggle-tree-view');
+        if (toggleBtn) {
+            toggleBtn.onclick = () => {
+                currentTreeView = currentTreeView === 'after' ? 'before' : 'after';
+
+                // Update button styling and text
+                if (currentTreeView === 'before') {
+                    toggleBtn.textContent = 'Before (Reference)';
+                    toggleBtn.style.background = '#fff';
+                    toggleBtn.style.borderColor = '#e74c3c';
+                    toggleBtn.style.color = '#e74c3c';
+                } else {
+                    toggleBtn.textContent = 'After (Current)';
+                    toggleBtn.style.background = '#fff';
+                    toggleBtn.style.borderColor = '#4CAF50';
+                    toggleBtn.style.color = '#4CAF50';
+                }
+
+                // Re-render tree with new view
+                renderTree();
+            };
+        }
 
         // Filter controls
         const includeRegexInput = document.getElementById('filter-include-regex');
@@ -1167,4 +1207,65 @@
 
     // Expose selectNode globally for diff-panel.js to use
     window.selectTreeNode = selectNode;
+
+    // Expose function to switch to before view and scroll to function
+    window.showInBeforeTree = function(qualifiedName) {
+        // Switch to before view if not already
+        if (currentTreeView !== 'before') {
+            currentTreeView = 'before';
+
+            // Update toggle button
+            const toggleBtn = document.getElementById('toggle-tree-view');
+            if (toggleBtn) {
+                toggleBtn.textContent = 'Before (Reference)';
+                toggleBtn.style.background = '#fff';
+                toggleBtn.style.borderColor = '#e74c3c';
+                toggleBtn.style.color = '#e74c3c';
+            }
+
+            // Re-render tree with before view
+            renderTree();
+        }
+
+        // Now find and scroll to the function
+        const functionNames = document.querySelectorAll('.function-name');
+        let found = false;
+
+        for (const nameElem of functionNames) {
+            if (nameElem.dataset.qualifiedName === qualifiedName) {
+                found = true;
+                const node = nameElem.closest('.tree-node');
+                if (node) {
+                    // Expand parent nodes to reveal the function
+                    let container = node.closest('.tree-node-container');
+                    while (container) {
+                        const parent = container.parentElement.closest('.tree-node-container');
+                        if (parent) {
+                            const expand = parent.querySelector('.tree-expand');
+                            const children = parent.querySelector('.tree-children');
+
+                            // If collapsed, expand it
+                            if (expand && children && expand.classList.contains('collapsed')) {
+                                expand.classList.remove('collapsed');
+                                expand.classList.add('expanded');
+                                children.classList.remove('collapsed');
+                            }
+                        }
+                        container = parent;
+                    }
+
+                    // Use existing selectNode function
+                    selectNode(node);
+                }
+                break;
+            }
+        }
+
+        if (!found) {
+            // Extract just the function name for display
+            const displayName = qualifiedName.split('::').pop() || qualifiedName;
+
+            showToast(`"${displayName}" was deleted but wasn't part of any active flow, so it has no representation in the flow tree`, 'info');
+        }
+    };
 })();

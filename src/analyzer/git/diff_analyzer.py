@@ -71,15 +71,71 @@ class GitDiffAnalyzer:
         symbol_changes: Dict[str, SymbolChange],
         is_before: bool
     ) -> List[CallTreeNode]:
-        """Build call tree with has_changes populated.
+        """Build call tree at specific ref with has_changes populated.
 
-        Note: We always build the tree from the current working directory,
-        but mark which nodes have changes based on symbol_changes.
+        Args:
+            ref: Git ref (SHA or "working" for working directory)
+            symbol_changes: Detected changes to mark in tree
+            is_before: Whether this is the before tree
+
+        Returns:
+            List of call trees built from the specified ref
         """
-        adapter = CallTreeAdapter(self.project_root)
+        import tempfile
+        import subprocess
 
-        # First, run analysis to populate symbol tables
-        adapter.symbol_tables = adapter.orchestrator.analyze()
+        # Determine if we need to checkout to temp directory
+        # Use working directory if ref is None or "working"
+        use_working_dir = ref is None or ref == "working"
+
+        if use_working_dir:
+            # Build from working directory
+            adapter = CallTreeAdapter(self.project_root)
+            adapter.symbol_tables = adapter.orchestrator.analyze()
+            build_path = self.project_root
+        else:
+            # Checkout ref to temp directory
+            with tempfile.TemporaryDirectory() as tmpdir:
+                tmp_path = Path(tmpdir) / "checkout"
+                tmp_path.mkdir()
+
+                # Use git archive to extract ref
+                archive_process = subprocess.Popen(
+                    ["git", "archive", ref],
+                    cwd=self.project_root,
+                    stdout=subprocess.PIPE
+                )
+
+                subprocess.run(
+                    ["tar", "-x", "-C", str(tmp_path)],
+                    stdin=archive_process.stdout,
+                    check=True
+                )
+
+                archive_process.wait()
+                if archive_process.returncode != 0:
+                    raise subprocess.CalledProcessError(archive_process.returncode, ["git", "archive", ref])
+
+                # Build tree from checkout
+                adapter = CallTreeAdapter(tmp_path)
+                adapter.symbol_tables = adapter.orchestrator.analyze()
+                build_path = tmp_path
+
+                # Continue with tree building inside the with block
+                # so temp directory doesn't get deleted before we're done
+                return self._build_tree_from_adapter(adapter, symbol_changes, ref, is_before)
+
+        # For working directory, build tree outside temp directory context
+        return self._build_tree_from_adapter(adapter, symbol_changes, ref, is_before)
+
+    def _build_tree_from_adapter(
+        self,
+        adapter: CallTreeAdapter,
+        symbol_changes: Dict[str, SymbolChange],
+        ref: Optional[str],
+        is_before: bool
+    ) -> List[CallTreeNode]:
+        """Build tree from an adapter with symbol tables already populated."""
 
         # Build unified symbol map
         for table in adapter.symbol_tables.values():

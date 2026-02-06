@@ -152,8 +152,25 @@ def analyze(
 
             # Build tree data from diff result (has changes marked)
             from datetime import datetime
+
+            # Extract deleted functions from symbol_changes
+            deleted_functions = []
+            for qname, symbol_change in diff_result.symbol_changes.items():
+                if symbol_change.change_type.value == "D" and symbol_change.before_symbol:
+                    # Convert Symbol to a serializable dict
+                    deleted_functions.append({
+                        "name": symbol_change.before_symbol.name,
+                        "qualified_name": symbol_change.before_symbol.qualified_name,
+                        "file_path": symbol_change.before_symbol.file_path,
+                        "file_name": symbol_change.before_symbol.file_path.split('/')[-1] if symbol_change.before_symbol.file_path else "",
+                        "line_number": symbol_change.before_symbol.line_number,
+                        "has_changes": True
+                    })
+
             tree_data = {
                 "trees": [_serialize_tree_node(tree) for tree in diff_result.after_tree],
+                "before_trees": [_serialize_tree_node(tree) for tree in diff_result.before_tree],
+                "deleted_functions": deleted_functions,
                 "metadata": {
                     "project": project_path.name,
                     "run_dir": str(Path.cwd()),
@@ -210,11 +227,28 @@ def analyze(
     log_print("")
     log_print("[green]✓ Preparing visualization data...[/green]")
 
-    # Use the after_tree from diff_result (already has changes marked)
+    # Use both trees from diff_result (already have changes marked)
     trees = diff_result.after_tree
+    before_trees = diff_result.before_tree
+
+    # Extract deleted functions from symbol_changes
+    deleted_functions = []
+    for qname, symbol_change in diff_result.symbol_changes.items():
+        if symbol_change.change_type.value == "D" and symbol_change.before_symbol:
+            # Convert Symbol to a serializable dict
+            deleted_functions.append({
+                "name": symbol_change.before_symbol.name,
+                "qualified_name": symbol_change.before_symbol.qualified_name,
+                "file_path": symbol_change.before_symbol.file_path,
+                "file_name": symbol_change.before_symbol.file_path.split('/')[-1] if symbol_change.before_symbol.file_path else "",
+                "line_number": symbol_change.before_symbol.line_number,
+                "has_changes": True
+            })
 
     tree_data = {
         "trees": [_serialize_tree_node(tree) for tree in trees],
+        "before_trees": [_serialize_tree_node(tree) for tree in before_trees],
+        "deleted_functions": deleted_functions,
         "metadata": {
             "project": project_path.name,
             "run_dir": str(Path.cwd()),
