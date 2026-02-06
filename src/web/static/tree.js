@@ -251,7 +251,7 @@
         if (node.function.name.startsWith('<script:')) {
             icon.textContent = '🚀';  // Rocket for server scripts
         } else {
-            icon.textContent = node.function.is_entry_point ? '🎯' : '📦';
+            icon.textContent = node.function.is_entry_point ? '🎯' : ''; //📦
         }
         nodeDiv.appendChild(icon);
 
@@ -875,9 +875,18 @@
 
         if (query.length < 2) return;
 
+        // Try to compile as regex, fall back to literal string search
+        let searchRegex;
+        try {
+            searchRegex = new RegExp(query, 'i'); // Case-insensitive
+        } catch (e) {
+            // Invalid regex, treat as literal string
+            searchRegex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+        }
+
         // Find matches
         document.querySelectorAll('.function-name').forEach(el => {
-            if (el.textContent.toLowerCase().includes(query)) {
+            if (searchRegex.test(el.textContent)) {
                 el.classList.add('search-highlight');
                 el.closest('.tree-node').classList.add('search-match');
                 searchMatches.push(el);
