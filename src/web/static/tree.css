@@ -477,8 +477,8 @@ main {
 /* Path to changed function highlighting */
 .tree-node.path-to-change {
     position: relative;
-    background: linear-gradient(to right, #fff9e6 0%, #fffdf5 100%);
-    border-left: 3px solid #ffd966;
+    background: linear-gradient(to right, #fff9e6 0%, #fffdf5 100%) !important;
+    border-left: 3px solid #ffd966 !important;
     margin-left: -3px;
     margin-top: 1px;
     margin-bottom: 1px;
@@ -486,7 +486,7 @@ main {
 
 .tree-node.path-to-change .function-name {
     font-weight: 600;
-    color: #997404;
+    color: #997404 !important;
 }
 
 .tree-node.path-to-change .tree-icon {
@@ -494,25 +494,25 @@ main {
 }
 
 .tree-node.path-to-change .tree-indent {
-    color: #ffd966;
+    color: #ffd966 !important;
     font-weight: 700;
 }
 
 /* Changed function highlighting (stronger than path) */
 .tree-node.has-changes {
     position: relative;
-    background: linear-gradient(to right, #fff3cd 0%, #fff9e6 100%);
-    border-left: 4px solid #f0ad4e;
+    background: linear-gradient(to right, #fff3cd 0%, #fff9e6 100%) !important;
+    border-left: 4px solid #f0ad4e !important;
     margin-left: -4px;
     margin-top: 2px;
     margin-bottom: 2px;
     border-radius: 3px;
-    box-shadow: 0 1px 3px rgba(240, 173, 78, 0.2);
+    box-shadow: 0 1px 3px rgba(240, 173, 78, 0.2) !important;
 }
 
 .tree-node.has-changes .function-name {
     font-weight: 700;
-    color: #856404;
+    color: #856404 !important;
 }
 
 .tree-node.has-changes .tree-icon {
@@ -520,7 +520,7 @@ main {
 }
 
 .tree-node.has-changes .tree-indent {
-    color: #f0ad4e;
+    color: #f0ad4e !important;
     font-weight: 700;
 }
 
