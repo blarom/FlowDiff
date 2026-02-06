@@ -96,16 +96,20 @@
 
     <div class="container">
         <header>
-            <h1>FlowDiff - Call Tree with Diff</h1>
-            <div class="stats" id="stats">
-                <span id="project-name"></span>
-                <span id="function-count"></span>
-                <span id="entry-points"></span>
-            </div>
-            <div class="stats" id="comparison-info" style="margin-top: 8px; font-size: 13px;">
-                <span id="before-ref"></span>
-                <span style="color: #95a5a6;">→</span>
-                <span id="after-ref"></span>
+            <h1>FlowDiff</h1>
+            <div class="header-info">
+                <div class="header-row">
+                    <span class="header-label">Run dir:</span>
+                    <span id="run-dir" class="header-value"></span>
+                </div>
+                <div class="header-row">
+                    <span class="header-label">Analysis:</span>
+                    <span id="analysis-info" class="header-value"></span>
+                </div>
+                <div class="header-row">
+                    <span class="header-label">Diff:</span>
+                    <span id="diff-info" class="header-value"></span>
+                </div>
             </div>
         </header>
 

@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 from typing import Optional, Dict
 from datetime import datetime
+import os
 import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -145,6 +146,9 @@ def analyze(
                 "trees": [_serialize_tree_node(tree) for tree in diff_result.after_tree],
                 "metadata": {
                     "project": project_path.name,
+                    "run_dir": str(Path.cwd()),
+                    "input_path": str(project_path),
+                    "function_count": count_functions(diff_result.after_tree),
                     "before_ref": diff_result.before_ref,
                     "after_ref": diff_result.after_ref,
                     "functions_added": diff_result.functions_added,
@@ -209,6 +213,8 @@ def analyze(
         "trees": [_serialize_tree_node(tree) for tree in trees],
         "metadata": {
             "project": project_path.name,
+            "run_dir": str(Path.cwd()),
+            "input_path": str(project_path),
             "function_count": count_functions(trees),
             "entry_point_count": len(trees),
             "before_ref": diff_result.before_ref,

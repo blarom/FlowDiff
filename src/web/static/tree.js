@@ -85,16 +85,46 @@
     }
 
     function updateStats() {
-        document.getElementById('project-name').textContent = window.treeData.metadata.project;
-        document.getElementById('function-count').textContent = `${window.treeData.metadata.function_count} functions`;
-        document.getElementById('entry-points').textContent = `${window.treeData.trees.length} entry points`;
+        const metadata = window.treeData.metadata;
 
-        // Update comparison info if available (diff.html only)
-        const beforeRef = document.getElementById('before-ref');
-        const afterRef = document.getElementById('after-ref');
-        if (beforeRef && afterRef && window.treeData.metadata.before_ref) {
-            beforeRef.textContent = `Before: ${window.treeData.metadata.before_ref}`;
-            afterRef.textContent = `After: ${window.treeData.metadata.after_ref}`;
+        // Update run directory (use ~ for home directory shorthand if applicable)
+        const runDir = metadata.run_dir || '';
+        const homeDir = runDir.includes('/Users/') ? runDir.replace(/^\/Users\/[^\/]+/, '~') : runDir;
+        const runDirElem = document.getElementById('run-dir');
+        if (runDirElem) {
+            runDirElem.textContent = homeDir;
+        }
+
+        // Update analysis info: "<input_path> (X functions, Y entry points)"
+        const analysisInfoElem = document.getElementById('analysis-info');
+        if (analysisInfoElem) {
+            const inputPath = metadata.input_path || metadata.project || '';
+            const shortPath = inputPath.includes('/Users/') ? inputPath.replace(/^\/Users\/[^\/]+/, '~') : inputPath;
+            const funcCount = metadata.function_count || 0;
+            const entryCount = metadata.entry_point_count || window.treeData.trees.length;
+            analysisInfoElem.textContent = `${shortPath} (${funcCount} functions, ${entryCount} entry points)`;
+        }
+
+        // Update diff info (only in diff.html)
+        const diffInfoElem = document.getElementById('diff-info');
+        if (diffInfoElem && metadata.before_ref) {
+            const beforeDesc = formatRefDescription(metadata.before_ref);
+            const afterDesc = formatRefDescription(metadata.after_ref);
+            diffInfoElem.innerHTML = `Current flow <strong>${afterDesc}</strong> compared with reference flow <strong>${beforeDesc}</strong>`;
+        }
+    }
+
+    function formatRefDescription(ref) {
+        // Format git ref for display
+        if (ref === 'working') {
+            return 'Latest uncommitted changes';
+        } else if (ref === 'HEAD') {
+            return 'Latest commit';
+        } else if (ref.startsWith('HEAD~')) {
+            const n = ref.substring(5) || '1';
+            return `${n} commit${n === '1' ? '' : 's'} ago`;
+        } else {
+            return `Commit ${ref}`;
         }
     }
 
