@@ -274,6 +274,45 @@ def _serialize_tree_node(node) -> dict:
 
 
 @app.command()
+def diff(
+    path: Path = typer.Argument(".", help="Path to git repository"),
+    ref: str = typer.Option("HEAD", "--ref", "-r", help="Reference/old state (commit, branch, tag)"),
+    new: str = typer.Option("working", "--new", "-n", help="New state (commit, branch, tag, or 'working' for uncommitted)"),
+    port: int = typer.Option(8080, "--port", "-p", help="Server port"),
+    no_browser: bool = typer.Option(False, "--no-browser", help="Don't open browser automatically"),
+    no_llm: bool = typer.Option(False, "--no-llm", help="Disable LLM-based entry point filtering"),
+    llm_provider: Optional[str] = typer.Option(None, "--llm-provider", help="LLM provider: 'anthropic-api', 'claude-code-cli', 'auto'"),
+    llm_model: Optional[str] = typer.Option(None, "--llm-model", help="LLM model name (provider-specific)"),
+    output_dir: Path = typer.Option("./output", "--output", "-o", help="Save reports to directory (default: ./output)")
+):
+    """
+    Show git diff visualization with call tree context.
+
+    Compares two git states (commits, branches, or working directory) and highlights
+    changed functions in an interactive call tree visualization.
+
+    Examples:
+        flowdiff diff .                              # Compare HEAD vs uncommitted changes
+        flowdiff diff . --ref HEAD~1                 # Compare HEAD~1 vs uncommitted
+        flowdiff diff . --ref HEAD~1 --new HEAD      # Compare two commits
+        flowdiff diff . --ref main --new dev         # Compare branches
+        flowdiff diff ../MyProject --llm-provider claude-code-cli
+    """
+    # Call analyze with ref/new mapped to before/after
+    analyze(
+        path=path,
+        before=ref,
+        after=new,
+        port=port,
+        no_browser=no_browser,
+        no_llm=no_llm,
+        llm_provider=llm_provider,
+        llm_model=llm_model,
+        output_dir=output_dir
+    )
+
+
+@app.command()
 def version():
     """Show FlowDiff version."""
     console.print("FlowDiff v0.3.0 - Multi-language Call Tree Analyzer with Diff Visualization")
