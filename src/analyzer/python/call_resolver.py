@@ -78,7 +78,15 @@ class PythonCallResolver:
                 return imported_name
 
         # Strategy 5: Same-module function
-        qualified = f"{self.symbol_table.module_name}.{call_name}"
+        # Extract the module name from the calling symbol's qualified name
+        # e.g., "src.core.stock_analysis.calculate_roic_wacc_spread" -> "src.core.stock_analysis"
+        calling_module = '.'.join(calling_symbol.qualified_name.split('.')[:-1])
+        if calling_module:  # Make sure we have a module (not a top-level symbol)
+            qualified = f"{calling_module}.{call_name}"
+        else:
+            # Fallback to table's module name
+            qualified = f"{self.symbol_table.module_name}.{call_name}"
+
         if qualified in self.symbol_table.symbols:
             return qualified
 
