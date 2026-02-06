@@ -128,16 +128,22 @@ class SymbolChangeMapper:
         Returns:
             True if symbols differ in meaningful ways
         """
+        differs = False
+        reason = None
+
         # Compare metadata (parameters, return type, etc.)
         if before.metadata != after.metadata:
-            return True
+            differs = True
+            reason = "metadata"
 
         # Compare what functions are called
         if set(before.resolved_calls) != set(after.resolved_calls):
-            return True
+            differs = True
+            reason = "resolved_calls"
 
         # Compare documentation
         if before.documentation != after.documentation:
-            return True
+            differs = True
+            reason = "documentation"
 
-        return False
+        return differs
