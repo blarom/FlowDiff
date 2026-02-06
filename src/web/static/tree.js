@@ -506,22 +506,59 @@
                 const diffHtml = Diff2Html.html(diffContent, {
                     drawFileList: false,
                     matching: 'lines',
-                    outputFormat: 'side-by-side',
+                    outputFormat: 'line-by-line',
                     renderNothingWhenEmpty: false,
+                    diffStyle: 'word',
                     colorScheme: 'light'
                 });
                 contentDiv.innerHTML = diffHtml;
+
+                // Force add classes if they're missing (fallback)
+                setTimeout(() => {
+                    contentDiv.querySelectorAll('.d2h-code-line').forEach(line => {
+                        const text = line.textContent || '';
+                        if (text.startsWith('+') && !line.classList.contains('d2h-ins')) {
+                            line.classList.add('d2h-code-line-ins');
+                        } else if (text.startsWith('-') && !line.classList.contains('d2h-del')) {
+                            line.classList.add('d2h-code-line-del');
+                        }
+                    });
+                }, 100);
             } catch (e) {
                 console.error('[FlowDiff] Error rendering diff with diff2html:', e);
-                // Fallback to plain text
+                // Fallback to plain text with manual coloring
                 contentDiv.innerHTML = `<pre><code>${escapeHtml(diffContent)}</code></pre>`;
+                applyManualDiffColors(contentDiv);
             }
         } else {
             // Fallback if diff2html isn't loaded
+            console.warn('[FlowDiff] Diff2Html library not loaded, using fallback');
             contentDiv.innerHTML = `<pre><code>${escapeHtml(diffContent)}</code></pre>`;
+            applyManualDiffColors(contentDiv);
         }
 
         modal.classList.remove('hidden');
+    }
+
+    function applyManualDiffColors(container) {
+        // Manually color diff lines if diff2html fails
+        const codeBlock = container.querySelector('code');
+        if (!codeBlock) return;
+
+        const lines = codeBlock.textContent.split('\n');
+        const coloredHtml = lines.map(line => {
+            if (line.startsWith('+') && !line.startsWith('+++')) {
+                return `<span style="background-color: #e6ffed; display: block;">${escapeHtml(line)}</span>`;
+            } else if (line.startsWith('-') && !line.startsWith('---')) {
+                return `<span style="background-color: #ffecec; display: block;">${escapeHtml(line)}</span>`;
+            } else if (line.startsWith('@@')) {
+                return `<span style="background-color: #e1f5fe; color: #0277bd; display: block;">${escapeHtml(line)}</span>`;
+            } else {
+                return `<span style="display: block;">${escapeHtml(line)}</span>`;
+            }
+        }).join('');
+
+        codeBlock.innerHTML = coloredHtml;
     }
 
     function createDiffModal() {
