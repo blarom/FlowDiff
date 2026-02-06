@@ -83,6 +83,13 @@
                 message += `<div style="font-size: 0.9rem; color: #aaa;">Comparing ${metadata.before_ref} → ${metadata.after_ref}</div>`;
             }
 
+            // Show timestamp if available
+            if (metadata && metadata.analysis_timestamp) {
+                const timestamp = new Date(metadata.analysis_timestamp);
+                const timeAgo = getTimeAgo(timestamp);
+                message += `<div style="font-size: 0.8rem; color: #bbb; margin-top: 1rem;">Report from ${timeAgo}</div>`;
+            }
+
             message += '</div>';
             container.innerHTML = message;
             return;
@@ -93,6 +100,15 @@
             const elem = createChangedFunctionElement(func);
             container.appendChild(elem);
         });
+    }
+
+    function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+
+        if (seconds < 60) return 'just now';
+        if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
+        if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+        return date.toLocaleString();
     }
 
     function createChangedFunctionElement(func) {

@@ -292,6 +292,9 @@ def _open_external_diff(file_path: str, project_path: Path) -> Dict:
 def _get_file_diff(file_path: str, project_path: Path) -> str:
     """Get raw diff content for a file.
 
+    Uses the before_ref and after_ref from the original analysis metadata.
+    Falls back to "HEAD" vs working directory if refs are not available.
+
     Args:
         file_path: Path to the file to diff
         project_path: Root path of the git repository
@@ -301,9 +304,30 @@ def _get_file_diff(file_path: str, project_path: Path) -> str:
     """
     rel_path = Path(file_path).relative_to(project_path) if file_path.startswith(str(project_path)) else file_path
 
+    # Get refs from metadata
+    before_ref = "HEAD"
+    after_ref = None  # None means working directory
+
+    if _current_tree_data and "metadata" in _current_tree_data:
+        metadata = _current_tree_data["metadata"]
+        before_ref = metadata.get("before_ref", "HEAD")
+        after_ref_str = metadata.get("after_ref", "working")
+
+        # Convert "working" to None for git diff command
+        if after_ref_str == "working":
+            after_ref = None
+        else:
+            after_ref = after_ref_str
+
     try:
+        # Build git diff command
+        cmd = ["git", "diff", before_ref]
+        if after_ref:
+            cmd.append(after_ref)
+        cmd.extend(["--", str(rel_path)])
+
         result = subprocess.run(
-            ["git", "diff", "HEAD", "--", str(rel_path)],
+            cmd,
             cwd=str(project_path),
             capture_output=True,
             text=True,

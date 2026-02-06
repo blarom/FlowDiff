@@ -151,6 +151,7 @@ def analyze(
             project_name = project_path.name
 
             # Build tree data from diff result (has changes marked)
+            from datetime import datetime
             tree_data = {
                 "trees": [_serialize_tree_node(tree) for tree in diff_result.after_tree],
                 "metadata": {
@@ -158,11 +159,13 @@ def analyze(
                     "run_dir": str(Path.cwd()),
                     "input_path": str(project_path),
                     "function_count": count_functions(diff_result.after_tree),
+                    "entry_point_count": len(diff_result.after_tree),
                     "before_ref": diff_result.before_ref,
                     "after_ref": diff_result.after_ref,
                     "functions_added": diff_result.functions_added,
                     "functions_modified": diff_result.functions_modified,
-                    "functions_deleted": diff_result.functions_deleted
+                    "functions_deleted": diff_result.functions_deleted,
+                    "analysis_timestamp": datetime.now().isoformat()
                 }
             }
 

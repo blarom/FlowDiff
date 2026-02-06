@@ -112,8 +112,29 @@
         if (diffInfoElem && metadata.before_ref) {
             const beforeDesc = formatRefDescription(metadata.before_ref);
             const afterDesc = formatRefDescription(metadata.after_ref);
-            diffInfoElem.innerHTML = `Current flow <strong>${afterDesc}</strong> compared with reference flow <strong>${beforeDesc}</strong>`;
+            let diffInfo = `Current flow <strong>${afterDesc}</strong> compared with reference flow <strong>${beforeDesc}</strong>`;
+
+            // Add timestamp if available
+            if (metadata.analysis_timestamp) {
+                const timestamp = new Date(metadata.analysis_timestamp);
+                const timeAgo = getTimeAgo(timestamp);
+                diffInfo += ` <span style="color: #95a5a6; font-size: 0.9em;">(${timeAgo})</span>`;
+            }
+
+            diffInfoElem.innerHTML = diffInfo;
         }
+    }
+
+    function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+
+        if (seconds < 60) return 'just now';
+        if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
+        if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+        const days = Math.floor(seconds / 86400);
+        if (days === 1) return 'yesterday';
+        if (days < 7) return `${days} days ago`;
+        return date.toLocaleDateString();
     }
 
     function formatRefDescription(ref) {
