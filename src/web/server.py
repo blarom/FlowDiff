@@ -295,6 +295,9 @@ def _get_file_diff(file_path: str, project_path: Path) -> str:
     Uses the before_ref and after_ref from the original analysis metadata.
     Falls back to "HEAD" vs working directory if refs are not available.
 
+    For new files that don't exist in before_ref, shows the full file content
+    with diff-style formatting.
+
     Args:
         file_path: Path to the file to diff
         project_path: Root path of the git repository
@@ -303,6 +306,7 @@ def _get_file_diff(file_path: str, project_path: Path) -> str:
         Diff content as string
     """
     rel_path = Path(file_path).relative_to(project_path) if file_path.startswith(str(project_path)) else file_path
+    abs_path = project_path / rel_path
 
     # Get refs from metadata
     before_ref = "HEAD"
@@ -333,8 +337,43 @@ def _get_file_diff(file_path: str, project_path: Path) -> str:
             text=True,
             timeout=5
         )
+
+        # If git diff returns empty but the file exists, it might be a new untracked file
+        if result.returncode == 0 and not result.stdout:
+            # Check if file exists in working directory
+            if abs_path.exists() and abs_path.is_file():
+                # Check if file exists in before_ref
+                check_cmd = ["git", "cat-file", "-e", f"{before_ref}:{rel_path}"]
+                check_result = subprocess.run(
+                    check_cmd,
+                    cwd=str(project_path),
+                    capture_output=True,
+                    timeout=5
+                )
+
+                # File doesn't exist in before_ref - it's a new file
+                if check_result.returncode != 0:
+                    # Read and format as a diff showing all lines as additions
+                    try:
+                        with open(abs_path, 'r', encoding='utf-8') as f:
+                            content = f.read()
+
+                        # Format as diff with all lines as additions
+                        lines = content.splitlines()
+                        diff_output = f"diff --git a/{rel_path} b/{rel_path}\n"
+                        diff_output += "new file mode 100644\n"
+                        diff_output += f"--- /dev/null\n"
+                        diff_output += f"+++ b/{rel_path}\n"
+                        diff_output += f"@@ -0,0 +1,{len(lines)} @@\n"
+                        diff_output += "\n".join(f"+{line}" for line in lines)
+                        return diff_output
+                    except Exception as e:
+                        return f"New file (unable to read content: {e})"
+
+            return "No changes detected"
+
         if result.returncode == 0:
-            return result.stdout or "No changes detected"
+            return result.stdout
         else:
             return f"Error getting diff: {result.stderr}"
     except subprocess.TimeoutExpired:
