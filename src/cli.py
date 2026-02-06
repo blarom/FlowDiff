@@ -38,6 +38,15 @@ console = Console()
 log_file = None
 
 
+def count_functions(nodes):
+    """Count total functions in a list of tree nodes recursively."""
+    count = 0
+    for node in nodes:
+        count += 1
+        count += count_functions(node.children)
+    return count
+
+
 @app.command()
 def analyze(
     path: Path = typer.Argument(".", help="Path to git repository"),
@@ -200,14 +209,6 @@ def analyze(
 
     # Use the after_tree from diff_result (already has changes marked)
     trees = diff_result.after_tree
-
-    # Count total functions
-    def count_functions(nodes):
-        count = 0
-        for node in nodes:
-            count += 1
-            count += count_functions(node.children)
-        return count
 
     tree_data = {
         "trees": [_serialize_tree_node(tree) for tree in trees],
