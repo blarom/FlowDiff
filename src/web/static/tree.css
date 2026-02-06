@@ -120,7 +120,7 @@ header h1 {
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 14px;
-    width: 200px;
+    width: 280px;
     font-family: 'Monaco', 'Menlo', monospace;
 }
 
@@ -754,11 +754,6 @@ main {
 
 .info-panel-overlay.active {
     display: block;
-}
-
-/* Test tree hiding */
-.entry-point-tree.hidden-test {
-    display: none;
 }
 
 /* Saved Report Banner */
