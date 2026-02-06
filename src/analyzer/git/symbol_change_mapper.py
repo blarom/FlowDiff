@@ -109,13 +109,35 @@ class SymbolChangeMapper:
         return all_symbols
 
     def _symbols_differ(self, before: Symbol, after: Symbol) -> bool:
-        """Check if symbols differ."""
-        if before.line_number != after.line_number:
-            return True
+        """Check if symbols differ in meaningful ways.
+
+        NOTE: We intentionally DO NOT compare line numbers, because functions
+        often move to different lines when code is added/removed above them.
+        This was causing false positives where unchanged functions were marked
+        as modified just because they shifted.
+
+        We only compare:
+        - Metadata (parameters, return type, etc.)
+        - Resolved calls (what the function calls)
+        - Documentation (docstrings)
+
+        Args:
+            before: Symbol from before ref
+            after: Symbol from after ref
+
+        Returns:
+            True if symbols differ in meaningful ways
+        """
+        # Compare metadata (parameters, return type, etc.)
         if before.metadata != after.metadata:
             return True
+
+        # Compare what functions are called
         if set(before.resolved_calls) != set(after.resolved_calls):
             return True
+
+        # Compare documentation
         if before.documentation != after.documentation:
             return True
+
         return False
