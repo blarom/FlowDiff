@@ -435,17 +435,16 @@
 
             const data = await response.json();
 
-            // If external viewer was attempted, show toast and also show inline diff as fallback
+            // If external viewer was attempted but failed, show notice
             if (data.method === 'external' && data.viewer) {
                 console.log('[FlowDiff] Attempted to open in external viewer:', data.viewer);
-                showToast(`Opening in ${data.viewer}...`, 'info');
 
-                // Give the external viewer a moment to open, then show inline fallback
-                setTimeout(() => {
-                    if (data.diff_content) {
-                        showInlineDiff(func, data.diff_content);
-                    }
-                }, 1000);
+                // Show inline diff immediately with a notice that external viewer was tried
+                if (data.diff_content) {
+                    showInlineDiff(func, data.diff_content);
+                    // Show non-obtrusive toast
+                    showToast(`Note: Attempted ${data.viewer} (showing inline)`, 'info');
+                }
             } else if (data.diff_content) {
                 // No external viewer, show inline diff immediately
                 showInlineDiff(func, data.diff_content);
@@ -473,13 +472,20 @@
 
         // Use diff2html to render the diff with syntax highlighting
         if (window.Diff2Html) {
-            const diffHtml = Diff2Html.html(diffContent, {
-                drawFileList: false,
-                matching: 'lines',
-                outputFormat: 'side-by-side',
-                renderNothingWhenEmpty: false,
-            });
-            contentDiv.innerHTML = diffHtml;
+            try {
+                const diffHtml = Diff2Html.html(diffContent, {
+                    drawFileList: false,
+                    matching: 'lines',
+                    outputFormat: 'side-by-side',
+                    renderNothingWhenEmpty: false,
+                    colorScheme: 'light'
+                });
+                contentDiv.innerHTML = diffHtml;
+            } catch (e) {
+                console.error('[FlowDiff] Error rendering diff with diff2html:', e);
+                // Fallback to plain text
+                contentDiv.innerHTML = `<pre><code>${escapeHtml(diffContent)}</code></pre>`;
+            }
         } else {
             // Fallback if diff2html isn't loaded
             contentDiv.innerHTML = `<pre><code>${escapeHtml(diffContent)}</code></pre>`;

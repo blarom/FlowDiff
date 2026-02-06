@@ -18,7 +18,21 @@
       "Bash(python -m src.cli:*)",
       "Bash(/usr/bin/python3:*)",
       "Bash(python test_comprehensive.py:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(ssh:*)",
+      "Bash(git push:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(node:*)",
+      "Bash(node -c:*)",
+      "Bash(timeout 5 python3:*)",
+      "Bash(python src/cli.py:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)",
+      "Bash(python:*)"
     ]
   }
 }
