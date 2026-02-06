@@ -112,6 +112,39 @@ class PythonAnalyzer(LanguageAnalyzer):
 
             symbol.resolved_calls = resolved
 
+    def mark_entry_points(self, symbol_table: SymbolTable) -> None:
+        """Mark functions as entry points based on heuristics.
+
+        Entry points include:
+        - Test functions (test_* or in test_*.py files)
+        - HTTP endpoint handlers
+        - Functions with if __name__ == '__main__' guards
+
+        Args:
+            symbol_table: PythonSymbolTable to mark entry points in
+        """
+        if not isinstance(symbol_table, PythonSymbolTable):
+            return
+
+        for symbol in symbol_table.get_all_symbols():
+            # Skip if already marked
+            if symbol.is_entry_point:
+                continue
+
+            # HTTP endpoints are always entry points
+            if symbol.metadata.get("http_method"):
+                symbol.is_entry_point = True
+                continue
+
+            # Test functions: test_* prefix OR in test_*.py files
+            file_name = Path(symbol.file_path).name
+            if symbol.name.startswith("test_") or file_name.startswith("test_"):
+                symbol.is_entry_point = True
+                continue
+
+            # Functions called from __main__ guard
+            # (Would need to track this during AST parsing - for now skip)
+
     def get_language_name(self) -> str:
         """Return 'python'."""
         return "python"

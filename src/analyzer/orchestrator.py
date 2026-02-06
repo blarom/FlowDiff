@@ -85,6 +85,16 @@ class FlowDiffOrchestrator:
                 analyzer.resolve_calls(table)
         print()
 
+        # Step 4.5: Mark entry points
+        print("Step 4.5: Marking entry points...")
+        for lang, table in symbol_tables.items():
+            analyzer = self.registry.get_analyzer(lang)
+            if analyzer and hasattr(analyzer, 'mark_entry_points'):
+                analyzer.mark_entry_points(table)
+                entry_count = sum(1 for s in table.get_all_symbols() if s.is_entry_point)
+                print(f"  {lang}: {entry_count} entry points marked")
+        print()
+
         # Step 5: Resolve cross-language calls
         print("Step 5: Resolving cross-language calls...")
         cross_refs = self.resolver.resolve_cross_language_calls(symbol_tables)
