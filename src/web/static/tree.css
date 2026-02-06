@@ -479,8 +479,9 @@ main {
     position: relative;
     background: linear-gradient(to right, #fff9e6 0%, #fffdf5 100%);
     border-left: 3px solid #ffd966;
-    padding-left: 6px;
-    margin: 1px 0;
+    margin-left: -3px;
+    margin-top: 1px;
+    margin-bottom: 1px;
 }
 
 .tree-node.path-to-change .function-name {
@@ -502,8 +503,9 @@ main {
     position: relative;
     background: linear-gradient(to right, #fff3cd 0%, #fff9e6 100%);
     border-left: 4px solid #f0ad4e;
-    padding-left: 8px;
-    margin: 2px 0;
+    margin-left: -4px;
+    margin-top: 2px;
+    margin-bottom: 2px;
     border-radius: 3px;
     box-shadow: 0 1px 3px rgba(240, 173, 78, 0.2);
 }
