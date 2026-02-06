@@ -124,13 +124,14 @@
                 if (node) {
                     // Expand parents if needed
                     expandToNode(node);
-                    // Scroll into view
-                    node.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    // Highlight briefly
-                    node.style.backgroundColor = '#ffe69c';
-                    setTimeout(() => {
-                        node.style.backgroundColor = '';
-                    }, 2000);
+
+                    // Select the node using tree.js's selectNode function
+                    if (window.selectTreeNode) {
+                        window.selectTreeNode(node);
+                    } else {
+                        // Fallback if selectTreeNode not available
+                        node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
                 }
                 break;
             }

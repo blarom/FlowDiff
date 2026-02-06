@@ -1083,4 +1083,7 @@
 
     // Start
     init();
+
+    // Expose selectNode globally for diff-panel.js to use
+    window.selectTreeNode = selectNode;
 })();
