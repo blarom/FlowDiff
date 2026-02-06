@@ -33,15 +33,31 @@
         </header>
 
         <div class="controls">
-            <button id="expand-all">Expand All</button>
-            <button id="collapse-all">Collapse All</button>
-            <input type="text" id="filter-regex" placeholder="Filter regex..." style="width: 150px;" title="Enter regex to filter tree nodes" />
-            <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; margin-left: 4px;">
-                <input type="checkbox" id="filter-top-level-only" title="Filter only top-level entry points" />
-                <span>Top-level only</span>
-            </label>
-            <button id="show-diff" class="diff-btn">Show Diff</button>
-            <input type="text" id="search" placeholder="Search functions..." />
+            <div class="controls-row">
+                <button id="expand-all">Expand All</button>
+                <button id="collapse-all">Collapse All</button>
+                <button id="show-diff" class="diff-btn">Show Diff</button>
+                <input type="text" id="search" placeholder="Search functions..." />
+            </div>
+            <div class="controls-row filter-row">
+                <span class="filter-section-label">Filters:</span>
+                <div class="filter-group">
+                    <label class="filter-label">Include</label>
+                    <input type="text" id="filter-include-regex" class="filter-input" placeholder="Enter regex to include..." title="Include nodes matching this regex" />
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" id="filter-include-top-level" />
+                        <span>Top-level only</span>
+                    </label>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Exclude</label>
+                    <input type="text" id="filter-exclude-regex" class="filter-input" placeholder="Enter regex to exclude..." title="Exclude nodes matching this regex" />
+                    <label class="filter-checkbox-label">
+                        <input type="checkbox" id="filter-exclude-top-level" />
+                        <span>Top-level only</span>
+                    </label>
+                </div>
+            </div>
         </div>
 
         <main>

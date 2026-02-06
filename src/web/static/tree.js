@@ -7,8 +7,10 @@
     let expandedNodes = new Set();
     let searchMatches = [];
     let currentSearchIndex = 0;
-    let filterRegex = null;
-    let filterTopLevelOnly = false;
+    let includeFilterRegex = null;
+    let includeFilterTopLevelOnly = false;
+    let excludeFilterRegex = null;
+    let excludeFilterTopLevelOnly = false;
     let changedNodes = [];
     let currentChangedIndex = 0;
     let currentSelectedNode = null;  // Track currently selected node for keyboard nav
@@ -134,11 +136,17 @@
 
         // Render each entry point tree as a separate collapsed section
         window.treeData.trees.forEach((tree, index) => {
-            // Apply filter if set
-            if (filterRegex && filterTopLevelOnly) {
-                // Filter top-level only: hide if root doesn't match
-                if (!filterRegex.test(tree.function.name) && !filterRegex.test(tree.function.file_name)) {
-                    return; // Skip this tree
+            // Apply top-level filters
+            if (includeFilterTopLevelOnly && includeFilterRegex) {
+                // Include filter: skip if root doesn't match
+                if (!includeFilterRegex.test(tree.function.name) && !includeFilterRegex.test(tree.function.file_name)) {
+                    return;
+                }
+            }
+            if (excludeFilterTopLevelOnly && excludeFilterRegex) {
+                // Exclude filter: skip if root matches
+                if (excludeFilterRegex.test(tree.function.name) || excludeFilterRegex.test(tree.function.file_name)) {
+                    return;
                 }
             }
 
@@ -184,12 +192,17 @@
     }
 
     function renderNode(node, depth, path) {
-        // Apply filter if set (for all nodes, not just top-level)
-        if (filterRegex && !filterTopLevelOnly) {
-            // Check if this node matches
-            if (!filterRegex.test(node.function.name) && !filterRegex.test(node.function.file_name)) {
-                // Node doesn't match - don't render it
-                return document.createDocumentFragment(); // Return empty fragment
+        // Apply all-nodes filters (when not top-level only)
+        if (!includeFilterTopLevelOnly && includeFilterRegex) {
+            // Include filter: skip if node doesn't match
+            if (!includeFilterRegex.test(node.function.name) && !includeFilterRegex.test(node.function.file_name)) {
+                return document.createDocumentFragment();
+            }
+        }
+        if (!excludeFilterTopLevelOnly && excludeFilterRegex) {
+            // Exclude filter: skip if node matches
+            if (excludeFilterRegex.test(node.function.name) || excludeFilterRegex.test(node.function.file_name)) {
+                return document.createDocumentFragment();
             }
         }
 
@@ -630,29 +643,56 @@
     }
 
     function applyFilter() {
-        const regexInput = document.getElementById('filter-regex');
-        const topLevelOnlyCheckbox = document.getElementById('filter-top-level-only');
+        const includeInput = document.getElementById('filter-include-regex');
+        const includeTopLevel = document.getElementById('filter-include-top-level');
+        const excludeInput = document.getElementById('filter-exclude-regex');
+        const excludeTopLevel = document.getElementById('filter-exclude-top-level');
 
-        const regexStr = regexInput ? regexInput.value.trim() : '';
-        filterTopLevelOnly = topLevelOnlyCheckbox ? topLevelOnlyCheckbox.checked : false;
+        const includeStr = includeInput ? includeInput.value.trim() : '';
+        const excludeStr = excludeInput ? excludeInput.value.trim() : '';
 
-        // Update filter regex
-        if (regexStr) {
+        includeFilterTopLevelOnly = includeTopLevel ? includeTopLevel.checked : false;
+        excludeFilterTopLevelOnly = excludeTopLevel ? excludeTopLevel.checked : false;
+
+        // Update include filter regex
+        if (includeStr) {
             try {
-                filterRegex = new RegExp(regexStr, 'i'); // Case-insensitive
+                includeFilterRegex = new RegExp(includeStr, 'i'); // Case-insensitive
+                if (includeInput) includeInput.style.borderColor = '';
             } catch (e) {
                 // Invalid regex, show error briefly
-                regexInput.style.borderColor = '#e74c3c';
-                setTimeout(() => {
-                    regexInput.style.borderColor = '';
-                }, 1000);
+                if (includeInput) {
+                    includeInput.style.borderColor = '#e74c3c';
+                    setTimeout(() => {
+                        includeInput.style.borderColor = '';
+                    }, 1000);
+                }
                 return;
             }
         } else {
-            filterRegex = null;
+            includeFilterRegex = null;
         }
 
-        // Re-render tree with filter applied
+        // Update exclude filter regex
+        if (excludeStr) {
+            try {
+                excludeFilterRegex = new RegExp(excludeStr, 'i'); // Case-insensitive
+                if (excludeInput) excludeInput.style.borderColor = '';
+            } catch (e) {
+                // Invalid regex, show error briefly
+                if (excludeInput) {
+                    excludeInput.style.borderColor = '#e74c3c';
+                    setTimeout(() => {
+                        excludeInput.style.borderColor = '';
+                    }, 1000);
+                }
+                return;
+            }
+        } else {
+            excludeFilterRegex = null;
+        }
+
+        // Re-render tree with filters applied
         renderTree();
     }
 
@@ -690,13 +730,22 @@
         };
 
         // Filter controls
-        const filterRegexInput = document.getElementById('filter-regex');
-        const filterTopLevelCheckbox = document.getElementById('filter-top-level-only');
-        if (filterRegexInput) {
-            filterRegexInput.oninput = applyFilter;
+        const includeRegexInput = document.getElementById('filter-include-regex');
+        const includeTopLevelCheckbox = document.getElementById('filter-include-top-level');
+        const excludeRegexInput = document.getElementById('filter-exclude-regex');
+        const excludeTopLevelCheckbox = document.getElementById('filter-exclude-top-level');
+
+        if (includeRegexInput) {
+            includeRegexInput.oninput = applyFilter;
         }
-        if (filterTopLevelCheckbox) {
-            filterTopLevelCheckbox.onchange = applyFilter;
+        if (includeTopLevelCheckbox) {
+            includeTopLevelCheckbox.onchange = applyFilter;
+        }
+        if (excludeRegexInput) {
+            excludeRegexInput.oninput = applyFilter;
+        }
+        if (excludeTopLevelCheckbox) {
+            excludeTopLevelCheckbox.onchange = applyFilter;
         }
 
         // Jump to next change (only in diff.html)
