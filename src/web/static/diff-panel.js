@@ -38,10 +38,15 @@
 
     function extractChangedFunctions(trees) {
         const changed = [];
+        const seen = new Set(); // Track qualified names to avoid duplicates
 
         function traverse(node) {
             if (node.function.has_changes) {
-                changed.push(node.function);
+                // Only add if we haven't seen this function before
+                if (!seen.has(node.function.qualified_name)) {
+                    seen.add(node.function.qualified_name);
+                    changed.push(node.function);
+                }
             }
             if (node.children) {
                 node.children.forEach(child => traverse(child));
