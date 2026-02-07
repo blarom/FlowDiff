@@ -8,7 +8,7 @@ from utils.file_io import (
     safe_write_json,
     safe_write_text,
 )
-from utils.serialization import extract_deleted_functions, serialize_symbol
+from utils.serialization import extract_deleted_functions, serialize_symbol, serialize_tree_node
 from utils.subprocess_runner import (
     CommandResult,
     SubprocessError,
@@ -27,6 +27,7 @@ __all__ = [
     # Serialization
     "extract_deleted_functions",
     "serialize_symbol",
+    "serialize_tree_node",
     # Subprocess
     "CommandResult",
     "SubprocessError",
