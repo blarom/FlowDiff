@@ -226,6 +226,7 @@ main {
     padding: 4px 0;
     cursor: pointer;
     transition: background 0.2s;
+    min-width: 0; /* Allow flex items to shrink below content size */
 }
 
 .tree-node:hover {
@@ -283,16 +284,26 @@ main {
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0; /* Allow flex item to shrink */
+    overflow: hidden; /* Hide overflow */
 }
 
 .function-name {
     color: #2c3e50;
     font-weight: 500;
+    white-space: nowrap; /* Don't wrap to new line */
+    overflow: hidden; /* Hide overflow */
+    text-overflow: ellipsis; /* Show ... for overflow */
+    min-width: 0; /* Allow flex item to shrink */
 }
 
 .function-params {
     color: #7f8c8d;
     font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .function-arrow {

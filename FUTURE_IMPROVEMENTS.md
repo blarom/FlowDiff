@@ -666,6 +666,67 @@ if (document.documentElement.getAttribute('data-theme') === 'dark') {
 
 ---
 
+## 🟢 MEDIUM: Code Quality - Return Type Hints
+
+### Motivation
+Many functions in the codebase lack return type hints, which reduces IDE support, type checking effectiveness, and code documentation quality. Adding comprehensive type hints improves developer experience and catches potential type errors early.
+
+### Current State
+- Approximately 40+ functions missing return type hints
+- Most commonly in:
+  - `src/cli.py` - Command functions and helpers
+  - `src/web/server.py` - API endpoint handlers
+  - `src/analyzer/orchestrator.py` - Analysis methods
+  - Various utility functions
+
+### Implementation Plan
+
+**Files to Update**:
+
+1. **cli.py**:
+```python
+# Before
+def count_functions(nodes):
+    """Count total functions in a list of tree nodes recursively."""
+
+# After
+def count_functions(nodes: List[CallTreeNode]) -> int:
+    """Count total functions in a list of tree nodes recursively."""
+```
+
+2. **server.py**:
+```python
+# Before
+def _find_function_in_tree(qualified_name: str):
+    """Find a function in the tree data by qualified name."""
+
+# After
+def _find_function_in_tree(qualified_name: str) -> Optional[Dict[str, Any]]:
+    """Find a function in the tree data by qualified name."""
+```
+
+3. **orchestrator.py**:
+```python
+# Before
+def _discover_files(self):
+    """Discover all relevant source files in project."""
+
+# After
+def _discover_files(self) -> List[Path]:
+    """Discover all relevant source files in project."""
+```
+
+**Benefits**:
+- Better IDE autocomplete and inline documentation
+- Catch type errors during development (with mypy)
+- Self-documenting code
+- Easier refactoring with type safety
+
+**Effort**: Low (1-2 hours)
+**Impact**: Medium (improved developer experience)
+
+---
+
 ## Additional Future Enhancements
 
 ### 🔵 LOW Priority
