@@ -3,10 +3,10 @@
 from typing import Any, Dict, List, TYPE_CHECKING
 
 from analyzer.core.symbol import Symbol
-from analyzer.git.symbol_change_mapper import SymbolChange
 
 if TYPE_CHECKING:
     from analyzer.legacy import CallTreeNode
+    from analyzer.git.symbol_change_mapper import SymbolChange
 
 
 def serialize_symbol(symbol: Symbol) -> Dict[str, Any]:
@@ -29,7 +29,7 @@ def serialize_symbol(symbol: Symbol) -> Dict[str, Any]:
     }
 
 
-def extract_deleted_functions(symbol_changes: Dict[str, SymbolChange]) -> List[Dict[str, Any]]:
+def extract_deleted_functions(symbol_changes: Dict[str, "SymbolChange"]) -> List[Dict[str, Any]]:
     """
     Extract deleted functions from symbol changes.
 
