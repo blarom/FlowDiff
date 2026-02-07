@@ -13,6 +13,8 @@ from pathlib import Path
 from typing import Optional, Dict
 from datetime import datetime
 import os
+import re
+import traceback
 import typer
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -37,7 +39,7 @@ from constants import (
     DEFAULT_AFTER_REF,
     DEFAULT_OUTPUT_DIR,
 )
-from utils import extract_deleted_functions
+from utils import extract_deleted_functions, serialize_tree_node
 
 app = typer.Typer(help="FlowDiff - Multi-language call tree analyzer with diff visualization")
 
@@ -53,6 +55,52 @@ def count_functions(nodes):
         count += 1
         count += count_functions(node.children)
     return count
+
+
+def build_tree_data(
+    after_trees: list,
+    before_trees: list,
+    deleted_functions: list,
+    diff_result,
+    project_path: Path,
+    include_timestamp: bool = False
+) -> dict:
+    """
+    Build tree_data dictionary from analysis results.
+
+    Args:
+        after_trees: List of tree nodes for after state
+        before_trees: List of tree nodes for before state
+        deleted_functions: List of deleted function dictionaries
+        diff_result: DiffResult object with metadata
+        project_path: Path to the project
+        include_timestamp: Whether to include analysis timestamp
+
+    Returns:
+        Dictionary with serialized tree data and metadata
+    """
+    metadata = {
+        "project": project_path.name,
+        "run_dir": str(Path.cwd()),
+        "input_path": str(project_path),
+        "function_count": count_functions(after_trees),
+        "entry_point_count": len(after_trees),
+        "before_ref": diff_result.before_ref,
+        "after_ref": diff_result.after_ref,
+        "functions_added": diff_result.functions_added,
+        "functions_modified": diff_result.functions_modified,
+        "functions_deleted": diff_result.functions_deleted
+    }
+
+    if include_timestamp:
+        metadata["analysis_timestamp"] = datetime.now().isoformat()
+
+    return {
+        "trees": [serialize_tree_node(tree) for tree in after_trees],
+        "before_trees": [serialize_tree_node(tree) for tree in before_trees],
+        "deleted_functions": deleted_functions,
+        "metadata": metadata
+    }
 
 
 @app.command()
@@ -113,7 +161,6 @@ def analyze(
         else:
             console.print(msg)
         # Strip ANSI codes for log file
-        import re
         clean_msg = re.sub(r'\[.*?\]', '', msg)  # Remove rich markup
         clean_msg = re.sub(r'\x1b\[[0-9;]*m', '', clean_msg)  # Remove ANSI codes
         log_file.write(clean_msg + '\n')
@@ -163,29 +210,19 @@ def analyze(
             project_name = project_path.name
 
             # Build tree data from diff result (has changes marked)
-            from datetime import datetime
 
             # Extract deleted functions from symbol_changes (using utility)
             deleted_functions = extract_deleted_functions(diff_result.symbol_changes)
 
-            tree_data = {
-                "trees": [_serialize_tree_node(tree) for tree in diff_result.after_tree],
-                "before_trees": [_serialize_tree_node(tree) for tree in diff_result.before_tree],
-                "deleted_functions": deleted_functions,
-                "metadata": {
-                    "project": project_path.name,
-                    "run_dir": str(Path.cwd()),
-                    "input_path": str(project_path),
-                    "function_count": count_functions(diff_result.after_tree),
-                    "entry_point_count": len(diff_result.after_tree),
-                    "before_ref": diff_result.before_ref,
-                    "after_ref": diff_result.after_ref,
-                    "functions_added": diff_result.functions_added,
-                    "functions_modified": diff_result.functions_modified,
-                    "functions_deleted": diff_result.functions_deleted,
-                    "analysis_timestamp": datetime.now().isoformat()
-                }
-            }
+            # Build tree data
+            tree_data = build_tree_data(
+                after_trees=diff_result.after_tree,
+                before_trees=diff_result.before_tree,
+                deleted_functions=deleted_functions,
+                diff_result=diff_result,
+                project_path=project_path,
+                include_timestamp=True
+            )
 
             # Save outputs (no timestamps - files get overwritten)
             json_path = output_dir / f"{project_name}.json"
@@ -217,7 +254,6 @@ def analyze(
         raise typer.Exit(1)
     except Exception as e:
         log_print(f"\n[red]Error: {e}[/red]")
-        import traceback
         tb = traceback.format_exc()
         log_print(tb)
         if log_file:
@@ -235,23 +271,15 @@ def analyze(
     # Extract deleted functions from symbol_changes (using utility)
     deleted_functions = extract_deleted_functions(diff_result.symbol_changes)
 
-    tree_data = {
-        "trees": [_serialize_tree_node(tree) for tree in trees],
-        "before_trees": [_serialize_tree_node(tree) for tree in before_trees],
-        "deleted_functions": deleted_functions,
-        "metadata": {
-            "project": project_path.name,
-            "run_dir": str(Path.cwd()),
-            "input_path": str(project_path),
-            "function_count": count_functions(trees),
-            "entry_point_count": len(trees),
-            "before_ref": diff_result.before_ref,
-            "after_ref": diff_result.after_ref,
-            "functions_added": diff_result.functions_added,
-            "functions_modified": diff_result.functions_modified,
-            "functions_deleted": diff_result.functions_deleted
-        }
-    }
+    # Build tree data (no timestamp for diff command)
+    tree_data = build_tree_data(
+        after_trees=trees,
+        before_trees=before_trees,
+        deleted_functions=deleted_functions,
+        diff_result=diff_result,
+        project_path=project_path,
+        include_timestamp=False
+    )
 
     log_print("[green]✓ Opening visualization...[/green]")
     log_print("")
@@ -273,28 +301,6 @@ def analyze(
         log_print(f"\n[red]Server error: {e}[/red]")
         raise typer.Exit(1)
 
-
-def _serialize_tree_node(node) -> dict:
-    """Convert CallTreeNode to JSON-serializable dict."""
-    return {
-        "function": {
-            "name": node.function.name,
-            "qualified_name": node.function.qualified_name,
-            "file_path": node.function.file_path,
-            "file_name": node.function.file_name,
-            "line_number": node.function.line_number,
-            "parameters": node.function.parameters,
-            "return_type": node.function.return_type,
-            "calls": node.function.calls,
-            "called_by": node.function.called_by,
-            "local_variables": node.function.local_variables,
-            "is_entry_point": node.function.is_entry_point,
-            "has_changes": node.function.has_changes,
-            "documentation": node.function.documentation or ""
-        },
-        "children": [_serialize_tree_node(child) for child in node.children],
-        "depth": node.depth
-    }
 
 
 @app.command()

@@ -21,12 +21,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from analyzer.git.diff_analyzer import GitDiffAnalyzer, DiffResult
 from analyzer.legacy import CallTreeNode
+from utils.serialization import serialize_tree_node
 from constants import (
     APP_NAME,
     APP_VERSION,
     DEFAULT_PORT,
     VSCODE_TIMEOUT,
     GIT_DIFF_TIMEOUT,
+    GIT_DIFFTOOL_TIMEOUT,
     DIFF_VIEWER_VSCODE,
     DIFF_VIEWER_DIFFTASTIC,
     DIFF_VIEWER_GIT,
@@ -194,24 +196,8 @@ def _serialize_diff_result(diff: DiffResult) -> dict:
             "deleted": diff.functions_deleted,
             "modified": diff.functions_modified
         },
-        "before_tree": [_serialize_tree_node(n) for n in diff.before_tree],
-        "after_tree": [_serialize_tree_node(n) for n in diff.after_tree]
-    }
-
-
-def _serialize_tree_node(node: CallTreeNode) -> dict:
-    """Convert CallTreeNode to JSON."""
-    return {
-        "function": {
-            "name": node.function.name,
-            "qualified_name": node.function.qualified_name,
-            "file_path": node.function.file_path,
-            "line_number": node.function.line_number,
-            "has_changes": node.function.has_changes
-        },
-        "children": [_serialize_tree_node(c) for c in node.children],
-        "is_expanded": node.is_expanded,
-        "depth": node.depth
+        "before_tree": [serialize_tree_node(n, minimal=True) for n in diff.before_tree],
+        "after_tree": [serialize_tree_node(n, minimal=True) for n in diff.after_tree]
     }
 
 
@@ -268,7 +254,7 @@ def _open_external_diff(file_path: str, project_path: Path) -> Dict:
                 ["code", "--diff", f"HEAD:{rel_path}", str(rel_path)],
                 cwd=str(project_path),
                 capture_output=True,
-                timeout=2
+                timeout=VSCODE_TIMEOUT
             )
             if result.returncode == 0:
                 return {"success": True, "viewer": "VS Code"}
@@ -353,7 +339,7 @@ def _get_file_diff(file_path: str, project_path: Path) -> str:
             cwd=str(project_path),
             capture_output=True,
             text=True,
-            timeout=5
+            timeout=GIT_DIFF_TIMEOUT
         )
 
         # If git diff returns empty but the file exists, it might be a new untracked file
@@ -366,7 +352,7 @@ def _get_file_diff(file_path: str, project_path: Path) -> str:
                     check_cmd,
                     cwd=str(project_path),
                     capture_output=True,
-                    timeout=5
+                    timeout=GIT_DIFF_TIMEOUT
                 )
 
                 # File doesn't exist in before_ref - it's a new file
