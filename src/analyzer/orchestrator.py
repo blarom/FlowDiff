@@ -40,12 +40,68 @@ class FlowDiffOrchestrator:
         # Register bridges
         self.resolver.register_bridge(HTTPToPythonBridge())
 
-    def analyze(self) -> Dict[str, SymbolTable]:
+    def analyze(self, context: str = None) -> Dict[str, SymbolTable]:
         """Run full analysis pipeline.
+
+        Args:
+            context: Optional context label (e.g., "before ref", "after ref")
+                     If provided, uses succinct logging. If None, uses detailed logging.
 
         Returns:
             Map from language name to SymbolTable with resolved calls
         """
+        # Succinct logging mode when context is provided
+        if context:
+            logger.info(f"Analyzing {context}...")
+            files = self._discover_files()
+            files_by_lang = self._group_by_language(files)
+
+            # Build symbol tables
+            symbol_tables = {}
+            for lang, lang_files in files_by_lang.items():
+                analyzer = self.registry.get_analyzer(lang)
+                if not analyzer:
+                    continue
+
+                tables = []
+                for file_path in lang_files:
+                    table = analyzer.build_symbol_table(file_path)
+                    tables.append(table)
+
+                merged = analyzer.merge_symbol_tables(tables)
+                symbol_tables[lang] = merged
+
+            # Resolve intra-language calls
+            for lang, table in symbol_tables.items():
+                analyzer = self.registry.get_analyzer(lang)
+                if analyzer:
+                    analyzer.resolve_calls(table)
+
+            # Mark entry points
+            for lang, table in symbol_tables.items():
+                analyzer = self.registry.get_analyzer(lang)
+                if analyzer and hasattr(analyzer, 'mark_entry_points'):
+                    analyzer.mark_entry_points(table)
+
+            # Resolve cross-language calls
+            cross_refs = self.resolver.resolve_cross_language_calls(symbol_tables)
+            self.resolver.apply_cross_refs(symbol_tables, cross_refs)
+
+            # Single-line summary
+            total_files = len(files)
+            total_symbols = sum(len(table) for table in symbol_tables.values())
+            total_entry_points = sum(
+                sum(1 for s in table.get_all_symbols() if s.is_entry_point)
+                for table in symbol_tables.values()
+            )
+            logger.info(
+                f"  → {total_files} files, {total_symbols} symbols, "
+                f"{total_entry_points} entry points, {len(cross_refs)} cross-refs\n"
+            )
+
+            return symbol_tables
+
+        # Detailed logging mode when no context provided
         logger.info("\n=== FlowDiff Multi-Language Analysis ===")
         logger.info(f"Project: {self.project_root}\n")
 

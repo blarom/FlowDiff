@@ -91,7 +91,8 @@ class GitDiffAnalyzer:
         if use_working_dir:
             # Build from working directory
             adapter = CallTreeAdapter(self.project_root)
-            adapter.symbol_tables = adapter.orchestrator.analyze()
+            context = "after ref (working directory)" if not is_before else "current state"
+            adapter.symbol_tables = adapter.orchestrator.analyze(context=context)
             build_path = self.project_root
         else:
             # Checkout ref to temp directory
@@ -111,7 +112,8 @@ class GitDiffAnalyzer:
 
                 # Build tree from checkout
                 adapter = CallTreeAdapter(tmp_path)
-                adapter.symbol_tables = adapter.orchestrator.analyze()
+                context = f"before ref ({ref[:8]})" if is_before else f"ref ({ref[:8]})"
+                adapter.symbol_tables = adapter.orchestrator.analyze(context=context)
                 build_path = tmp_path
 
                 # Continue with tree building inside the with block

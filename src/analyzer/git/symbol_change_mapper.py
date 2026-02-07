@@ -81,7 +81,7 @@ class SymbolChangeMapper:
                 raise RuntimeError(f"Failed to extract ref {ref}: {e}") from e
 
             orchestrator = FlowDiffOrchestrator(tmp_path)
-            symbol_tables = orchestrator.analyze()
+            symbol_tables = orchestrator.analyze(context=f"ref ({ref[:8]}) for change detection")
 
             all_symbols = {}
             for table in symbol_tables.values():
@@ -93,7 +93,7 @@ class SymbolChangeMapper:
     def _build_current_symbol_table(self) -> Dict[str, Symbol]:
         """Build symbol table for working tree."""
         orchestrator = FlowDiffOrchestrator(self.project_root)
-        symbol_tables = orchestrator.analyze()
+        symbol_tables = orchestrator.analyze(context="working directory for change detection")
 
         all_symbols = {}
         for table in symbol_tables.values():
