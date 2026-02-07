@@ -3,6 +3,7 @@
 from pathlib import Path
 from typing import Dict, List
 from collections import defaultdict
+import logging
 
 from .core.symbol import SymbolTable, Symbol
 from .core.cross_language_resolver import CrossLanguageResolver
@@ -10,6 +11,9 @@ from .registry import LanguageRegistry
 from .python.python_analyzer import PythonAnalyzer
 from .shell.shell_analyzer import ShellAnalyzer
 from .bridges.http_to_python import HTTPToPythonBridge
+
+# Setup logger
+logger = logging.getLogger(__name__)
 
 
 class FlowDiffOrchestrator:
@@ -42,68 +46,68 @@ class FlowDiffOrchestrator:
         Returns:
             Map from language name to SymbolTable with resolved calls
         """
-        print(f"\n=== FlowDiff Multi-Language Analysis ===")
-        print(f"Project: {self.project_root}\n")
+        logger.info("\n=== FlowDiff Multi-Language Analysis ===")
+        logger.info(f"Project: {self.project_root}\n")
 
         # Step 1: Discover files
-        print("Step 1: Discovering files...")
+        logger.info("Step 1: Discovering files...")
         files = self._discover_files()
-        print(f"  Found {len(files)} files\n")
+        logger.info(f"  Found {len(files)} files\n")
 
         # Step 2: Group by language
-        print("Step 2: Grouping by language...")
+        logger.info("Step 2: Grouping by language...")
         files_by_lang = self._group_by_language(files)
         for lang, lang_files in files_by_lang.items():
-            print(f"  {lang}: {len(lang_files)} files")
-        print()
+            logger.info(f"  {lang}: {len(lang_files)} files")
+        logger.info("")
 
         # Step 3: Build symbol tables
-        print("Step 3: Building symbol tables...")
+        logger.info("Step 3: Building symbol tables...")
         symbol_tables = {}
         for lang, lang_files in files_by_lang.items():
             analyzer = self.registry.get_analyzer(lang)
             if not analyzer:
                 continue
 
-            print(f"  {lang}:")
+            logger.info(f"  {lang}:")
             tables = []
             for file_path in lang_files:
                 table = analyzer.build_symbol_table(file_path)
                 tables.append(table)
-                print(f"    {file_path.name}: {len(table)} symbols")
+                logger.info(f"    {file_path.name}: {len(table)} symbols")
 
             merged = analyzer.merge_symbol_tables(tables)
             symbol_tables[lang] = merged
-            print(f"  Total {lang} symbols: {len(merged)}\n")
+            logger.info(f"  Total {lang} symbols: {len(merged)}\n")
 
         # Step 4: Resolve intra-language calls
-        print("Step 4: Resolving intra-language calls...")
+        logger.info("Step 4: Resolving intra-language calls...")
         for lang, table in symbol_tables.items():
             analyzer = self.registry.get_analyzer(lang)
             if analyzer:
-                print(f"  Resolving {lang} calls...")
+                logger.info(f"  Resolving {lang} calls...")
                 analyzer.resolve_calls(table)
-        print()
+        logger.info("")
 
         # Step 4.5: Mark entry points
-        print("Step 4.5: Marking entry points...")
+        logger.info("Step 4.5: Marking entry points...")
         for lang, table in symbol_tables.items():
             analyzer = self.registry.get_analyzer(lang)
             if analyzer and hasattr(analyzer, 'mark_entry_points'):
                 analyzer.mark_entry_points(table)
                 entry_count = sum(1 for s in table.get_all_symbols() if s.is_entry_point)
-                print(f"  {lang}: {entry_count} entry points marked")
-        print()
+                logger.info(f"  {lang}: {entry_count} entry points marked")
+        logger.info("")
 
         # Step 5: Resolve cross-language calls
-        print("Step 5: Resolving cross-language calls...")
+        logger.info("Step 5: Resolving cross-language calls...")
         cross_refs = self.resolver.resolve_cross_language_calls(symbol_tables)
-        print(f"  Found {len(cross_refs)} cross-language references\n")
+        logger.info(f"  Found {len(cross_refs)} cross-language references\n")
 
         # Apply cross-references to symbols
         self.resolver.apply_cross_refs(symbol_tables, cross_refs)
 
-        print("=== Analysis Complete ===\n")
+        logger.info("=== Analysis Complete ===\n")
         return symbol_tables
 
     def _discover_files(self) -> List[Path]:

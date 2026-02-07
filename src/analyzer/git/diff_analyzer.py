@@ -9,6 +9,7 @@ from ..call_tree_adapter import CallTreeAdapter
 from .ref_resolver import GitRefResolver
 from .file_change_detector import FileChangeDetector, FileChange
 from .symbol_change_mapper import SymbolChangeMapper, SymbolChange
+from utils.subprocess_runner import run_piped_commands, SubprocessError
 
 @dataclass
 class DiffResult:
@@ -82,7 +83,6 @@ class GitDiffAnalyzer:
             List of call trees built from the specified ref
         """
         import tempfile
-        import subprocess
 
         # Determine if we need to checkout to temp directory
         # Use working directory if ref is None or "working"
@@ -100,21 +100,14 @@ class GitDiffAnalyzer:
                 tmp_path.mkdir()
 
                 # Use git archive to extract ref
-                archive_process = subprocess.Popen(
-                    ["git", "archive", ref],
-                    cwd=self.project_root,
-                    stdout=subprocess.PIPE
-                )
-
-                subprocess.run(
-                    ["tar", "-x", "-C", str(tmp_path)],
-                    stdin=archive_process.stdout,
-                    check=True
-                )
-
-                archive_process.wait()
-                if archive_process.returncode != 0:
-                    raise subprocess.CalledProcessError(archive_process.returncode, ["git", "archive", ref])
+                try:
+                    run_piped_commands(
+                        [["git", "archive", ref], ["tar", "-x", "-C", str(tmp_path)]],
+                        cwd=self.project_root,
+                        description=f"Extracting git ref {ref}"
+                    )
+                except SubprocessError as e:
+                    raise RuntimeError(f"Failed to extract ref {ref}: {e}") from e
 
                 # Build tree from checkout
                 adapter = CallTreeAdapter(tmp_path)

@@ -14,6 +14,7 @@ import uvicorn
 import subprocess
 import os
 import shutil
+import logging
 from typing import Optional, Dict
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -30,6 +31,9 @@ from constants import (
     DIFF_VIEWER_DIFFTASTIC,
     DIFF_VIEWER_GIT,
 )
+
+# Setup logger
+logger = logging.getLogger(__name__)
 
 
 # Global state for tree data
@@ -268,8 +272,11 @@ def _open_external_diff(file_path: str, project_path: Path) -> Dict:
             )
             if result.returncode == 0:
                 return {"success": True, "viewer": "VS Code"}
-        except (subprocess.TimeoutExpired, Exception):
-            pass
+        except subprocess.TimeoutExpired:
+            logger.warning(f"VS Code diff timed out for {rel_path}")
+        except Exception as e:
+            logger.error(f"Error opening VS Code diff: {e}")
+
 
     # Try Difftastic - check if it exists first
     if shutil.which("difft"):
@@ -281,8 +288,9 @@ def _open_external_diff(file_path: str, project_path: Path) -> Dict:
                 stderr=subprocess.PIPE
             )
             return {"success": True, "viewer": "Difftastic"}
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f"Error opening Difftastic: {e}")
+
 
     # Try git difftool - git should always be available
     try:
@@ -293,8 +301,8 @@ def _open_external_diff(file_path: str, project_path: Path) -> Dict:
             stderr=subprocess.PIPE
         )
         return {"success": True, "viewer": "git difftool"}
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"Error opening git difftool: {e}")
 
     return {"success": False, "viewer": None}
 

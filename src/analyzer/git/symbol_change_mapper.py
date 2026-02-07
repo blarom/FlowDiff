@@ -8,6 +8,7 @@ import tempfile
 from ..orchestrator import FlowDiffOrchestrator
 from ..core.symbol import Symbol
 from .file_change_detector import FileChange, ChangeType
+from utils.subprocess_runner import run_piped_commands, SubprocessError
 
 @dataclass
 class SymbolChange:
@@ -69,22 +70,15 @@ class SymbolChangeMapper:
             tmp_path = Path(tmpdir) / "checkout"
             tmp_path.mkdir()
 
-            # Use Popen to pipe git archive to tar
-            archive_process = subprocess.Popen(
-                ["git", "archive", ref],
-                cwd=self.project_root,
-                stdout=subprocess.PIPE
-            )
-
-            extract_process = subprocess.run(
-                ["tar", "-x", "-C", str(tmp_path)],
-                stdin=archive_process.stdout,
-                check=True
-            )
-
-            archive_process.wait()
-            if archive_process.returncode != 0:
-                raise subprocess.CalledProcessError(archive_process.returncode, ["git", "archive", ref])
+            # Use git archive to extract ref
+            try:
+                run_piped_commands(
+                    [["git", "archive", ref], ["tar", "-x", "-C", str(tmp_path)]],
+                    cwd=self.project_root,
+                    description=f"Extracting git ref {ref}"
+                )
+            except SubprocessError as e:
+                raise RuntimeError(f"Failed to extract ref {ref}: {e}") from e
 
             orchestrator = FlowDiffOrchestrator(tmp_path)
             symbol_tables = orchestrator.analyze()

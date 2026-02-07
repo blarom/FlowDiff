@@ -98,9 +98,13 @@ def analyze(
         raise typer.Exit(1)
 
     # Setup output directory and logging
-    output_dir.mkdir(parents=True, exist_ok=True)
-    log_path = output_dir / "run.log"
-    log_file = open(log_path, 'w', encoding='utf-8')
+    try:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        log_path = output_dir / "run.log"
+        log_file = open(log_path, 'w', encoding='utf-8')
+    except (IOError, OSError) as e:
+        console.print(f"[red]Error: Cannot write to {output_dir}: {e}[/red]")
+        raise typer.Exit(1)
 
     def log_print(msg: str, style: str = ""):
         """Print to both console and log file."""
