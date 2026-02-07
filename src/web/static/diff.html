@@ -90,62 +90,52 @@
 
         /* Diff Comparison Card */
         .diff-comparison-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 8px;
-            padding: 1.25rem;
-            margin-top: 1rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-left: 4px solid #667eea;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            margin-top: 0.75rem;
+        }
+
+        .comparison-flows {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
         }
 
         .comparison-flow {
-            margin: 0.75rem 0;
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
         }
 
-        .flow-badge {
+        .flow-label {
             font-weight: 600;
-            font-size: 1rem;
-            margin-bottom: 0.35rem;
-            letter-spacing: 0.3px;
+            color: #6c757d;
+            font-size: 0.875rem;
         }
 
-        .flow-description {
-            font-size: 0.9rem;
-            opacity: 0.95;
-            line-height: 1.4;
+        .flow-value {
+            color: #2c3e50;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
         }
 
         .comparison-divider {
-            text-align: center;
-            margin: 1rem 0;
-            padding: 0.5rem 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .divider-icon {
-            font-size: 1.1rem;
-            margin-right: 0.5rem;
-        }
-
-        .divider-text {
-            font-style: italic;
-            opacity: 0.85;
-            font-size: 0.9rem;
+            color: #adb5bd;
+            font-weight: 500;
+            font-size: 0.875rem;
+            padding: 0 0.25rem;
         }
 
         .comparison-timestamp {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            font-size: 0.85rem;
-            opacity: 0.85;
-            text-align: center;
-        }
-
-        .comparison-timestamp::before {
-            content: '📅 ';
-            margin-right: 0.35rem;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e9ecef;
+            font-size: 0.8rem;
+            color: #6c757d;
         }
     </style>
 
@@ -173,21 +163,17 @@
                     <span id="analysis-info" class="header-value"></span>
                 </div>
                 <div id="diff-comparison-card" class="diff-comparison-card" style="display: none;">
-                    <div class="comparison-flow current-flow">
-                        <div class="flow-badge">🟢 Current Flow</div>
-                        <div id="current-flow-desc" class="flow-description"></div>
+                    <div class="comparison-flows">
+                        <div class="comparison-flow current-flow">
+                            <span class="flow-label">After:</span>
+                            <span id="current-flow-desc" class="flow-value"></span>
+                        </div>
+                        <div class="comparison-divider">vs</div>
+                        <div class="comparison-flow reference-flow">
+                            <span class="flow-label">Before:</span>
+                            <span id="reference-flow-desc" class="flow-value"></span>
+                        </div>
                     </div>
-
-                    <div class="comparison-divider">
-                        <span class="divider-icon">⚖️</span>
-                        <span class="divider-text">compared with</span>
-                    </div>
-
-                    <div class="comparison-flow reference-flow">
-                        <div class="flow-badge">🔴 Reference Flow</div>
-                        <div id="reference-flow-desc" class="flow-description"></div>
-                    </div>
-
                     <div id="comparison-timestamp" class="comparison-timestamp"></div>
                 </div>
             </div>

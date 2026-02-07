@@ -113,7 +113,7 @@
         const diffComparisonCard = document.getElementById('diff-comparison-card');
 
         if (diffComparisonCard && metadata.before_ref) {
-            // Use new visual card layout
+            // Use new compact card layout
             const beforeDesc = formatRefDescription(metadata.before_ref);
             const afterDesc = formatRefDescription(metadata.after_ref);
 
