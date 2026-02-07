@@ -48,7 +48,7 @@ console = Console()
 log_file = None
 
 
-def count_functions(nodes):
+def count_functions(nodes: list) -> int:
     """Count total functions in a list of tree nodes recursively."""
     count = 0
     for node in nodes:
@@ -114,7 +114,7 @@ def analyze(
     llm_provider: Optional[str] = typer.Option(None, "--llm-provider", help="LLM provider: 'anthropic-api', 'claude-code-cli', 'auto'"),
     llm_model: Optional[str] = typer.Option(None, "--llm-model", help="LLM model name (provider-specific)"),
     output_dir: Path = typer.Option(DEFAULT_OUTPUT_DIR, "--output", "-o", help="Save reports to directory (default: ./output)")
-):
+) -> None:
     """
     Analyze codebase and visualize call tree with git diff highlighting.
 
@@ -314,7 +314,7 @@ def diff(
     llm_provider: Optional[str] = typer.Option(None, "--llm-provider", help="LLM provider: 'anthropic-api', 'claude-code-cli', 'auto'"),
     llm_model: Optional[str] = typer.Option(None, "--llm-model", help="LLM model name (provider-specific)"),
     output_dir: Path = typer.Option("./output", "--output", "-o", help="Save reports to directory (default: ./output)")
-):
+) -> None:
     """
     Show git diff visualization with call tree context.
 
@@ -343,12 +343,12 @@ def diff(
 
 
 @app.command()
-def version():
+def version() -> None:
     """Show FlowDiff version."""
     console.print(f"FlowDiff v{APP_VERSION} - Multi-language Call Tree Analyzer with Diff Visualization")
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     app()
 

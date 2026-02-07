@@ -386,7 +386,7 @@ def _get_file_diff(file_path: str, project_path: Path) -> str:
         return f"Error: {str(e)}"
 
 
-def set_tree_data(tree_data: Dict, html_path: Optional[str] = None, project_path: Optional[Path] = None):
+def set_tree_data(tree_data: Dict, html_path: Optional[str] = None, project_path: Optional[Path] = None) -> None:
     """Set the current tree data to be served.
 
     Args:
@@ -401,7 +401,7 @@ def set_tree_data(tree_data: Dict, html_path: Optional[str] = None, project_path
         _project_path = project_path
 
 
-def start_server(tree_data: Dict, port: int = 8080, open_browser: bool = True, html_path: Optional[str] = None, project_path: Optional[Path] = None):
+def start_server(tree_data: Dict, port: int = 8080, open_browser: bool = True, html_path: Optional[str] = None, project_path: Optional[Path] = None) -> None:
     """Start the web server and optionally open browser.
 
     Args:
