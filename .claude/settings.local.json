@@ -33,7 +33,17 @@
       "Bash(lsof:*)",
       "Bash(xargs kill:*)",
       "Bash(python:*)",
-      "Bash(changes detected\" for highlighted functions.\n\nRoot cause: _symbols_differ\\(\\) was comparing line_number, which changes\nwhenever code is added/removed above the function, even if the function\nitself is unchanged.\n\nExample:\n- calculate_roic_wacc_spread was at line 2870 in HEAD~1\n- Code added above it, moved to line 3105 in HEAD  \n- Implementation identical, but marked as \"modified\" ❌\n\nSolution: Removed line_number comparison from _symbols_differ\\(\\).\nNow only compares meaningful changes:\n- Metadata \\(parameters, return type, etc.\\)\n- Resolved calls \\(what the function calls\\)  \n- Documentation \\(docstrings\\)\n\nThis eliminates false positives from line number shifts. Functions are\nonly marked as changed if their implementation actually differs.\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(changes detected\" for highlighted functions.\n\nRoot cause: _symbols_differ\\(\\) was comparing line_number, which changes\nwhenever code is added/removed above the function, even if the function\nitself is unchanged.\n\nExample:\n- calculate_roic_wacc_spread was at line 2870 in HEAD~1\n- Code added above it, moved to line 3105 in HEAD  \n- Implementation identical, but marked as \"modified\" ❌\n\nSolution: Removed line_number comparison from _symbols_differ\\(\\).\nNow only compares meaningful changes:\n- Metadata \\(parameters, return type, etc.\\)\n- Resolved calls \\(what the function calls\\)  \n- Documentation \\(docstrings\\)\n\nThis eliminates false positives from line number shifts. Functions are\nonly marked as changed if their implementation actually differs.\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(1 <<'EOF'\nimport sys\nsys.path.insert\\(0, '/Users/barlarom/PycharmProjects/Main/FlowDiff/src'\\)\nfrom analyzer.git.diff_analyzer import GitDiffAnalyzer\nfrom pathlib import Path\n\nanalyzer = GitDiffAnalyzer\\(Path\\('.'\\)\\)\nresult = analyzer.analyze_diff\\(\"HEAD~1\", \"HEAD\"\\)\nprint\\(f\"\\\\nTotal functions modified: {result.functions_modified}\"\\)\nEOF)",
+      "Bash(../FlowDiff/flowdiff analyze:*)",
+      "Bash(tee:*)",
+      "Bash(source:*)",
+      "Bash(/Users/barlarom/PycharmProjects/Main/FlowDiff/.venv/bin/python -m FlowDiff.src.cli diff:*)",
+      "Bash(venv/bin/python -m FlowDiff.src.cli diff:*)",
+      "Bash(/Users/barlarom/PycharmProjects/Main/venv/bin/python -m FlowDiff.src.cli diff:*)",
+      "Bash(venv/bin/python:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(pkill:*)"
     ]
   }
 }

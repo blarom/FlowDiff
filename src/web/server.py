@@ -20,6 +20,16 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from analyzer.git.diff_analyzer import GitDiffAnalyzer, DiffResult
 from analyzer.legacy import CallTreeNode
+from constants import (
+    APP_NAME,
+    APP_VERSION,
+    DEFAULT_PORT,
+    VSCODE_TIMEOUT,
+    GIT_DIFF_TIMEOUT,
+    DIFF_VIEWER_VSCODE,
+    DIFF_VIEWER_DIFFTASTIC,
+    DIFF_VIEWER_GIT,
+)
 
 
 # Global state for tree data
@@ -35,9 +45,9 @@ def create_app() -> FastAPI:
         Configured FastAPI app
     """
     app = FastAPI(
-        title="FlowDiff",
+        title=APP_NAME,
         description="Function call tree visualizer",
-        version="0.2.0"
+        version=APP_VERSION
     )
 
     # Get paths

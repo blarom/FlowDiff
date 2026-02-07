@@ -30,6 +30,14 @@ from output.report_generator import (
     save_markdown_report,
     save_html_output
 )
+from constants import (
+    APP_VERSION,
+    DEFAULT_PORT,
+    DEFAULT_BEFORE_REF,
+    DEFAULT_AFTER_REF,
+    DEFAULT_OUTPUT_DIR,
+)
+from utils import extract_deleted_functions
 
 app = typer.Typer(help="FlowDiff - Multi-language call tree analyzer with diff visualization")
 
@@ -50,14 +58,14 @@ def count_functions(nodes):
 @app.command()
 def analyze(
     path: Path = typer.Argument(".", help="Path to git repository"),
-    before: str = typer.Option("HEAD", "--before", "-b", help="Before ref (commit, branch, tag)"),
-    after: str = typer.Option("working", "--after", "-a", help="After ref (commit, branch, tag, or 'working')"),
-    port: int = typer.Option(8080, "--port", "-p", help="Server port"),
+    before: str = typer.Option(DEFAULT_BEFORE_REF, "--before", "-b", help="Before ref (commit, branch, tag)"),
+    after: str = typer.Option(DEFAULT_AFTER_REF, "--after", "-a", help="After ref (commit, branch, tag, or 'working')"),
+    port: int = typer.Option(DEFAULT_PORT, "--port", "-p", help="Server port"),
     no_browser: bool = typer.Option(False, "--no-browser", help="Don't open browser automatically"),
     no_llm: bool = typer.Option(False, "--no-llm", help="Disable LLM-based entry point filtering"),
     llm_provider: Optional[str] = typer.Option(None, "--llm-provider", help="LLM provider: 'anthropic-api', 'claude-code-cli', 'auto'"),
     llm_model: Optional[str] = typer.Option(None, "--llm-model", help="LLM model name (provider-specific)"),
-    output_dir: Path = typer.Option("./output", "--output", "-o", help="Save reports to directory (default: ./output)")
+    output_dir: Path = typer.Option(DEFAULT_OUTPUT_DIR, "--output", "-o", help="Save reports to directory (default: ./output)")
 ):
     """
     Analyze codebase and visualize call tree with git diff highlighting.
@@ -153,19 +161,8 @@ def analyze(
             # Build tree data from diff result (has changes marked)
             from datetime import datetime
 
-            # Extract deleted functions from symbol_changes
-            deleted_functions = []
-            for qname, symbol_change in diff_result.symbol_changes.items():
-                if symbol_change.change_type.value == "D" and symbol_change.before_symbol:
-                    # Convert Symbol to a serializable dict
-                    deleted_functions.append({
-                        "name": symbol_change.before_symbol.name,
-                        "qualified_name": symbol_change.before_symbol.qualified_name,
-                        "file_path": symbol_change.before_symbol.file_path,
-                        "file_name": symbol_change.before_symbol.file_path.split('/')[-1] if symbol_change.before_symbol.file_path else "",
-                        "line_number": symbol_change.before_symbol.line_number,
-                        "has_changes": True
-                    })
+            # Extract deleted functions from symbol_changes (using utility)
+            deleted_functions = extract_deleted_functions(diff_result.symbol_changes)
 
             tree_data = {
                 "trees": [_serialize_tree_node(tree) for tree in diff_result.after_tree],
@@ -231,19 +228,8 @@ def analyze(
     trees = diff_result.after_tree
     before_trees = diff_result.before_tree
 
-    # Extract deleted functions from symbol_changes
-    deleted_functions = []
-    for qname, symbol_change in diff_result.symbol_changes.items():
-        if symbol_change.change_type.value == "D" and symbol_change.before_symbol:
-            # Convert Symbol to a serializable dict
-            deleted_functions.append({
-                "name": symbol_change.before_symbol.name,
-                "qualified_name": symbol_change.before_symbol.qualified_name,
-                "file_path": symbol_change.before_symbol.file_path,
-                "file_name": symbol_change.before_symbol.file_path.split('/')[-1] if symbol_change.before_symbol.file_path else "",
-                "line_number": symbol_change.before_symbol.line_number,
-                "has_changes": True
-            })
+    # Extract deleted functions from symbol_changes (using utility)
+    deleted_functions = extract_deleted_functions(diff_result.symbol_changes)
 
     tree_data = {
         "trees": [_serialize_tree_node(tree) for tree in trees],
@@ -349,7 +335,7 @@ def diff(
 @app.command()
 def version():
     """Show FlowDiff version."""
-    console.print("FlowDiff v0.3.0 - Multi-language Call Tree Analyzer with Diff Visualization")
+    console.print(f"FlowDiff v{APP_VERSION} - Multi-language Call Tree Analyzer with Diff Visualization")
 
 
 def main():
