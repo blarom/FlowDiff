@@ -13,6 +13,7 @@
             gap: 0;
             height: calc(100vh - 200px);
             overflow: hidden; /* Prevent scrollbars on main container */
+            padding: 0; /* Remove padding from tree.css */
         }
 
         .tree-container {
@@ -20,6 +21,7 @@
             overflow-y: auto;
             overflow-x: hidden; /* Prevent horizontal scroll */
             height: 100%; /* Match parent height */
+            max-height: none; /* Override 70vh limit from tree.css */
         }
 
         .diff-panel {
