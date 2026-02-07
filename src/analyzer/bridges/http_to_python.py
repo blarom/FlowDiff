@@ -1,11 +1,14 @@
 """HTTP to Python bridge for cross-language resolution."""
 
 from typing import Dict, List
+import logging
 
 from ..core.language_bridge import LanguageBridge
 from ..core.symbol import SymbolTable
 from ..python.python_symbol_table import PythonSymbolTable
 from ..shell.shell_analyzer import ShellSymbolTable
+
+logger = logging.getLogger(__name__)
 
 
 class HTTPToPythonBridge(LanguageBridge):
@@ -52,9 +55,9 @@ class HTTPToPythonBridge(LanguageBridge):
         if not endpoint_map:
             return {}
 
-        print(f"Built endpoint map with {len(endpoint_map)} entries")
+        logger.debug(f"Built endpoint map with {len(endpoint_map)} entries")
         for key, handler in endpoint_map.items():
-            print(f"  {key} -> {handler}")
+            logger.debug(f"  {key} -> {handler}")
 
         # Resolve shell HTTP calls
         cross_refs = {}
@@ -73,7 +76,7 @@ class HTTPToPythonBridge(LanguageBridge):
                         if key in endpoint_map:
                             handler = endpoint_map[key]
                             resolved.append(handler)
-                            print(f"  Resolved {raw_call} -> {handler}")
+                            logger.debug(f"  Resolved {raw_call} -> {handler}")
 
             if resolved:
                 cross_refs[symbol.qualified_name] = resolved

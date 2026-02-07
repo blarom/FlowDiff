@@ -1,9 +1,12 @@
 """Cross-language call resolver."""
 
 from typing import Dict, List
+import logging
 
 from .language_bridge import LanguageBridge
 from .symbol import SymbolTable
+
+logger = logging.getLogger(__name__)
 
 
 class CrossLanguageResolver:
@@ -23,7 +26,7 @@ class CrossLanguageResolver:
             bridge: LanguageBridge implementation
         """
         self.bridges.append(bridge)
-        print(f"Registered bridge: {bridge.get_bridge_name()}")
+        logger.debug(f"Registered bridge: {bridge.get_bridge_name()}")
 
     def resolve_cross_language_calls(
         self,
@@ -48,7 +51,7 @@ class CrossLanguageResolver:
                         cross_refs[source] = []
                     cross_refs[source].extend(targets)
             except Exception as e:
-                print(f"Warning: Bridge {bridge.get_bridge_name()} failed: {e}")
+                logger.warning(f"Bridge {bridge.get_bridge_name()} failed: {e}")
 
         return cross_refs
 
@@ -71,4 +74,4 @@ class CrossLanguageResolver:
                     # Add cross-language targets to resolved_calls
                     targets = cross_refs[symbol.qualified_name]
                     symbol.resolved_calls.extend(targets)
-                    print(f"  {symbol.qualified_name} → {targets}")
+                    logger.debug(f"  {symbol.qualified_name} → {targets}")

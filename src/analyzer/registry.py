@@ -2,8 +2,11 @@
 
 from pathlib import Path
 from typing import Dict, List, Optional
+import logging
 
 from .core.language_analyzer import LanguageAnalyzer
+
+logger = logging.getLogger(__name__)
 
 
 class LanguageRegistry:
@@ -26,7 +29,7 @@ class LanguageRegistry:
         self.analyzers.append(analyzer)
         lang = analyzer.get_language_name()
         self._analyzer_by_lang[lang] = analyzer
-        print(f"Registered analyzer: {analyzer.get_language_name()}")
+        logger.debug(f"Registered analyzer: {analyzer.get_language_name()}")
 
     def get_analyzer_for_file(self, file_path: Path) -> Optional[LanguageAnalyzer]:
         """Get appropriate analyzer for a file.
