@@ -87,6 +87,66 @@
             font-size: 0.85rem;
             color: #666;
         }
+
+        /* Diff Comparison Card */
+        .diff-comparison-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-top: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .comparison-flow {
+            margin: 0.75rem 0;
+        }
+
+        .flow-badge {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.35rem;
+            letter-spacing: 0.3px;
+        }
+
+        .flow-description {
+            font-size: 0.9rem;
+            opacity: 0.95;
+            line-height: 1.4;
+        }
+
+        .comparison-divider {
+            text-align: center;
+            margin: 1rem 0;
+            padding: 0.5rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .divider-icon {
+            font-size: 1.1rem;
+            margin-right: 0.5rem;
+        }
+
+        .divider-text {
+            font-style: italic;
+            opacity: 0.85;
+            font-size: 0.9rem;
+        }
+
+        .comparison-timestamp {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.85rem;
+            opacity: 0.85;
+            text-align: center;
+        }
+
+        .comparison-timestamp::before {
+            content: '📅 ';
+            margin-right: 0.35rem;
+        }
     </style>
 
     <!-- Diff2HTML for syntax-highlighted diffs -->
@@ -112,9 +172,23 @@
                     <span class="header-label">Analysis:</span>
                     <span id="analysis-info" class="header-value"></span>
                 </div>
-                <div class="header-row">
-                    <span class="header-label">Diff:</span>
-                    <span id="diff-info" class="header-value"></span>
+                <div id="diff-comparison-card" class="diff-comparison-card" style="display: none;">
+                    <div class="comparison-flow current-flow">
+                        <div class="flow-badge">🟢 Current Flow</div>
+                        <div id="current-flow-desc" class="flow-description"></div>
+                    </div>
+
+                    <div class="comparison-divider">
+                        <span class="divider-icon">⚖️</span>
+                        <span class="divider-text">compared with</span>
+                    </div>
+
+                    <div class="comparison-flow reference-flow">
+                        <div class="flow-badge">🔴 Reference Flow</div>
+                        <div id="reference-flow-desc" class="flow-description"></div>
+                    </div>
+
+                    <div id="comparison-timestamp" class="comparison-timestamp"></div>
                 </div>
             </div>
         </header>

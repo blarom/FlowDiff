@@ -110,7 +110,28 @@
 
         // Update diff info (only in diff.html)
         const diffInfoElem = document.getElementById('diff-info');
-        if (diffInfoElem && metadata.before_ref) {
+        const diffComparisonCard = document.getElementById('diff-comparison-card');
+
+        if (diffComparisonCard && metadata.before_ref) {
+            // Use new visual card layout
+            const beforeDesc = formatRefDescription(metadata.before_ref);
+            const afterDesc = formatRefDescription(metadata.after_ref);
+
+            document.getElementById('current-flow-desc').textContent = afterDesc;
+            document.getElementById('reference-flow-desc').textContent = beforeDesc;
+
+            // Add timestamp if available
+            const timestampElem = document.getElementById('comparison-timestamp');
+            if (metadata.analysis_timestamp && timestampElem) {
+                const timestamp = new Date(metadata.analysis_timestamp);
+                const timeAgo = getTimeAgo(timestamp);
+                timestampElem.textContent = `Analyzed ${timeAgo}`;
+            }
+
+            // Show the card
+            diffComparisonCard.style.display = 'block';
+        } else if (diffInfoElem && metadata.before_ref) {
+            // Fallback to old text format if card not found
             const beforeDesc = formatRefDescription(metadata.before_ref);
             const afterDesc = formatRefDescription(metadata.after_ref);
             let diffInfo = `Current flow <strong>${afterDesc}</strong> compared with reference flow <strong>${beforeDesc}</strong>`;
