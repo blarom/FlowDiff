@@ -2,7 +2,8 @@
 
 from typing import Any, Dict, List
 
-from analyzer.models import Symbol, SymbolChange
+from analyzer.core.symbol import Symbol
+from analyzer.git.symbol_change_mapper import SymbolChange
 
 
 def serialize_symbol(symbol: Symbol) -> Dict[str, Any]:
