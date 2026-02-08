@@ -43,7 +43,14 @@
       "Bash(/Users/barlarom/PycharmProjects/Main/venv/bin/python -m FlowDiff.src.cli diff:*)",
       "Bash(venv/bin/python:*)",
       "Bash(git ls-tree:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(done)",
+      "Bash(git reset:*)",
+      "Bash(./venv/bin/python -m pytest:*)",
+      "Bash(/Users/barlarom/PycharmProjects/Main/FlowDiff/venv/bin/pip install:*)",
+      "Bash(/Users/barlarom/PycharmProjects/Main/FlowDiff/venv/bin/python:*)",
+      "Bash(timeout 30 /Users/barlarom/PycharmProjects/Main/FlowDiff/venv/bin/python:*)",
+      "Bash(git rm:*)"
     ]
   }
 }
