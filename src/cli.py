@@ -10,9 +10,8 @@ Usage:
 
 import sys
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Optional
 from datetime import datetime
-import os
 import re
 import traceback
 import typer
@@ -154,12 +153,9 @@ def analyze(
         console.print(f"[red]Error: Cannot write to {output_dir}: {e}[/red]")
         raise typer.Exit(1)
 
-    def log_print(msg: str, style: str = ""):
+    def log_print(msg: str):
         """Print to both console and log file."""
-        if style:
-            console.print(msg)
-        else:
-            console.print(msg)
+        console.print(msg)
         # Strip ANSI codes for log file
         clean_msg = re.sub(r'\[.*?\]', '', msg)  # Remove rich markup
         clean_msg = re.sub(r'\x1b\[[0-9;]*m', '', clean_msg)  # Remove ANSI codes
@@ -264,17 +260,10 @@ def analyze(
     log_print("")
     log_print("[green]✓ Preparing visualization data...[/green]")
 
-    # Use both trees from diff_result (already have changes marked)
-    trees = diff_result.after_tree
-    before_trees = diff_result.before_tree
-
-    # Extract deleted functions from symbol_changes (using utility)
-    deleted_functions = extract_deleted_functions(diff_result.symbol_changes)
-
-    # Build tree data (no timestamp for diff command)
-    tree_data = build_tree_data(
-        after_trees=trees,
-        before_trees=before_trees,
+    # Build tree data for server (no timestamp needed)
+    server_tree_data = build_tree_data(
+        after_trees=diff_result.after_tree,
+        before_trees=diff_result.before_tree,
         deleted_functions=deleted_functions,
         diff_result=diff_result,
         project_path=project_path,
@@ -294,7 +283,7 @@ def analyze(
         if log_file:
             log_file.close()
 
-        start_server(tree_data, port=port, open_browser=False, project_path=project_path)
+        start_server(server_tree_data, port=port, open_browser=False, project_path=project_path)
     except KeyboardInterrupt:
         log_print("\n\n[yellow]Server stopped[/yellow]")
     except Exception as e:

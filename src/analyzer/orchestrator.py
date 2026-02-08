@@ -50,44 +50,91 @@ class FlowDiffOrchestrator:
         Returns:
             Map from language name to SymbolTable with resolved calls
         """
-        # Succinct logging mode when context is provided
-        if context:
+        verbose = context is None
+
+        if verbose:
+            logger.info("\n=== FlowDiff Multi-Language Analysis ===")
+            logger.info(f"Project: {self.project_root}\n")
+            logger.info("Step 1: Discovering files...")
+        else:
             logger.info(f"Analyzing {context}...")
-            files = self._discover_files()
-            files_by_lang = self._group_by_language(files)
 
-            # Build symbol tables
-            symbol_tables = {}
+        # Step 1: Discover files
+        files = self._discover_files()
+
+        if verbose:
+            logger.info(f"  Found {len(files)} files\n")
+            logger.info("Step 2: Grouping by language...")
+
+        # Step 2: Group by language
+        files_by_lang = self._group_by_language(files)
+
+        if verbose:
             for lang, lang_files in files_by_lang.items():
-                analyzer = self.registry.get_analyzer(lang)
-                if not analyzer:
-                    continue
+                logger.info(f"  {lang}: {len(lang_files)} files")
+            logger.info("")
+            logger.info("Step 3: Building symbol tables...")
 
-                tables = []
-                for file_path in lang_files:
-                    table = analyzer.build_symbol_table(file_path)
-                    tables.append(table)
+        # Step 3: Build symbol tables
+        symbol_tables = {}
+        for lang, lang_files in files_by_lang.items():
+            analyzer = self.registry.get_analyzer(lang)
+            if not analyzer:
+                continue
 
-                merged = analyzer.merge_symbol_tables(tables)
-                symbol_tables[lang] = merged
+            if verbose:
+                logger.info(f"  {lang}:")
 
-            # Resolve intra-language calls
-            for lang, table in symbol_tables.items():
-                analyzer = self.registry.get_analyzer(lang)
-                if analyzer:
-                    analyzer.resolve_calls(table)
+            tables = []
+            for file_path in lang_files:
+                table = analyzer.build_symbol_table(file_path)
+                tables.append(table)
+                if verbose:
+                    logger.info(f"    {file_path.name}: {len(table)} symbols")
 
-            # Mark entry points
-            for lang, table in symbol_tables.items():
-                analyzer = self.registry.get_analyzer(lang)
-                if analyzer and hasattr(analyzer, 'mark_entry_points'):
-                    analyzer.mark_entry_points(table)
+            merged = analyzer.merge_symbol_tables(tables)
+            symbol_tables[lang] = merged
 
-            # Resolve cross-language calls
-            cross_refs = self.resolver.resolve_cross_language_calls(symbol_tables)
-            self.resolver.apply_cross_refs(symbol_tables, cross_refs)
+            if verbose:
+                logger.info(f"  Total {lang} symbols: {len(merged)}\n")
 
-            # Single-line summary
+        # Step 4: Resolve intra-language calls
+        if verbose:
+            logger.info("Step 4: Resolving intra-language calls...")
+
+        for lang, table in symbol_tables.items():
+            analyzer = self.registry.get_analyzer(lang)
+            if analyzer:
+                if verbose:
+                    logger.info(f"  Resolving {lang} calls...")
+                analyzer.resolve_calls(table)
+
+        if verbose:
+            logger.info("")
+            logger.info("Step 4.5: Marking entry points...")
+
+        # Step 4.5: Mark entry points
+        for lang, table in symbol_tables.items():
+            analyzer = self.registry.get_analyzer(lang)
+            if analyzer and hasattr(analyzer, 'mark_entry_points'):
+                analyzer.mark_entry_points(table)
+                if verbose:
+                    entry_count = sum(1 for s in table.get_all_symbols() if s.is_entry_point)
+                    logger.info(f"  {lang}: {entry_count} entry points marked")
+
+        if verbose:
+            logger.info("")
+            logger.info("Step 5: Resolving cross-language calls...")
+
+        # Step 5: Resolve cross-language calls
+        cross_refs = self.resolver.resolve_cross_language_calls(symbol_tables)
+        self.resolver.apply_cross_refs(symbol_tables, cross_refs)
+
+        if verbose:
+            logger.info(f"  Found {len(cross_refs)} cross-language references\n")
+            logger.info("=== Analysis Complete ===\n")
+        else:
+            # Single-line summary for succinct mode
             total_files = len(files)
             total_symbols = sum(len(table) for table in symbol_tables.values())
             total_entry_points = sum(
@@ -99,71 +146,6 @@ class FlowDiffOrchestrator:
                 f"{total_entry_points} entry points, {len(cross_refs)} cross-refs\n"
             )
 
-            return symbol_tables
-
-        # Detailed logging mode when no context provided
-        logger.info("\n=== FlowDiff Multi-Language Analysis ===")
-        logger.info(f"Project: {self.project_root}\n")
-
-        # Step 1: Discover files
-        logger.info("Step 1: Discovering files...")
-        files = self._discover_files()
-        logger.info(f"  Found {len(files)} files\n")
-
-        # Step 2: Group by language
-        logger.info("Step 2: Grouping by language...")
-        files_by_lang = self._group_by_language(files)
-        for lang, lang_files in files_by_lang.items():
-            logger.info(f"  {lang}: {len(lang_files)} files")
-        logger.info("")
-
-        # Step 3: Build symbol tables
-        logger.info("Step 3: Building symbol tables...")
-        symbol_tables = {}
-        for lang, lang_files in files_by_lang.items():
-            analyzer = self.registry.get_analyzer(lang)
-            if not analyzer:
-                continue
-
-            logger.info(f"  {lang}:")
-            tables = []
-            for file_path in lang_files:
-                table = analyzer.build_symbol_table(file_path)
-                tables.append(table)
-                logger.info(f"    {file_path.name}: {len(table)} symbols")
-
-            merged = analyzer.merge_symbol_tables(tables)
-            symbol_tables[lang] = merged
-            logger.info(f"  Total {lang} symbols: {len(merged)}\n")
-
-        # Step 4: Resolve intra-language calls
-        logger.info("Step 4: Resolving intra-language calls...")
-        for lang, table in symbol_tables.items():
-            analyzer = self.registry.get_analyzer(lang)
-            if analyzer:
-                logger.info(f"  Resolving {lang} calls...")
-                analyzer.resolve_calls(table)
-        logger.info("")
-
-        # Step 4.5: Mark entry points
-        logger.info("Step 4.5: Marking entry points...")
-        for lang, table in symbol_tables.items():
-            analyzer = self.registry.get_analyzer(lang)
-            if analyzer and hasattr(analyzer, 'mark_entry_points'):
-                analyzer.mark_entry_points(table)
-                entry_count = sum(1 for s in table.get_all_symbols() if s.is_entry_point)
-                logger.info(f"  {lang}: {entry_count} entry points marked")
-        logger.info("")
-
-        # Step 5: Resolve cross-language calls
-        logger.info("Step 5: Resolving cross-language calls...")
-        cross_refs = self.resolver.resolve_cross_language_calls(symbol_tables)
-        logger.info(f"  Found {len(cross_refs)} cross-language references\n")
-
-        # Apply cross-references to symbols
-        self.resolver.apply_cross_refs(symbol_tables, cross_refs)
-
-        logger.info("=== Analysis Complete ===\n")
         return symbol_tables
 
     def _discover_files(self) -> List[Path]:

@@ -3,7 +3,8 @@ from pathlib import Path
 from typing import List, Optional
 from dataclasses import dataclass
 from enum import Enum
-import subprocess
+
+from utils.subprocess_runner import run_command, SubprocessError
 
 class ChangeType(Enum):
     ADDED = "A"
@@ -42,12 +43,10 @@ class FileChangeDetector:
         else:
             cmd.extend([f"{before_ref}..{after_ref}"])
 
-        result = subprocess.run(
+        result = run_command(
             cmd,
             cwd=self.project_root,
-            capture_output=True,
-            text=True,
-            check=True
+            description="Get changed files"
         )
 
         changes = []

@@ -4,7 +4,7 @@ FastAPI web server for FlowDiff visualization.
 Serves the interactive call tree viewer and provides API endpoints for tree data.
 """
 
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from pathlib import Path
@@ -12,7 +12,6 @@ import sys
 import webbrowser
 import uvicorn
 import subprocess
-import os
 import shutil
 import logging
 from typing import Optional, Dict
@@ -25,13 +24,8 @@ from utils.serialization import serialize_tree_node
 from constants import (
     APP_NAME,
     APP_VERSION,
-    DEFAULT_PORT,
     VSCODE_TIMEOUT,
     GIT_DIFF_TIMEOUT,
-    GIT_DIFFTOOL_TIMEOUT,
-    DIFF_VIEWER_VSCODE,
-    DIFF_VIEWER_DIFFTASTIC,
-    DIFF_VIEWER_GIT,
 )
 
 # Setup logger
@@ -263,7 +257,6 @@ def _open_external_diff(file_path: str, project_path: Path) -> Dict:
         except Exception as e:
             logger.error(f"Error opening VS Code diff: {e}")
 
-
     # Try Difftastic - check if it exists first
     if shutil.which("difft"):
         try:
@@ -276,7 +269,6 @@ def _open_external_diff(file_path: str, project_path: Path) -> Dict:
             return {"success": True, "viewer": "Difftastic"}
         except Exception as e:
             logger.error(f"Error opening Difftastic: {e}")
-
 
     # Try git difftool - git should always be available
     try:

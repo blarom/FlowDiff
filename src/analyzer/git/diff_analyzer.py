@@ -2,7 +2,7 @@
 from pathlib import Path
 from typing import List, Dict, Optional
 from dataclasses import dataclass
-import sys
+import tempfile
 
 from ..legacy import CallTreeNode
 from ..call_tree_adapter import CallTreeAdapter
@@ -82,8 +82,6 @@ class GitDiffAnalyzer:
         Returns:
             List of call trees built from the specified ref
         """
-        import tempfile
-
         # Determine if we need to checkout to temp directory
         # Use working directory if ref is None or "working"
         use_working_dir = ref is None or ref == "working"
@@ -164,9 +162,6 @@ class GitDiffAnalyzer:
         for tree in trees:
             adapter._apply_expansion_state(tree, expansion_depth)
 
-        # NOTE: Orphan function detection disabled - we now properly resolve instance method calls
-        # trees = self._add_orphan_changed_functions(trees, symbol_changes, adapter)
-
         # Debug logging
         if self.debug_log_path:
             with open(self.debug_log_path, 'a', encoding='utf-8') as f:
@@ -181,87 +176,6 @@ class GitDiffAnalyzer:
                 f.write(f"Expansion depth: {expansion_depth}\n")
 
         return trees
-
-    def _mark_changed_nodes(
-        self,
-        trees: List[CallTreeNode],
-        symbol_changes: Dict[str, SymbolChange]
-    ) -> None:
-        """Mark nodes with changes."""
-        marked_count = 0
-
-        def mark_recursive(node: CallTreeNode):
-            nonlocal marked_count
-            if node.function.qualified_name in symbol_changes:
-                node.function.has_changes = True
-                marked_count += 1
-            for child in node.children:
-                mark_recursive(child)
-
-        for tree in trees:
-            mark_recursive(tree)
-
-        # Debug logging
-        if self.debug_log_path:
-            with open(self.debug_log_path, 'a', encoding='utf-8') as f:
-                f.write(f"\nMarked {marked_count} nodes with changes\n")
-
-    def _add_orphan_changed_functions(
-        self,
-        trees: List[CallTreeNode],
-        symbol_changes: Dict[str, SymbolChange],
-        adapter
-    ) -> List[CallTreeNode]:
-        """Add changed functions that aren't in the tree as separate entry points.
-
-        This happens when the analyzer can't resolve certain call patterns
-        (e.g., instance method calls like self.instance.method()).
-        """
-        # Find all qualified names in the existing tree
-        existing_qnames = set()
-
-        def collect_qnames(node):
-            existing_qnames.add(node.function.qualified_name)
-            for child in node.children:
-                collect_qnames(child)
-
-        for tree in trees:
-            collect_qnames(tree)
-
-        # Find changed functions not in the tree
-        orphan_changes = {}
-        for qname, change in symbol_changes.items():
-            if qname not in existing_qnames:
-                orphan_changes[qname] = change
-
-        # Debug logging
-        if self.debug_log_path:
-            with open(self.debug_log_path, 'a', encoding='utf-8') as f:
-                f.write(f"\nOrphan changed functions (not in tree): {len(orphan_changes)}\n")
-                for qname in list(orphan_changes.keys())[:10]:
-                    f.write(f"  - {qname}\n")
-
-        # Try to add orphans by looking them up in the adapter's symbol table
-        orphan_trees = []
-        all_symbols = adapter.all_symbols  # Dict[str, Symbol]
-
-        for qname in orphan_changes.keys():
-            if qname in all_symbols:
-                symbol = all_symbols[qname]
-                # Mark it as having changes
-                symbol.has_changes = True
-                # Convert to FunctionInfo and CallTreeNode
-                func_info = adapter._symbol_to_function_info(symbol)
-                func_info.has_changes = True
-                # Create a standalone node (expanded, no children for orphans)
-                orphan_node = CallTreeNode(function=func_info, depth=0, is_expanded=True)
-                orphan_trees.append(orphan_node)
-
-        if self.debug_log_path:
-            with open(self.debug_log_path, 'a', encoding='utf-8') as f:
-                f.write(f"Added {len(orphan_trees)} orphan nodes to tree\n")
-
-        return trees + orphan_trees
 
     def _calculate_stats(self, symbol_changes: Dict[str, SymbolChange]) -> Dict[str, int]:
         """Calculate summary statistics."""

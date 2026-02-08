@@ -1,7 +1,9 @@
 """Git reference resolver for FlowDiff."""
 from pathlib import Path
 from typing import Optional
-import subprocess
+
+from utils.subprocess_runner import run_command, SubprocessError
+
 
 class GitRefResolver:
     """Resolve git reference strings to commit SHAs."""
@@ -27,16 +29,14 @@ class GitRefResolver:
             return None
 
         try:
-            result = subprocess.run(
+            result = run_command(
                 ["git", "rev-parse", "--verify", ref],
                 cwd=self.project_root,
-                capture_output=True,
-                text=True,
-                check=True
+                description=f"Resolve git ref '{ref}'"
             )
             return result.stdout.strip()
-        except subprocess.CalledProcessError as e:
-            raise ValueError(f"Invalid git ref '{ref}': {e.stderr.strip()}")
+        except SubprocessError as e:
+            raise ValueError(f"Invalid git ref '{ref}': {e}")
 
     def get_ref_description(self, ref: str) -> str:
         """Get human-readable description."""
@@ -45,14 +45,15 @@ class GitRefResolver:
 
         sha = self.resolve(ref)
         try:
-            result = subprocess.run(
+            result = run_command(
                 ["git", "name-rev", "--name-only", sha],
                 cwd=self.project_root,
-                capture_output=True,
-                text=True,
-                check=True
+                description="Get ref name",
+                check=False
             )
-            branch = result.stdout.strip()
-            return f"{ref} ({branch}, {sha[:7]})"
-        except:
+            if result.returncode == 0:
+                branch = result.stdout.strip()
+                return f"{ref} ({branch}, {sha[:7]})"
+            return f"{ref} ({sha[:7]})"
+        except SubprocessError:
             return f"{ref} ({sha[:7]})"
