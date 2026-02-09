@@ -1089,6 +1089,11 @@
             if (window.highlightChangeInPanel && nodeElement.classList.contains('has-changes')) {
                 window.highlightChangeInPanel(qualifiedName);
             }
+
+            // Sync with architecture diagram if it exists
+            if (window.onFunctionSelected) {
+                window.onFunctionSelected(qualifiedName);
+            }
         }
 
         // Scroll to center the node

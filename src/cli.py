@@ -112,6 +112,7 @@ def analyze(
     no_llm: bool = typer.Option(False, "--no-llm", help="Disable LLM-based entry point filtering"),
     llm_provider: Optional[str] = typer.Option(None, "--llm-provider", help="LLM provider: 'anthropic-api', 'claude-code-cli', 'auto'"),
     llm_model: Optional[str] = typer.Option(None, "--llm-model", help="LLM model name (provider-specific)"),
+    generate_architecture: bool = typer.Option(False, "--generate-architecture", "--arch", help="Generate interactive architecture block diagram"),
     output_dir: Path = typer.Option(DEFAULT_OUTPUT_DIR, "--output", "-o", help="Save reports to directory (default: ./output)")
 ) -> None:
     """
@@ -220,6 +221,51 @@ def analyze(
                 include_timestamp=True
             )
 
+            # Generate architecture diagram if requested
+            if generate_architecture:
+                task_arch = progress.add_task("🏗️  Generating architecture diagram...", total=None)
+                try:
+                    from analyzer.architecture_analyzer import ArchitectureAnalyzer
+                    arch_analyzer = ArchitectureAnalyzer()
+                    arch_diagram = arch_analyzer.analyze(diff_result.after_tree, project_path)
+
+                    # Generate SVG
+                    svg_content = arch_analyzer.generate_svg_diagram(arch_diagram)
+
+                    # Add to tree_data
+                    tree_data["architecture"] = {
+                        "blocks": [
+                            {
+                                "id": block.id,
+                                "label": block.label,
+                                "description": block.description,
+                                "functions": block.functions,
+                                "color": block.color
+                            }
+                            for block in arch_diagram.blocks
+                        ],
+                        "connections": [
+                            {
+                                "from": conn.from_block,
+                                "to": conn.to_block,
+                                "label": conn.label
+                            }
+                            for conn in arch_diagram.connections
+                        ],
+                        "svg": svg_content
+                    }
+
+                    # Save SVG separately
+                    svg_path = output_dir / f"{project_name}_architecture.svg"
+                    svg_path.write_text(svg_content, encoding='utf-8')
+
+                    progress.update(task_arch, completed=True)
+                    log_print("[green]✓ Architecture diagram generated[/green]")
+                except Exception as e:
+                    progress.update(task_arch, completed=True)
+                    log_print(f"[yellow]⚠ Architecture generation failed: {e}[/yellow]")
+                    # Continue without architecture
+
             # Save outputs (no timestamps - files get overwritten)
             json_path = output_dir / f"{project_name}.json"
             text_path = output_dir / f"{project_name}.txt"
@@ -240,6 +286,8 @@ def analyze(
             log_print(f"[dim]   Text:     {text_path.name}[/dim]")
             log_print(f"[dim]   Markdown: {md_path.name}[/dim]")
             log_print(f"[dim]   HTML:     {html_path.name}[/dim]")
+            if generate_architecture and "architecture" in tree_data:
+                log_print(f"[dim]   Architecture: {project_name}_architecture.svg[/dim]")
             log_print(f"[dim]   Log:      {log_path.name}[/dim]")
             log_print(f"[dim]   Debug:    {debug_log_path.name}[/dim]")
 
@@ -269,6 +317,10 @@ def analyze(
         project_path=project_path,
         include_timestamp=False
     )
+
+    # Copy architecture data if it was generated
+    if "architecture" in tree_data:
+        server_tree_data["architecture"] = tree_data["architecture"]
 
     log_print("[green]✓ Opening visualization...[/green]")
     log_print("")
@@ -302,6 +354,7 @@ def diff(
     no_llm: bool = typer.Option(False, "--no-llm", help="Disable LLM-based entry point filtering"),
     llm_provider: Optional[str] = typer.Option(None, "--llm-provider", help="LLM provider: 'anthropic-api', 'claude-code-cli', 'auto'"),
     llm_model: Optional[str] = typer.Option(None, "--llm-model", help="LLM model name (provider-specific)"),
+    generate_architecture: bool = typer.Option(False, "--generate-architecture", "--arch", help="Generate interactive architecture block diagram"),
     output_dir: Path = typer.Option("./output", "--output", "-o", help="Save reports to directory (default: ./output)")
 ) -> None:
     """
@@ -327,6 +380,7 @@ def diff(
         no_llm=no_llm,
         llm_provider=llm_provider,
         llm_model=llm_model,
+        generate_architecture=generate_architecture,
         output_dir=output_dir
     )
 

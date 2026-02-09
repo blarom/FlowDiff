@@ -89,6 +89,25 @@ def create_app() -> FastAPI:
 
         return JSONResponse(_current_tree_data)
 
+    @app.get("/api/architecture")
+    async def get_architecture():
+        """Get architecture diagram data.
+
+        Returns:
+            JSON with architecture blocks, connections, and SVG
+        """
+        if _current_tree_data is None:
+            raise HTTPException(status_code=404, detail="No tree data loaded")
+
+        architecture_data = _current_tree_data.get("architecture")
+        if architecture_data is None:
+            raise HTTPException(
+                status_code=404,
+                detail="No architecture data available. Run with --generate-architecture flag."
+            )
+
+        return JSONResponse(architecture_data)
+
     @app.get("/api/saved-html-path")
     async def get_saved_html_path():
         """Get path to saved HTML file.

@@ -139,6 +139,125 @@
             color: #6c757d;
             white-space: nowrap;
         }
+
+        /* Architecture Panel */
+        .architecture-panel {
+            position: fixed;
+            left: 0;
+            top: 200px;
+            bottom: 0;
+            width: 300px;
+            background: white;
+            border-right: 2px solid #ddd;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+            z-index: 100;
+            overflow-y: auto;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .architecture-panel.visible {
+            transform: translateX(0);
+        }
+
+        .architecture-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .architecture-panel-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+
+        .architecture-toggle-btn {
+            position: fixed;
+            left: 10px;
+            top: 210px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            padding: 12px 8px;
+            cursor: pointer;
+            z-index: 99;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            box-shadow: 2px 0 4px rgba(0,0,0,0.2);
+        }
+
+        .architecture-toggle-btn:hover {
+            background: #2980b9;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.3);
+        }
+
+        .architecture-panel.visible + .architecture-toggle-btn {
+            left: 310px;
+        }
+
+        #architecture-svg-container {
+            padding: 1rem;
+            overflow: auto;
+        }
+
+        #architecture-svg-container svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Adjust main grid when architecture panel is visible */
+        .architecture-panel.visible ~ .container main {
+            margin-left: 300px;
+            width: calc(100% - 300px);
+        }
+
+        /* Toast animations */
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .block-info-popup h3 {
+            margin: 0 0 0.5rem 0;
+            color: #3498db;
+        }
+
+        .block-info-popup ul {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .block-info-popup code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
     </style>
 
     <!-- Diff2HTML for syntax-highlighted diffs -->
@@ -146,6 +265,23 @@
     <script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html-ui.min.js"></script>
 </head>
 <body>
+    <!-- Architecture Panel (collapsible) -->
+    <div id="architecture-panel" class="architecture-panel" style="display: none;">
+        <div class="architecture-panel-header">
+            <h3>🏗️ Architecture</h3>
+            <button onclick="toggleArchitecturePanel()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #7f8c8d;">&times;</button>
+        </div>
+        <div id="architecture-svg-container">
+            <!-- SVG diagram will be loaded here -->
+            <p style="text-align: center; color: #999; padding: 2rem;">Loading architecture diagram...</p>
+        </div>
+    </div>
+
+    <!-- Architecture Toggle Button -->
+    <button id="architecture-toggle-btn" class="architecture-toggle-btn" onclick="toggleArchitecturePanel()" title="Toggle Architecture Diagram" style="display: none;">
+        🏗️
+    </button>
+
     <!-- Saved Report Banner -->
     <div id="saved-report-banner" class="saved-report-banner hidden">
         <span>📄 Saved report: <a id="saved-report-link" href="#" target="_blank"></a></span>
@@ -281,5 +417,6 @@
 
     <script src="/static/tree.js"></script>
     <script src="/static/diff-panel.js"></script>
+    <script src="/static/architecture.js"></script>
 </body>
 </html>
