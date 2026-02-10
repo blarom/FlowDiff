@@ -346,6 +346,7 @@
                 <span id="change-counter" style="padding: 0 8px; color: #7f8c8d; font-size: 14px; font-weight: 500;">-</span>
                 <button id="next-change" class="diff-btn" title="Jump to next changed function (→ or N)">Next ▶</button>
                 <input type="text" id="search" placeholder="Find by regex..." />
+                <button id="show-architecture-btn" style="display: none; padding: 6px 12px; font-weight: 600; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">🏗️ Show Architecture</button>
             </div>
             <div class="controls-row filter-row">
                 <span class="filter-section-label">Filters:</span>
@@ -400,9 +401,9 @@
                         🏗️ Architecture Diagram
                     </h3>
                     <div class="architecture-controls">
-                        <button class="zoom-btn" id="zoom-out-btn" title="Zoom Out (or scroll down)">−</button>
+                        <button class="zoom-btn" id="zoom-out-btn" title="Zoom Out">−</button>
                         <span class="zoom-level" id="zoom-level">100%</span>
-                        <button class="zoom-btn" id="zoom-in-btn" title="Zoom In (or scroll up)">+</button>
+                        <button class="zoom-btn" id="zoom-in-btn" title="Zoom In">+</button>
                         <button class="reset-zoom-btn" id="reset-zoom-btn" title="Reset zoom and position">Reset</button>
                         <button class="collapse-architecture-btn" id="collapse-architecture-btn" title="Hide architecture diagram">▼</button>
                     </div>

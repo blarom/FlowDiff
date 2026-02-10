@@ -173,7 +173,6 @@
         }
 
         setupZoomButtons();
-        setupMouseWheelZoom(container);
         setupPanDrag(container);
         updateTransform();
     }
@@ -188,14 +187,6 @@
         if (zoomOutBtn) zoomOutBtn.onclick = () => zoomBy(-0.2);
         if (resetBtn) resetBtn.onclick = resetZoomAndPan;
         if (collapseBtn) collapseBtn.onclick = hideArchitectureSection;
-    }
-
-    function setupMouseWheelZoom(container) {
-        container.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const delta = e.deltaY > 0 ? -0.1 : 0.1;
-            zoomBy(delta);
-        }, { passive: false });
     }
 
     function setupPanDrag(container) {
@@ -218,8 +209,8 @@
                 const scaleX = (originalViewBox.width / currentZoom) / containerRect.width;
                 const scaleY = (originalViewBox.height / currentZoom) / containerRect.height;
 
-                panX = -deltaX * scaleX;
-                panY = -deltaY * scaleY;
+                panX = deltaX * scaleX;
+                panY = deltaY * scaleY;
 
                 updateTransform();
             }
@@ -454,9 +445,13 @@
     function showArchitectureSection() {
         const section = document.getElementById('architecture-section');
         const panel = document.getElementById('architecture-panel');
+        const showBtn = document.getElementById('show-architecture-btn');
 
         if (section) {
             section.style.display = 'block';
+        }
+        if (showBtn) {
+            showBtn.style.display = 'none';
         }
 
         if (panel) {
@@ -477,8 +472,13 @@
      */
     function hideArchitectureSection() {
         const section = document.getElementById('architecture-section');
+        const showBtn = document.getElementById('show-architecture-btn');
+
         if (section) {
             section.style.display = 'none';
+        }
+        if (showBtn) {
+            showBtn.style.display = 'inline-block';
         }
     }
 
@@ -555,6 +555,12 @@
     // Export functions for use by other scripts
     window.initArchitecture = initArchitecture;
     window.onFunctionSelected = onFunctionSelected;
+
+    // Setup show architecture button listener
+    const showArchitectureBtn = document.getElementById('show-architecture-btn');
+    if (showArchitectureBtn) {
+        showArchitectureBtn.onclick = showArchitectureSection;
+    }
 
     // Auto-initialize when DOM is ready
     if (document.readyState === 'loading') {
