@@ -4,14 +4,14 @@ Architecture Analyzer - LLM-powered architectural block identification.
 Uses LLM to analyze codebase structure and identify 10-15 high-level
 architectural components, their relationships, and function mappings.
 """
-from pathlib import Path
-from typing import Dict, List, Any, Optional
 import json
 import subprocess
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from .llm_providers import LLMProvider, create_provider
 from .legacy import CallTreeNode
+from .llm_providers import LLMProvider
 
 
 @dataclass
@@ -61,7 +61,7 @@ class ArchitectureAnalyzer:
         "#7f8c8d",  # Gray - Other
     ]
 
-    def __init__(self, llm_provider: Optional[LLMProvider] = None):
+    def __init__(self, llm_provider: Optional[LLMProvider] = None) -> None:
         """
         Initialize architecture analyzer.
 
@@ -109,9 +109,9 @@ class ArchitectureAnalyzer:
         Returns:
             List of function dictionaries with metadata
         """
-        functions = []
+        functions: List[Dict[str, Any]] = []
 
-        def traverse(node: CallTreeNode):
+        def traverse(node: CallTreeNode) -> None:
             functions.append({
                 "qualified_name": node.function.qualified_name,
                 "name": node.function.name,
@@ -121,7 +121,6 @@ class ArchitectureAnalyzer:
                 "calls": node.function.calls,
                 "called_by": node.function.called_by,
             })
-
             for child in node.children:
                 traverse(child)
 
@@ -146,7 +145,7 @@ class ArchitectureAnalyzer:
             Formatted summary string
         """
         # Group by file
-        by_file: Dict[str, List[Dict]] = {}
+        by_file: Dict[str, List[Dict[str, Any]]] = {}
         for func in functions:
             file_path = func["file_path"]
             if file_path not in by_file:
@@ -203,40 +202,52 @@ class ArchitectureAnalyzer:
 
 {function_summary}
 
-Group functions into architectural components based on:
-- Directory structure (e.g., src/web/, src/analyzer/, src/cli/)
-- Functional purpose (e.g., "API Layer", "Code Analysis", "Git Integration", "Web Server", "Utilities")
-- Common patterns in software architecture (presentation layer, business logic, data access, etc.)
+Create architectural blocks based on directory structure and functional purpose.
 
-Provide:
-1. Block ID (lowercase_with_underscores, e.g., "api_layer")
-2. Block label (human-readable, e.g., "API Layer")
-3. Description (1-2 sentences about the block's purpose)
-4. List of function prefixes that belong to this block (e.g., ["api::", "server::"])
-5. Connections between blocks showing data flow or dependencies
+Requirements:
+1. Block ID: lowercase_with_underscores (e.g., "web_server")
+2. Block Label: Human-readable name (e.g., "Web Server")
+3. Description: One sentence describing the block's responsibility
+4. Function Prefixes: Dot-separated module paths WITHOUT .py extension
+   - Examples: ["src.api", "src.analyzer", "src.data.extraction_layer"]
+   - For scripts: ["scripts"]
+   - For tests: ["tests", "testing"]
+5. Color: Use semantic colors based on block type (see categories below)
+6. Connections: Show execution flow FROM caller TO callee
 
-Special handling:
-- Group test files into a single "Tests" block
-- Group small utility files into "Utilities" block
-- Main entry points should map to their respective workflow blocks
-- CLI commands go to "CLI Interface" block
+Color Categories (use these exact colors):
+- Entry Points (CLI/Scripts/API): "#7f8c8d" (gray)
+- Backend/Business Logic: "#e67e22" (orange) or "#9b59b6" (purple)
+- Data/Persistence Layers: "#16a085" (teal)
+- Reporting/Output/Visualization: "#c0392b" (red) or "#e91e63" (magenta)
+- Testing/Debug Tools: "#95a5a6" (light gray)
+- Utilities/Helpers: "#34495e" (dark slate)
 
-Return ONLY valid JSON in this exact format (no markdown, no code blocks):
+IMPORTANT: Do NOT use blue or green colors - these are reserved for highlighting.
+
+Connection Rules:
+- Direction: caller -> callee (A calls B means A -> B)
+- Entry points (CLI/API/Scripts) call business logic
+- Business logic calls data/utilities
+- Data layers call nothing (they're leaves)
+- Reporting/output is called BY business logic
+
+Return ONLY valid JSON (no markdown):
 {{
     "blocks": [
         {{
-            "id": "api_layer",
-            "label": "API Layer",
-            "description": "FastAPI endpoints for analysis requests",
-            "function_prefixes": ["api::", "endpoints::"],
-            "color": "#3498db"
+            "id": "web_api",
+            "label": "Web API",
+            "description": "FastAPI endpoints handling HTTP requests",
+            "function_prefixes": ["src.api", "src.web"],
+            "color": "#7f8c8d"
         }}
     ],
     "connections": [
         {{
-            "from": "api_layer",
-            "to": "analyzer",
-            "label": "analyzes code"
+            "from": "web_api",
+            "to": "business_logic",
+            "label": "processes requests"
         }}
     ]
 }}"""
@@ -248,20 +259,30 @@ Return ONLY valid JSON in this exact format (no markdown, no code blocks):
 
         response = self.llm_provider.complete(prompt, max_tokens=4000)
 
-        # Parse JSON response
+        return self._parse_json_response(response)
+
+    def _parse_json_response(self, response: str) -> Dict[str, Any]:
+        """
+        Parse JSON from LLM response, handling markdown code blocks.
+
+        Args:
+            response: Raw LLM response text
+
+        Returns:
+            Parsed JSON dictionary
+        """
+        response_text = response.strip()
+
+        # Remove markdown code blocks if present
+        if response_text.startswith("```"):
+            lines = response_text.split("\n")
+            response_text = "\n".join(lines[1:-1])
+            if response_text.startswith("json"):
+                response_text = response_text[4:].strip()
+
         try:
-            # Try to extract JSON from response
-            response_text = response.strip()
-
-            # Remove markdown code blocks if present
-            if response_text.startswith("```"):
-                lines = response_text.split("\n")
-                response_text = "\n".join(lines[1:-1])  # Remove first and last line
-                if response_text.startswith("json"):
-                    response_text = response_text[4:].strip()
-
             return json.loads(response_text)
-        except json.JSONDecodeError as e:
+        except json.JSONDecodeError:
             # Fallback: Return basic structure
             return {
                 "blocks": [
@@ -286,11 +307,9 @@ Return ONLY valid JSON in this exact format (no markdown, no code blocks):
         Returns:
             Structured ArchitectureDiagram
         """
-        blocks = []
+        blocks: List[ArchitectureBlock] = []
         for i, block_data in enumerate(llm_data.get("blocks", [])):
-            # Assign color from palette
             color = block_data.get("color", self.COLORS[i % len(self.COLORS)])
-
             block = ArchitectureBlock(
                 id=block_data["id"],
                 label=block_data["label"],
@@ -300,7 +319,7 @@ Return ONLY valid JSON in this exact format (no markdown, no code blocks):
             )
             blocks.append(block)
 
-        connections = []
+        connections: List[BlockConnection] = []
         for conn_data in llm_data.get("connections", []):
             conn = BlockConnection(
                 from_block=conn_data["from"],
@@ -328,20 +347,16 @@ Return ONLY valid JSON in this exact format (no markdown, no code blocks):
             "    node [shape=box, style=filled, fontname=\"Arial\", fontsize=12];",
             "    edge [fontname=\"Arial\", fontsize=10];",
             "    bgcolor=transparent;",
+            "    ranksep=1.2;",  # More space between ranks
+            "    nodesep=0.8;",   # More space between nodes
             ""
         ]
 
         # Add blocks as nodes
         for block in diagram.blocks:
-            # Escape quotes in label and description
             label = block.label.replace('"', '\\"')
-            desc = block.description.replace('"', '\\"')
-
-            # Create label with title and description
-            node_label = f"{label}\\n{desc}"
-
             dot_lines.append(
-                f'    {block.id} [label="{node_label}", '
+                f'    {block.id} [label="{label}", '
                 f'fillcolor="{block.color}", fontcolor="#ffffff"];'
             )
 

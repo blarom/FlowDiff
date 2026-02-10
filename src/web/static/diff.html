@@ -6,29 +6,31 @@
     <title>FlowDiff - Call Tree with Diff</title>
     <link rel="stylesheet" href="/static/tree.css">
     <style>
-        /* Override for unified diff view */
+        /* Layout Override for Unified Diff View */
         main {
             display: grid;
             grid-template-columns: 1fr 400px;
             gap: 0;
             height: calc(100vh - 200px);
-            overflow: hidden; /* Prevent scrollbars on main container */
-            padding: 0; /* Remove padding from tree.css */
+            overflow: hidden;
+            padding: 0;
         }
 
+        /* Tree Container */
         .tree-container {
             border-right: 2px solid #ddd;
             overflow-y: auto;
-            overflow-x: hidden; /* Prevent horizontal scroll */
-            height: 100%; /* Match parent height */
-            max-height: none; /* Override 70vh limit from tree.css */
+            overflow-x: hidden;
+            height: 100%;
+            max-height: none;
         }
 
+        /* Diff Panel (Right Side) */
         .diff-panel {
             background: #f8f9fa;
             overflow-y: auto;
             padding: 1rem;
-            height: 100%; /* Match parent height */
+            height: 100%;
         }
 
         .diff-panel h2 {
@@ -53,6 +55,7 @@
             font-size: 0.9rem;
         }
 
+        /* Changed Function Cards */
         .changed-function {
             background: #fff3cd;
             border: 1px solid #ffc107;
@@ -140,108 +143,141 @@
             white-space: nowrap;
         }
 
-        /* Architecture Panel */
-        .architecture-panel {
-            position: fixed;
-            left: 0;
-            top: 200px;
-            bottom: 0;
-            width: 300px;
+        /* Architecture Section (Bottom) */
+        .architecture-section {
+            width: 100%;
             background: white;
-            border-right: 2px solid #ddd;
-            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
-            z-index: 100;
-            overflow-y: auto;
-            transform: translateX(-100%);
-            transition: transform 0.3s ease;
+            border-top: 3px solid #ddd;
+            margin-top: 2rem;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
         }
 
-        .architecture-panel.visible {
-            transform: translateX(0);
+        .architecture-panel {
+            width: 100%;
+            background: white;
+            position: relative;
+            overflow: hidden;
         }
 
         .architecture-panel-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 1rem;
+            padding: 0.75rem 1.5rem;
             background: #f8f9fa;
-            border-bottom: 1px solid #ddd;
-            position: sticky;
-            top: 0;
-            z-index: 10;
+            border-bottom: 2px solid #ddd;
         }
 
         .architecture-panel-header h3 {
             margin: 0;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .architecture-toggle-btn {
-            position: fixed;
-            left: 10px;
-            top: 210px;
+        .architecture-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Zoom Controls */
+        .zoom-btn {
             background: #3498db;
             color: white;
             border: none;
-            border-radius: 0 4px 4px 0;
-            padding: 12px 8px;
+            border-radius: 4px;
+            padding: 6px 12px;
             cursor: pointer;
-            z-index: 99;
-            font-size: 18px;
-            transition: all 0.3s ease;
-            box-shadow: 2px 0 4px rgba(0,0,0,0.2);
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.2s;
         }
 
-        .architecture-toggle-btn:hover {
+        .zoom-btn:hover {
             background: #2980b9;
-            box-shadow: 2px 0 8px rgba(0,0,0,0.3);
+            transform: scale(1.05);
         }
 
-        .architecture-panel.visible + .architecture-toggle-btn {
-            left: 310px;
+        .zoom-btn:active {
+            transform: scale(0.95);
         }
 
+        .zoom-level {
+            font-size: 13px;
+            color: #7f8c8d;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .reset-zoom-btn {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .reset-zoom-btn:hover {
+            background: #7f8c8d;
+        }
+
+        .collapse-architecture-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #7f8c8d;
+            padding: 0 8px;
+            transition: color 0.2s;
+        }
+
+        .collapse-architecture-btn:hover {
+            color: #2c3e50;
+        }
+
+        /* Architecture SVG Container */
         #architecture-svg-container {
-            padding: 1rem;
-            overflow: auto;
+            width: 100%;
+            height: calc(100% - 50px);
+            overflow: hidden;
+            position: relative;
+            background: #fafafa;
+            cursor: grab;
+        }
+
+        #architecture-svg-container.grabbing {
+            cursor: grabbing;
         }
 
         #architecture-svg-container svg {
-            max-width: 100%;
-            height: auto;
+            width: 100%;
+            height: 100%;
+            display: block;
         }
 
-        /* Adjust main grid when architecture panel is visible */
-        .architecture-panel.visible ~ .container main {
-            margin-left: 300px;
-            width: calc(100% - 300px);
+        /* Hide architecture toggle button */
+        .architecture-toggle-btn {
+            display: none !important;
         }
 
-        /* Toast animations */
+        /* Toast Animations */
         @keyframes slideInRight {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
         @keyframes slideOutRight {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(400px);
-                opacity: 0;
-            }
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
         }
 
+        /* Block Info Popup */
         .block-info-popup h3 {
             margin: 0 0 0.5rem 0;
             color: #3498db;
@@ -265,23 +301,6 @@
     <script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html-ui.min.js"></script>
 </head>
 <body>
-    <!-- Architecture Panel (collapsible) -->
-    <div id="architecture-panel" class="architecture-panel" style="display: none;">
-        <div class="architecture-panel-header">
-            <h3>🏗️ Architecture</h3>
-            <button onclick="toggleArchitecturePanel()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #7f8c8d;">&times;</button>
-        </div>
-        <div id="architecture-svg-container">
-            <!-- SVG diagram will be loaded here -->
-            <p style="text-align: center; color: #999; padding: 2rem;">Loading architecture diagram...</p>
-        </div>
-    </div>
-
-    <!-- Architecture Toggle Button -->
-    <button id="architecture-toggle-btn" class="architecture-toggle-btn" onclick="toggleArchitecturePanel()" title="Toggle Architecture Diagram" style="display: none;">
-        🏗️
-    </button>
-
     <!-- Saved Report Banner -->
     <div id="saved-report-banner" class="saved-report-banner hidden">
         <span>📄 Saved report: <a id="saved-report-link" href="#" target="_blank"></a></span>
@@ -372,6 +391,28 @@
                 <div id="changed-functions"></div>
             </div>
         </main>
+
+        <!-- Architecture Section (Bottom) -->
+        <section id="architecture-section" class="architecture-section" style="display: none;">
+            <div class="architecture-panel">
+                <div class="architecture-panel-header">
+                    <h3>
+                        🏗️ Architecture Diagram
+                    </h3>
+                    <div class="architecture-controls">
+                        <button class="zoom-btn" id="zoom-out-btn" title="Zoom Out (or scroll down)">−</button>
+                        <span class="zoom-level" id="zoom-level">100%</span>
+                        <button class="zoom-btn" id="zoom-in-btn" title="Zoom In (or scroll up)">+</button>
+                        <button class="reset-zoom-btn" id="reset-zoom-btn" title="Reset zoom and position">Reset</button>
+                        <button class="collapse-architecture-btn" id="collapse-architecture-btn" title="Hide architecture diagram">▼</button>
+                    </div>
+                </div>
+                <div id="architecture-svg-container">
+                    <!-- SVG diagram will be loaded here -->
+                    <p style="text-align: center; color: #999; padding: 2rem;">Loading architecture diagram...</p>
+                </div>
+            </div>
+        </section>
     </div>
 
     <!-- Info Panel Overlay -->

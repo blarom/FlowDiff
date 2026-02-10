@@ -2,7 +2,7 @@
 (function() {
     'use strict';
 
-    // Make treeData global for diff-panel.js
+    // State variables
     window.treeData = null;
     let expandedNodes = new Set();
     let searchMatches = [];
@@ -13,31 +13,21 @@
     let excludeFilterTopLevelOnly = false;
     let changedNodes = [];
     let currentChangedIndex = 0;
-    let currentSelectedNode = null;  // Track currently selected node for keyboard nav
-    let currentTreeView = 'after';  // 'before' or 'after'
+    let currentSelectedNode = null;
+    let currentTreeView = 'after';
 
-    // Initialize
     async function init() {
         try {
-            // Fetch call tree data
             const response = await fetch('/api/tree');
             if (!response.ok) {
                 throw new Error('Failed to load call tree data');
             }
             window.treeData = await response.json();
 
-            // Update stats
             updateStats();
-
-            // Render tree
             renderTree();
-
-            // Setup event listeners
             setupEventListeners();
-
-            // Load saved HTML path banner
             await loadSavedHtmlPath();
-
         } catch (error) {
             console.error('Error loading tree:', error);
             document.getElementById('call-tree').innerHTML =
@@ -47,37 +37,28 @@
 
     async function loadSavedHtmlPath() {
         try {
-            console.log('[FlowDiff] Fetching saved HTML path...');
             const response = await fetch('/api/saved-html-path');
-
             if (!response.ok) {
-                console.warn('[FlowDiff] API response not OK:', response.status);
                 return;
             }
 
             const data = await response.json();
-            console.log('[FlowDiff] Saved HTML path data:', data);
-
-            if (data.html_path && data.file_url) {
-                const banner = document.getElementById('saved-report-banner');
-                const link = document.getElementById('saved-report-link');
-
-                if (!banner || !link) {
-                    console.error('[FlowDiff] Banner elements not found in DOM');
-                    return;
-                }
-
-                // Extract just the filename for display
-                const filename = data.html_path.split('/').pop();
-                link.href = data.file_url;
-                link.textContent = filename;
-
-                // Show banner
-                banner.classList.remove('hidden');
-                console.log('[FlowDiff] Banner displayed:', filename);
-            } else {
-                console.warn('[FlowDiff] No html_path or file_url in response');
+            if (!data.html_path || !data.file_url) {
+                return;
             }
+
+            const banner = document.getElementById('saved-report-banner');
+            const link = document.getElementById('saved-report-link');
+
+            if (!banner || !link) {
+                console.error('[FlowDiff] Banner elements not found in DOM');
+                return;
+            }
+
+            const filename = data.html_path.split('/').pop();
+            link.href = data.file_url;
+            link.textContent = filename;
+            banner.classList.remove('hidden');
         } catch (error) {
             console.error('[FlowDiff] Error loading saved HTML path:', error);
         }
@@ -90,57 +71,66 @@
     function updateStats() {
         const metadata = window.treeData.metadata;
 
-        // Update run directory (use ~ for home directory shorthand if applicable)
+        updateRunDirectory(metadata);
+        updateAnalysisInfo(metadata);
+        updateDiffInfo(metadata);
+    }
+
+    function updateRunDirectory(metadata) {
         const runDir = metadata.run_dir || '';
-        const homeDir = runDir.includes('/Users/') ? runDir.replace(/^\/Users\/[^\/]+/, '~') : runDir;
+        const homeDir = runDir.includes('/Users/')
+            ? runDir.replace(/^\/Users\/[^\/]+/, '~')
+            : runDir;
         const runDirElem = document.getElementById('run-dir');
         if (runDirElem) {
             runDirElem.textContent = homeDir;
         }
+    }
 
-        // Update analysis info: "<input_path> (X functions, Y entry points)"
+    function updateAnalysisInfo(metadata) {
         const analysisInfoElem = document.getElementById('analysis-info');
-        if (analysisInfoElem) {
-            const inputPath = metadata.input_path || metadata.project || '';
-            const shortPath = inputPath.includes('/Users/') ? inputPath.replace(/^\/Users\/[^\/]+/, '~') : inputPath;
-            const funcCount = metadata.function_count || 0;
-            const entryCount = metadata.entry_point_count || window.treeData.trees.length;
-            analysisInfoElem.textContent = `${shortPath} (${funcCount} functions, ${entryCount} entry points)`;
+        if (!analysisInfoElem) {
+            return;
         }
 
-        // Update diff info (only in diff.html)
-        const diffInfoElem = document.getElementById('diff-info');
+        const inputPath = metadata.input_path || metadata.project || '';
+        const shortPath = inputPath.includes('/Users/')
+            ? inputPath.replace(/^\/Users\/[^\/]+/, '~')
+            : inputPath;
+        const funcCount = metadata.function_count || 0;
+        const entryCount = metadata.entry_point_count || window.treeData.trees.length;
+        analysisInfoElem.textContent = `${shortPath} (${funcCount} functions, ${entryCount} entry points)`;
+    }
+
+    function updateDiffInfo(metadata) {
+        if (!metadata.before_ref) {
+            return;
+        }
+
         const diffComparisonCard = document.getElementById('diff-comparison-card');
+        const diffInfoElem = document.getElementById('diff-info');
+        const beforeDesc = formatRefDescription(metadata.before_ref);
+        const afterDesc = formatRefDescription(metadata.after_ref);
 
-        if (diffComparisonCard && metadata.before_ref) {
-            // Use new compact card layout
-            const beforeDesc = formatRefDescription(metadata.before_ref);
-            const afterDesc = formatRefDescription(metadata.after_ref);
-
+        if (diffComparisonCard) {
             document.getElementById('current-flow-desc').textContent = afterDesc;
             document.getElementById('reference-flow-desc').textContent = beforeDesc;
 
-            // Add timestamp if available
-            const timestampElem = document.getElementById('comparison-timestamp');
-            if (metadata.analysis_timestamp && timestampElem) {
-                const timestamp = new Date(metadata.analysis_timestamp);
-                const timeAgo = getTimeAgo(timestamp);
-                timestampElem.textContent = `Analyzed ${timeAgo}`;
+            if (metadata.analysis_timestamp) {
+                const timestampElem = document.getElementById('comparison-timestamp');
+                if (timestampElem) {
+                    const timestamp = new Date(metadata.analysis_timestamp);
+                    timestampElem.textContent = `Analyzed ${getTimeAgo(timestamp)}`;
+                }
             }
 
-            // Show the card
             diffComparisonCard.style.display = 'block';
-        } else if (diffInfoElem && metadata.before_ref) {
-            // Fallback to old text format if card not found
-            const beforeDesc = formatRefDescription(metadata.before_ref);
-            const afterDesc = formatRefDescription(metadata.after_ref);
+        } else if (diffInfoElem) {
             let diffInfo = `Current flow <strong>${afterDesc}</strong> compared with reference flow <strong>${beforeDesc}</strong>`;
 
-            // Add timestamp if available
             if (metadata.analysis_timestamp) {
                 const timestamp = new Date(metadata.analysis_timestamp);
-                const timeAgo = getTimeAgo(timestamp);
-                diffInfo += ` <span style="color: #95a5a6; font-size: 0.9em;">(${timeAgo})</span>`;
+                diffInfo += ` <span style="color: #95a5a6; font-size: 0.9em;">(${getTimeAgo(timestamp)})</span>`;
             }
 
             diffInfoElem.innerHTML = diffInfo;
@@ -153,6 +143,7 @@
         if (seconds < 60) return 'just now';
         if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
         if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+
         const days = Math.floor(seconds / 86400);
         if (days === 1) return 'yesterday';
         if (days < 7) return `${days} days ago`;
@@ -160,45 +151,28 @@
     }
 
     function formatRefDescription(ref) {
-        // Format git ref for display
-        if (ref === 'working') {
-            return 'Latest uncommitted changes';
-        } else if (ref === 'HEAD') {
-            return 'Latest commit';
-        } else if (ref.startsWith('HEAD~')) {
+        if (ref === 'working') return 'Latest uncommitted changes';
+        if (ref === 'HEAD') return 'Latest commit';
+        if (ref.startsWith('HEAD~')) {
             const n = ref.substring(5) || '1';
             return `${n} commit${n === '1' ? '' : 's'} ago`;
-        } else {
-            return `Commit ${ref}`;
         }
+        return `Commit ${ref}`;
     }
 
     function renderTree() {
         const container = document.getElementById('call-tree');
         container.innerHTML = '';
 
-        // Choose which tree to render based on current view
         const trees = currentTreeView === 'before' ? window.treeData.before_trees : window.treeData.trees;
 
-        // Render each entry point tree as a separate collapsed section
         trees.forEach((tree, index) => {
-            // Apply top-level filters
-            if (includeFilterTopLevelOnly && includeFilterRegex) {
-                // Include filter: skip if root doesn't match
-                if (!includeFilterRegex.test(tree.function.name) && !includeFilterRegex.test(tree.function.file_name)) {
-                    return;
-                }
-            }
-            if (excludeFilterTopLevelOnly && excludeFilterRegex) {
-                // Exclude filter: skip if root matches
-                if (excludeFilterRegex.test(tree.function.name) || excludeFilterRegex.test(tree.function.file_name)) {
-                    return;
-                }
+            if (!shouldRenderTopLevelNode(tree)) {
+                return;
             }
 
             const treeElement = renderNode(tree, 0, `tree-${index}`);
 
-            // Only create container if node was actually rendered (not filtered out)
             if (treeElement.childNodes.length > 0) {
                 const treeSection = document.createElement('div');
                 treeSection.className = 'entry-point-tree';
@@ -207,30 +181,36 @@
             }
         });
 
-        // Mark paths to changed nodes
         markPathsToChanges();
-
-        // Collect all changed nodes for jump navigation
         changedNodes = Array.from(document.querySelectorAll('.tree-node.has-changes'));
         currentChangedIndex = 0;
-
-        // Update change counter
         updateChangeCounter();
     }
 
-    function markPathsToChanges() {
-        // Find all nodes with changes
-        const changedNodes = document.querySelectorAll('.tree-node.has-changes');
+    function shouldRenderTopLevelNode(tree) {
+        if (includeFilterTopLevelOnly && includeFilterRegex) {
+            if (!includeFilterRegex.test(tree.function.name) && !includeFilterRegex.test(tree.function.file_name)) {
+                return false;
+            }
+        }
+        if (excludeFilterTopLevelOnly && excludeFilterRegex) {
+            if (excludeFilterRegex.test(tree.function.name) || excludeFilterRegex.test(tree.function.file_name)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-        changedNodes.forEach(changedNode => {
-            // Walk up the tree and mark all parents
+    function markPathsToChanges() {
+        const changedNodeElements = document.querySelectorAll('.tree-node.has-changes');
+
+        changedNodeElements.forEach(changedNode => {
             let container = changedNode.closest('.tree-node-container');
             while (container) {
                 const parent = container.parentElement.closest('.tree-node-container');
                 if (parent) {
                     const parentNode = parent.querySelector('.tree-node');
                     if (parentNode && !parentNode.classList.contains('has-changes')) {
-                        // Mark as part of path to change
                         parentNode.classList.add('path-to-change');
                     }
                 }
@@ -239,48 +219,74 @@
         });
     }
 
-    function renderNode(node, depth, path) {
-        // Apply all-nodes filters (when not top-level only)
+    function shouldRenderNode(node) {
         if (!includeFilterTopLevelOnly && includeFilterRegex) {
-            // Include filter: skip if node doesn't match
             if (!includeFilterRegex.test(node.function.name) && !includeFilterRegex.test(node.function.file_name)) {
-                return document.createDocumentFragment();
+                return false;
             }
         }
         if (!excludeFilterTopLevelOnly && excludeFilterRegex) {
-            // Exclude filter: skip if node matches
             if (excludeFilterRegex.test(node.function.name) || excludeFilterRegex.test(node.function.file_name)) {
-                return document.createDocumentFragment();
+                return false;
             }
+        }
+        return true;
+    }
+
+    function renderNode(node, depth, path) {
+        if (!shouldRenderNode(node)) {
+            return document.createDocumentFragment();
         }
 
         const div = document.createElement('div');
         div.className = 'tree-node-container';
         div.dataset.path = path;
 
-        // Create node element
+        const nodeDiv = createNodeElement(node, depth, path);
+        div.appendChild(nodeDiv);
+
+        if (node.children && node.children.length > 0) {
+            const childrenDiv = createChildrenContainer(node, depth, path);
+            div.appendChild(childrenDiv);
+        }
+
+        return div;
+    }
+
+    function createNodeElement(node, depth, path) {
         const nodeDiv = document.createElement('div');
         nodeDiv.className = 'tree-node';
         nodeDiv.dataset.depth = depth;
+
         if (node.children && node.children.length > 0) {
             nodeDiv.classList.add('has-children');
         }
-        // Highlight changed functions
         if (node.function.has_changes) {
             nodeDiv.classList.add('has-changes');
         }
 
-        // Indentation
+        appendIndentation(nodeDiv, depth);
+        appendExpandToggle(nodeDiv, node, path);
+        appendIcon(nodeDiv, node);
+        appendLabel(nodeDiv, node, path);
+        appendActionIcons(nodeDiv, node);
+
+        return nodeDiv;
+    }
+
+    function appendIndentation(nodeDiv, depth) {
         for (let i = 0; i < depth; i++) {
             const indent = document.createElement('span');
             indent.className = 'tree-indent';
-            indent.textContent = '│';
+            indent.textContent = '\u2502';
             nodeDiv.appendChild(indent);
         }
+    }
 
-        // Expand/collapse toggle
+    function appendExpandToggle(nodeDiv, node, path) {
         const expand = document.createElement('span');
         expand.className = 'tree-expand';
+
         if (node.children && node.children.length > 0) {
             expand.classList.add('collapsed');
             expand.onclick = (e) => {
@@ -290,41 +296,39 @@
         } else {
             expand.classList.add('leaf');
         }
-        nodeDiv.appendChild(expand);
 
-        // Icon
+        nodeDiv.appendChild(expand);
+    }
+
+    function appendIcon(nodeDiv, node) {
         const icon = document.createElement('span');
         icon.className = 'tree-icon';
-        // Use server icon for script entry points
-        if (node.function.name.startsWith('<script:')) {
-            icon.textContent = '🚀';  // Rocket for server scripts
-        } else {
-            icon.textContent = node.function.is_entry_point ? '🎯' : ''; //📦
-        }
-        nodeDiv.appendChild(icon);
 
-        // Label
+        if (node.function.name.startsWith('<script:')) {
+            icon.textContent = '\uD83D\uDE80';
+        } else if (node.function.is_entry_point) {
+            icon.textContent = '\uD83C\uDFAF';
+        }
+
+        nodeDiv.appendChild(icon);
+    }
+
+    function appendLabel(nodeDiv, node, path) {
         const label = document.createElement('span');
         label.className = 'tree-label';
         label.onclick = () => {
-            // Always select the node (changed or not)
-            // selectNode already handles diff panel sync for changed nodes
             selectNode(nodeDiv);
-
-            // Always toggle node expansion
             toggleNode(path);
         };
 
-        // Function name with file prefix (e.g., "test_sqlite::main")
         const funcName = document.createElement('span');
         funcName.className = 'function-name';
-        funcName.dataset.qualifiedName = node.function.qualified_name;  // For diff-panel click navigation
-        const fileName = node.function.file_name.replace('.py', '');
+        funcName.dataset.qualifiedName = node.function.qualified_name;
 
-        // Handle script entry points specially
+        const fileName = node.function.file_name.replace('.py', '');
         let displayName = node.function.name;
+
         if (displayName.startsWith('<script:')) {
-            // Extract script name: "<script:server>" -> "server"
             displayName = displayName.replace('<script:', '').replace('>', '');
             funcName.textContent = `${fileName} [script]`;
         } else {
@@ -332,16 +336,14 @@
         }
 
         label.appendChild(funcName);
-
-        // Don't show parameters, return type, or file location in tree - they're in the tooltip
-
         nodeDiv.appendChild(label);
+    }
 
-        // Diff icon (only for changed functions)
+    function appendActionIcons(nodeDiv, node) {
         if (node.function.has_changes) {
             const diffIcon = document.createElement('span');
             diffIcon.className = 'diff-icon';
-            diffIcon.textContent = '⎆';  // Diff symbol
+            diffIcon.textContent = '\u238E';
             diffIcon.title = 'View diff';
             diffIcon.onclick = (e) => {
                 e.stopPropagation();
@@ -350,34 +352,28 @@
             nodeDiv.appendChild(diffIcon);
         }
 
-        // Info icon (always shown)
         const infoIcon = document.createElement('span');
         infoIcon.className = 'info-icon';
-        infoIcon.textContent = 'ⓘ';
+        infoIcon.textContent = '\u24D8';
         infoIcon.onclick = (e) => {
             e.stopPropagation();
             showInfo(node.function);
         };
         nodeDiv.appendChild(infoIcon);
+    }
 
-        div.appendChild(nodeDiv);
+    function createChildrenContainer(node, depth, path) {
+        const childrenDiv = document.createElement('div');
+        childrenDiv.className = 'tree-children collapsed';
+        childrenDiv.dataset.path = path;
 
-        // Children container
-        if (node.children && node.children.length > 0) {
-            const childrenDiv = document.createElement('div');
-            childrenDiv.className = 'tree-children collapsed';
-            childrenDiv.dataset.path = path;
+        node.children.forEach((child, index) => {
+            const childPath = `${path}-${index}`;
+            const childElement = renderNode(child, depth + 1, childPath);
+            childrenDiv.appendChild(childElement);
+        });
 
-            node.children.forEach((child, index) => {
-                const childPath = `${path}-${index}`;
-                const childElement = renderNode(child, depth + 1, childPath);
-                childrenDiv.appendChild(childElement);
-            });
-
-            div.appendChild(childrenDiv);
-        }
-
-        return div;
+        return childrenDiv;
     }
 
     function toggleNode(path) {
@@ -411,100 +407,58 @@
         panel.classList.remove('hidden');
         overlay.classList.add('active');
 
-        // Update panel content
         const fileName = func.file_name.replace('.py', '');
+        const isScript = func.name.startsWith('<script:');
+        const displayTitle = isScript
+            ? `${fileName} [script entry point]`
+            : `${fileName}::${func.name}`;
 
-        // Handle script entry points specially in title
-        let displayTitle;
-        if (func.name.startsWith('<script:')) {
-            displayTitle = `${fileName} [script entry point]`;
-        } else {
-            displayTitle = `${fileName}::${func.name}`;
-        }
         document.getElementById('info-title').textContent = displayTitle;
 
-        // Location with wrapped path
         document.getElementById('info-location').innerHTML = `
             <code style="word-wrap: break-word; white-space: pre-wrap;">${func.file_path}:${func.line_number}</code>
         `;
 
-        // Signature with return type
-        // For scripts, show a special message
-        if (func.name.startsWith('<script:')) {
+        if (isScript) {
             document.getElementById('info-signature').innerHTML = `
                 <code>Script entry point (launches server/application)</code>
             `;
         } else {
             const params = func.parameters.length > 0 ? func.parameters.join(', ') : '';
-            const returnType = func.return_type ? ` → ${func.return_type}` : '';
+            const returnType = func.return_type ? ` \u2192 ${func.return_type}` : '';
             document.getElementById('info-signature').innerHTML = `
                 <code>${func.name}(${params})${returnType}</code>
             `;
         }
 
-        // Parameters
-        if (func.parameters && func.parameters.length > 0) {
-            const paramsList = func.parameters.map(p => `<li><code>${p}</code></li>`).join('');
-            document.getElementById('info-parameters').innerHTML = `
-                <ul class="info-list">${paramsList}</ul>
-            `;
-        } else {
-            document.getElementById('info-parameters').innerHTML = `
-                <span class="empty-state">No parameters</span>
-            `;
-        }
+        renderInfoList('info-parameters', func.parameters, 'No parameters');
+        renderDocumentation('info-documentation', func.documentation);
+        renderInfoList('info-locals', func.local_variables, 'No local variables');
+        renderInfoList('info-calls', func.calls, 'No function calls');
+        renderInfoList('info-called-by', func.called_by, 'Entry point (not called by anyone)');
+    }
 
-        // Documentation
-        if (func.documentation && func.documentation.trim()) {
-            // Escape HTML and preserve newlines
-            const escapedDoc = func.documentation
+    function renderInfoList(elementId, items, emptyMessage) {
+        const element = document.getElementById(elementId);
+        if (items && items.length > 0) {
+            const listHtml = items.map(item => `<li><code>${item}</code></li>`).join('');
+            element.innerHTML = `<ul class="info-list">${listHtml}</ul>`;
+        } else {
+            element.innerHTML = `<span class="empty-state">${emptyMessage}</span>`;
+        }
+    }
+
+    function renderDocumentation(elementId, documentation) {
+        const element = document.getElementById(elementId);
+        if (documentation && documentation.trim()) {
+            const escapedDoc = documentation
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
                 .replace(/\n/g, '<br>');
-            document.getElementById('info-documentation').innerHTML = `
-                <div class="documentation-text">${escapedDoc}</div>
-            `;
+            element.innerHTML = `<div class="documentation-text">${escapedDoc}</div>`;
         } else {
-            document.getElementById('info-documentation').innerHTML = `
-                <span class="empty-state">No documentation</span>
-            `;
-        }
-
-        // Local variables
-        if (func.local_variables && func.local_variables.length > 0) {
-            const varsList = func.local_variables.map(v => `<li><code>${v}</code></li>`).join('');
-            document.getElementById('info-locals').innerHTML = `
-                <ul class="info-list">${varsList}</ul>
-            `;
-        } else {
-            document.getElementById('info-locals').innerHTML = `
-                <span class="empty-state">No local variables</span>
-            `;
-        }
-
-        // Calls
-        if (func.calls && func.calls.length > 0) {
-            const callsList = func.calls.map(c => `<li><code>${c}</code></li>`).join('');
-            document.getElementById('info-calls').innerHTML = `
-                <ul class="info-list">${callsList}</ul>
-            `;
-        } else {
-            document.getElementById('info-calls').innerHTML = `
-                <span class="empty-state">No function calls</span>
-            `;
-        }
-
-        // Called by
-        if (func.called_by && func.called_by.length > 0) {
-            const calledByList = func.called_by.map(c => `<li><code>${c}</code></li>`).join('');
-            document.getElementById('info-called-by').innerHTML = `
-                <ul class="info-list">${calledByList}</ul>
-            `;
-        } else {
-            document.getElementById('info-called-by').innerHTML = `
-                <span class="empty-state">Entry point (not called by anyone)</span>
-            `;
+            element.innerHTML = `<span class="empty-state">No documentation</span>`;
         }
     }
 
@@ -515,10 +469,6 @@
 
     async function viewDiff(func) {
         try {
-            // Show loading state
-            console.log('[FlowDiff] Fetching diff for:', func.qualified_name);
-
-            // Fetch diff from server
             const response = await fetch(`/api/diff/${encodeURIComponent(func.qualified_name)}`);
             if (!response.ok) {
                 throw new Error(`Failed to fetch diff: ${response.statusText}`);
@@ -526,23 +476,14 @@
 
             const data = await response.json();
 
-            // If external viewer was attempted but failed, show notice
-            if (data.method === 'external' && data.viewer) {
-                console.log('[FlowDiff] Attempted to open in external viewer:', data.viewer);
-
-                // Show inline diff immediately with a notice that external viewer was tried
-                if (data.diff_content) {
-                    showInlineDiff(func, data.diff_content);
-                    // Show non-obtrusive toast
-                    showToast(`Note: Attempted ${data.viewer} (showing inline)`, 'info');
-                }
+            if (data.method === 'external' && data.viewer && data.diff_content) {
+                showInlineDiff(func, data.diff_content);
+                showToast(`Note: Attempted ${data.viewer} (showing inline)`, 'info');
             } else if (data.diff_content) {
-                // No external viewer, show inline diff immediately
                 showInlineDiff(func, data.diff_content);
             } else {
                 throw new Error(data.error || 'No diff available');
             }
-
         } catch (error) {
             console.error('[FlowDiff] Error viewing diff:', error);
             showToast(`Error: ${error.message}`, 'error');
@@ -550,7 +491,6 @@
     }
 
     function showInlineDiff(func, diffContent) {
-        // Create or show diff modal
         let modal = document.getElementById('diff-modal');
         if (!modal) {
             modal = createDiffModal();
@@ -559,9 +499,8 @@
         document.getElementById('diff-modal-title').textContent = `Diff: ${func.name}`;
 
         const contentDiv = document.getElementById('diff-modal-content');
-        contentDiv.innerHTML = ''; // Clear previous content
+        contentDiv.innerHTML = '';
 
-        // Use diff2html to render the diff with syntax highlighting
         if (window.Diff2Html) {
             try {
                 const diffHtml = Diff2Html.html(diffContent, {
@@ -573,27 +512,12 @@
                     colorScheme: 'light'
                 });
                 contentDiv.innerHTML = diffHtml;
-
-                // Force add classes if they're missing (fallback)
-                setTimeout(() => {
-                    contentDiv.querySelectorAll('.d2h-code-line').forEach(line => {
-                        const text = line.textContent || '';
-                        if (text.startsWith('+') && !line.classList.contains('d2h-ins')) {
-                            line.classList.add('d2h-code-line-ins');
-                        } else if (text.startsWith('-') && !line.classList.contains('d2h-del')) {
-                            line.classList.add('d2h-code-line-del');
-                        }
-                    });
-                }, 100);
             } catch (e) {
                 console.error('[FlowDiff] Error rendering diff with diff2html:', e);
-                // Fallback to plain text with manual coloring
                 contentDiv.innerHTML = `<pre><code>${escapeHtml(diffContent)}</code></pre>`;
                 applyManualDiffColors(contentDiv);
             }
         } else {
-            // Fallback if diff2html isn't loaded
-            console.warn('[FlowDiff] Diff2Html library not loaded, using fallback');
             contentDiv.innerHTML = `<pre><code>${escapeHtml(diffContent)}</code></pre>`;
             applyManualDiffColors(contentDiv);
         }
@@ -602,21 +526,22 @@
     }
 
     function applyManualDiffColors(container) {
-        // Manually color diff lines if diff2html fails
         const codeBlock = container.querySelector('code');
         if (!codeBlock) return;
 
         const lines = codeBlock.textContent.split('\n');
         const coloredHtml = lines.map(line => {
+            const escaped = escapeHtml(line);
             if (line.startsWith('+') && !line.startsWith('+++')) {
-                return `<span style="background-color: #e6ffed; display: block;">${escapeHtml(line)}</span>`;
-            } else if (line.startsWith('-') && !line.startsWith('---')) {
-                return `<span style="background-color: #ffecec; display: block;">${escapeHtml(line)}</span>`;
-            } else if (line.startsWith('@@')) {
-                return `<span style="background-color: #e1f5fe; color: #0277bd; display: block;">${escapeHtml(line)}</span>`;
-            } else {
-                return `<span style="display: block;">${escapeHtml(line)}</span>`;
+                return `<span style="background-color: #e6ffed; display: block;">${escaped}</span>`;
             }
+            if (line.startsWith('-') && !line.startsWith('---')) {
+                return `<span style="background-color: #ffecec; display: block;">${escaped}</span>`;
+            }
+            if (line.startsWith('@@')) {
+                return `<span style="background-color: #e1f5fe; color: #0277bd; display: block;">${escaped}</span>`;
+            }
+            return `<span style="display: block;">${escaped}</span>`;
         }).join('');
 
         codeBlock.innerHTML = coloredHtml;
@@ -631,7 +556,7 @@
             <div class="diff-modal-content">
                 <div class="diff-modal-header">
                     <h3 id="diff-modal-title">Diff</h3>
-                    <button class="diff-modal-close" id="close-diff-modal-btn">×</button>
+                    <button class="diff-modal-close" id="close-diff-modal-btn">\u00d7</button>
                 </div>
                 <div class="diff-modal-body">
                     <div id="diff-modal-content"></div>
@@ -640,20 +565,14 @@
         `;
         document.body.appendChild(modal);
 
-        // Close on overlay click
-        modal.querySelector('.diff-modal-overlay').onclick = () => {
-            modal.classList.add('hidden');
-        };
+        const closeModal = () => modal.classList.add('hidden');
 
-        // Close on close button click
-        modal.querySelector('#close-diff-modal-btn').onclick = () => {
-            modal.classList.add('hidden');
-        };
+        modal.querySelector('.diff-modal-overlay').onclick = closeModal;
+        modal.querySelector('#close-diff-modal-btn').onclick = closeModal;
 
-        // Close on escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
-                modal.classList.add('hidden');
+                closeModal();
             }
         });
 
@@ -665,14 +584,8 @@
         toast.className = `toast toast-${type}`;
         toast.textContent = message;
 
-        let bgColor, duration;
-        if (type === 'error') {
-            bgColor = '#e74c3c';
-            duration = 3000;
-        } else {
-            bgColor = '#3498db';
-            duration = 5000; // Longer for info messages
-        }
+        const bgColor = type === 'error' ? '#e74c3c' : '#3498db';
+        const duration = type === 'error' ? 3000 : 5000;
 
         toast.style.cssText = `
             position: fixed;
@@ -703,73 +616,71 @@
     }
 
     function applyFilter() {
-        const includeInput = document.getElementById('filter-include-regex');
-        const includeTopLevel = document.getElementById('filter-include-top-level');
-        const excludeInput = document.getElementById('filter-exclude-regex');
-        const excludeTopLevel = document.getElementById('filter-exclude-top-level');
+        const includeStr = getInputValue('filter-include-regex');
+        const excludeStr = getInputValue('filter-exclude-regex');
 
-        const includeStr = includeInput ? includeInput.value.trim() : '';
-        const excludeStr = excludeInput ? excludeInput.value.trim() : '';
+        includeFilterTopLevelOnly = getCheckboxValue('filter-include-top-level');
+        excludeFilterTopLevelOnly = getCheckboxValue('filter-exclude-top-level');
 
-        includeFilterTopLevelOnly = includeTopLevel ? includeTopLevel.checked : false;
-        excludeFilterTopLevelOnly = excludeTopLevel ? excludeTopLevel.checked : false;
+        includeFilterRegex = compileFilterRegex(includeStr, 'filter-include-regex');
+        if (includeStr && !includeFilterRegex) return;
 
-        // Update include filter regex
-        if (includeStr) {
-            try {
-                includeFilterRegex = new RegExp(includeStr, 'i'); // Case-insensitive
-                if (includeInput) includeInput.style.borderColor = '';
-            } catch (e) {
-                // Invalid regex, show error briefly
-                if (includeInput) {
-                    includeInput.style.borderColor = '#e74c3c';
-                    setTimeout(() => {
-                        includeInput.style.borderColor = '';
-                    }, 1000);
-                }
-                return;
-            }
-        } else {
-            includeFilterRegex = null;
-        }
+        excludeFilterRegex = compileFilterRegex(excludeStr, 'filter-exclude-regex');
+        if (excludeStr && !excludeFilterRegex) return;
 
-        // Update exclude filter regex
-        if (excludeStr) {
-            try {
-                excludeFilterRegex = new RegExp(excludeStr, 'i'); // Case-insensitive
-                if (excludeInput) excludeInput.style.borderColor = '';
-            } catch (e) {
-                // Invalid regex, show error briefly
-                if (excludeInput) {
-                    excludeInput.style.borderColor = '#e74c3c';
-                    setTimeout(() => {
-                        excludeInput.style.borderColor = '';
-                    }, 1000);
-                }
-                return;
-            }
-        } else {
-            excludeFilterRegex = null;
-        }
-
-        // Re-render tree with filters applied
         renderTree();
     }
 
+    function getInputValue(elementId) {
+        const element = document.getElementById(elementId);
+        return element ? element.value.trim() : '';
+    }
+
+    function getCheckboxValue(elementId) {
+        const element = document.getElementById(elementId);
+        return element ? element.checked : false;
+    }
+
+    function compileFilterRegex(pattern, inputId) {
+        if (!pattern) return null;
+
+        try {
+            const input = document.getElementById(inputId);
+            if (input) input.style.borderColor = '';
+            return new RegExp(pattern, 'i');
+        } catch (e) {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.style.borderColor = '#e74c3c';
+                setTimeout(() => { input.style.borderColor = ''; }, 1000);
+            }
+            return null;
+        }
+    }
+
     function setupEventListeners() {
-        // Close banner (optional)
+        setupBannerListeners();
+        setupInfoPanelListeners();
+        setupTreeControls();
+        setupFilterControls();
+        setupSearchListeners();
+        setupKeyboardShortcuts();
+        setupDiffModalListeners();
+    }
+
+    function setupBannerListeners() {
         const closeBannerBtn = document.getElementById('close-banner');
         if (closeBannerBtn) {
             closeBannerBtn.onclick = closeBanner;
         }
+    }
 
-        // Close info panel
+    function setupInfoPanelListeners() {
         document.getElementById('close-info').onclick = closeInfoPanel;
-
-        // Click outside info panel to close
         document.getElementById('info-panel-overlay').onclick = closeInfoPanel;
+    }
 
-        // Expand all
+    function setupTreeControls() {
         document.getElementById('expand-all').onclick = () => {
             document.querySelectorAll('.tree-expand.collapsed').forEach(expand => {
                 const container = expand.closest('.tree-node-container');
@@ -779,7 +690,6 @@
             });
         };
 
-        // Collapse all
         document.getElementById('collapse-all').onclick = () => {
             document.querySelectorAll('.tree-expand.expanded').forEach(expand => {
                 const container = expand.closest('.tree-node-container');
@@ -789,112 +699,60 @@
             });
         };
 
-        // Toggle tree view (before/after)
         const toggleBtn = document.getElementById('toggle-tree-view');
         if (toggleBtn) {
             toggleBtn.onclick = () => {
                 currentTreeView = currentTreeView === 'after' ? 'before' : 'after';
-
-                // Update button styling and text
-                if (currentTreeView === 'before') {
-                    toggleBtn.textContent = 'Before (Reference)';
-                    toggleBtn.style.background = '#fff';
-                    toggleBtn.style.borderColor = '#e74c3c';
-                    toggleBtn.style.color = '#e74c3c';
-                } else {
-                    toggleBtn.textContent = 'After (Current)';
-                    toggleBtn.style.background = '#fff';
-                    toggleBtn.style.borderColor = '#4CAF50';
-                    toggleBtn.style.color = '#4CAF50';
-                }
-
-                // Re-render tree with new view
+                updateToggleButtonStyle(toggleBtn);
                 renderTree();
             };
         }
 
-        // Filter controls
-        const includeRegexInput = document.getElementById('filter-include-regex');
-        const includeTopLevelCheckbox = document.getElementById('filter-include-top-level');
-        const excludeRegexInput = document.getElementById('filter-exclude-regex');
-        const excludeTopLevelCheckbox = document.getElementById('filter-exclude-top-level');
-
-        if (includeRegexInput) {
-            includeRegexInput.oninput = applyFilter;
-        }
-        if (includeTopLevelCheckbox) {
-            includeTopLevelCheckbox.onchange = applyFilter;
-        }
-        if (excludeRegexInput) {
-            excludeRegexInput.oninput = applyFilter;
-        }
-        if (excludeTopLevelCheckbox) {
-            excludeTopLevelCheckbox.onchange = applyFilter;
-        }
-
-        // Jump to next change (only in diff.html)
         const jumpToNextChangeBtn = document.getElementById('next-change');
         const jumpToPrevChangeBtn = document.getElementById('prev-change');
         if (jumpToNextChangeBtn && jumpToPrevChangeBtn) {
             jumpToNextChangeBtn.onclick = jumpToNextChange;
             jumpToPrevChangeBtn.onclick = jumpToPrevChange;
         }
+    }
 
-        // Diff modal elements (only in index.html)
-        const showDiffBtn = document.getElementById('show-diff');
-        if (showDiffBtn) {
-            showDiffBtn.onclick = () => {
-                document.getElementById('diff-modal').classList.remove('hidden');
-            };
-
-            document.getElementById('close-diff-modal').onclick = () => {
-                document.getElementById('diff-modal').classList.add('hidden');
-            };
-
-            document.getElementById('cancel-diff').onclick = () => {
-                document.getElementById('diff-modal').classList.add('hidden');
-            };
-
-            // Click outside modal to close
-            document.getElementById('diff-modal').onclick = (e) => {
-                if (e.target.id === 'diff-modal') {
-                    document.getElementById('diff-modal').classList.add('hidden');
-                }
-            };
-
-            // Load diff
-            document.getElementById('load-diff').onclick = async () => {
-                const beforeSelect = document.getElementById('diff-before');
-                const afterSelect = document.getElementById('diff-after');
-                const beforeCustom = document.getElementById('diff-before-custom').value.trim();
-                const afterCustom = document.getElementById('diff-after-custom').value.trim();
-
-                const beforeRef = beforeCustom || beforeSelect.value;
-                const afterRef = afterCustom || afterSelect.value;
-
-                console.log('Loading diff:', beforeRef, 'vs', afterRef);
-
-                try {
-                    const response = await fetch('/api/diff', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ before: beforeRef, after: afterRef })
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Failed to load diff');
-                    }
-
-                    const diffData = await response.json();
-                    displayDiff(diffData);
-                    document.getElementById('diff-modal').classList.add('hidden');
-                } catch (error) {
-                    alert('Error loading diff: ' + error.message);
-                }
-            };
+    function updateToggleButtonStyle(toggleBtn) {
+        if (currentTreeView === 'before') {
+            toggleBtn.textContent = 'Before (Reference)';
+            toggleBtn.style.background = '#fff';
+            toggleBtn.style.borderColor = '#e74c3c';
+            toggleBtn.style.color = '#e74c3c';
+        } else {
+            toggleBtn.textContent = 'After (Current)';
+            toggleBtn.style.background = '#fff';
+            toggleBtn.style.borderColor = '#4CAF50';
+            toggleBtn.style.color = '#4CAF50';
         }
+    }
 
-        // Search with Enter to navigate
+    function setupFilterControls() {
+        const filterInputs = [
+            'filter-include-regex',
+            'filter-exclude-regex'
+        ];
+
+        const filterCheckboxes = [
+            'filter-include-top-level',
+            'filter-exclude-top-level'
+        ];
+
+        filterInputs.forEach(id => {
+            const input = document.getElementById(id);
+            if (input) input.oninput = applyFilter;
+        });
+
+        filterCheckboxes.forEach(id => {
+            const checkbox = document.getElementById(id);
+            if (checkbox) checkbox.onchange = applyFilter;
+        });
+    }
+
+    function setupSearchListeners() {
         const searchInput = document.getElementById('search');
 
         searchInput.oninput = (e) => {
@@ -908,48 +766,104 @@
                 navigateToNextMatch();
             }
         };
+    }
 
-        // Global keyboard shortcuts for navigation
+    function setupKeyboardShortcuts() {
         document.addEventListener('keydown', (e) => {
-            // Only if not typing in input/textarea
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-            // Arrow key navigation
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                navigateDown();
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                navigateUp();
-            } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                collapseCurrentNode();
-            } else if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                expandCurrentNode();
-            }
-            // n/p shortcuts for change navigation (only in diff.html)
-            else if (document.getElementById('next-change')) {
-                if (e.key === 'n') {
+            switch (e.key) {
+                case 'ArrowDown':
                     e.preventDefault();
-                    jumpToNextChange();
-                } else if (e.key === 'p') {
+                    navigateDown();
+                    break;
+                case 'ArrowUp':
                     e.preventDefault();
-                    jumpToPrevChange();
-                }
+                    navigateUp();
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    collapseCurrentNode();
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    expandCurrentNode();
+                    break;
+                case 'n':
+                    if (document.getElementById('next-change')) {
+                        e.preventDefault();
+                        jumpToNextChange();
+                    }
+                    break;
+                case 'p':
+                    if (document.getElementById('next-change')) {
+                        e.preventDefault();
+                        jumpToPrevChange();
+                    }
+                    break;
             }
         });
     }
 
+    function setupDiffModalListeners() {
+        const showDiffBtn = document.getElementById('show-diff');
+        if (!showDiffBtn) return;
+
+        showDiffBtn.onclick = () => {
+            document.getElementById('diff-modal').classList.remove('hidden');
+        };
+
+        document.getElementById('close-diff-modal').onclick = () => {
+            document.getElementById('diff-modal').classList.add('hidden');
+        };
+
+        document.getElementById('cancel-diff').onclick = () => {
+            document.getElementById('diff-modal').classList.add('hidden');
+        };
+
+        document.getElementById('diff-modal').onclick = (e) => {
+            if (e.target.id === 'diff-modal') {
+                document.getElementById('diff-modal').classList.add('hidden');
+            }
+        };
+
+        document.getElementById('load-diff').onclick = loadDiffFromModal;
+    }
+
+    async function loadDiffFromModal() {
+        const beforeSelect = document.getElementById('diff-before');
+        const afterSelect = document.getElementById('diff-after');
+        const beforeCustom = document.getElementById('diff-before-custom').value.trim();
+        const afterCustom = document.getElementById('diff-after-custom').value.trim();
+
+        const beforeRef = beforeCustom || beforeSelect.value;
+        const afterRef = afterCustom || afterSelect.value;
+
+        try {
+            const response = await fetch('/api/diff', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ before: beforeRef, after: afterRef })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load diff');
+            }
+
+            const diffData = await response.json();
+            displayDiff(diffData);
+            document.getElementById('diff-modal').classList.add('hidden');
+        } catch (error) {
+            alert('Error loading diff: ' + error.message);
+        }
+    }
+
     function displayDiff(diffData) {
-        // TODO: Implement diff visualization
-        // This will show before/after comparison with highlighted changes
         console.log('Diff data:', diffData);
         alert('Diff view coming soon! Data received: ' + JSON.stringify(diffData, null, 2));
     }
 
     function performSearch(query) {
-        // Clear previous highlights
         document.querySelectorAll('.search-match, .search-highlight, .current-match').forEach(el => {
             el.classList.remove('search-match', 'search-highlight', 'current-match');
         });
@@ -959,96 +873,90 @@
 
         if (query.length < 2) return;
 
-        // Try to compile as regex, fall back to literal string search
         let searchRegex;
         try {
-            searchRegex = new RegExp(query, 'i'); // Case-insensitive
+            searchRegex = new RegExp(query, 'i');
         } catch (e) {
-            // Invalid regex, treat as literal string
             searchRegex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
         }
 
-        // Find matches
         document.querySelectorAll('.function-name').forEach(el => {
             if (searchRegex.test(el.textContent)) {
                 el.classList.add('search-highlight');
                 el.closest('.tree-node').classList.add('search-match');
                 searchMatches.push(el);
-
-                // Expand parent nodes to show match
-                let container = el.closest('.tree-node-container');
-                while (container) {
-                    const parent = container.parentElement.closest('.tree-node-container');
-                    if (parent) {
-                        const expand = parent.querySelector('.tree-expand');
-                        if (expand && expand.classList.contains('collapsed')) {
-                            toggleNode(parent.dataset.path);
-                        }
-                    }
-                    container = parent;
-                }
+                expandParentsToShow(el);
             }
         });
 
-        // Highlight first match
         if (searchMatches.length > 0) {
             highlightCurrentMatch();
+        }
+    }
+
+    function expandParentsToShow(element) {
+        let container = element.closest('.tree-node-container');
+        while (container) {
+            const parent = container.parentElement.closest('.tree-node-container');
+            if (parent) {
+                const expand = parent.querySelector('.tree-expand');
+                if (expand && expand.classList.contains('collapsed')) {
+                    toggleNode(parent.dataset.path);
+                }
+            }
+            container = parent;
         }
     }
 
     function navigateToNextMatch() {
         if (searchMatches.length === 0) return;
 
-        // Move to next match
         currentSearchIndex = (currentSearchIndex + 1) % searchMatches.length;
         highlightCurrentMatch();
     }
 
     function highlightCurrentMatch() {
-        // Remove previous current match highlight
         document.querySelectorAll('.current-match').forEach(el => {
             el.classList.remove('current-match');
         });
 
-        // Highlight current match
         const currentMatch = searchMatches[currentSearchIndex];
         currentMatch.classList.add('current-match');
 
-        // Scroll to match (center it in the viewport)
+        scrollToElementInTree(currentMatch.closest('.tree-node'));
+    }
+
+    function scrollToElementInTree(element) {
         const treeContainer = document.querySelector('.tree-container');
-        const matchNode = currentMatch.closest('.tree-node');
+        if (!element || !treeContainer) return;
 
-        if (matchNode && treeContainer) {
-            const containerRect = treeContainer.getBoundingClientRect();
-            const nodeRect = matchNode.getBoundingClientRect();
-            const scrollOffset = nodeRect.top - containerRect.top - (containerRect.height / 2) + (nodeRect.height / 2);
+        const containerRect = treeContainer.getBoundingClientRect();
+        const elementRect = element.getBoundingClientRect();
+        const scrollOffset = elementRect.top - containerRect.top - (containerRect.height / 2) + (elementRect.height / 2);
 
-            treeContainer.scrollBy({
-                top: scrollOffset,
-                behavior: 'smooth'
-            });
-        }
+        treeContainer.scrollBy({
+            top: scrollOffset,
+            behavior: 'smooth'
+        });
     }
 
     function updateChangeCounter() {
         const counterElem = document.getElementById('change-counter');
-        if (counterElem) {
-            if (changedNodes.length === 0) {
-                counterElem.textContent = 'No changes';
-                counterElem.style.color = '#aaa';
-            } else {
-                counterElem.textContent = `${currentChangedIndex + 1} of ${changedNodes.length}`;
-                counterElem.style.color = '#f0ad4e';
-                counterElem.style.fontWeight = '600';
-            }
+        if (!counterElem) return;
+
+        if (changedNodes.length === 0) {
+            counterElem.textContent = 'No changes';
+            counterElem.style.color = '#aaa';
+        } else {
+            counterElem.textContent = `${currentChangedIndex + 1} of ${changedNodes.length}`;
+            counterElem.style.color = '#f0ad4e';
+            counterElem.style.fontWeight = '600';
         }
     }
 
     function getVisibleTreeNodes() {
-        // Get all tree nodes that are currently visible (not in collapsed children)
         const allNodes = document.querySelectorAll('.tree-node');
         return Array.from(allNodes).filter(node => {
-            // Check if any parent container is collapsed
             let parent = node.closest('.tree-children');
             while (parent) {
                 if (parent.classList.contains('collapsed')) {
@@ -1061,53 +969,33 @@
     }
 
     function selectNode(nodeElement) {
-        // Remove previous selection
         document.querySelectorAll('.tree-node.selected').forEach(node => {
             node.classList.remove('selected');
         });
 
-        // Select the new node
         nodeElement.classList.add('selected');
         currentSelectedNode = nodeElement;
 
-        // Get the function data
-        const container = nodeElement.closest('.tree-node-container');
         const funcNameElem = nodeElement.querySelector('.function-name');
-
         if (funcNameElem && funcNameElem.dataset.qualifiedName) {
-            // Find function in tree data
             const qualifiedName = funcNameElem.dataset.qualifiedName;
 
-            // Update change counter if this is a changed node
             const clickedIndex = changedNodes.indexOf(nodeElement);
             if (clickedIndex !== -1) {
                 currentChangedIndex = clickedIndex;
                 updateChangeCounter();
             }
 
-            // Sync with diff panel if it exists
             if (window.highlightChangeInPanel && nodeElement.classList.contains('has-changes')) {
                 window.highlightChangeInPanel(qualifiedName);
             }
 
-            // Sync with architecture diagram if it exists
             if (window.onFunctionSelected) {
                 window.onFunctionSelected(qualifiedName);
             }
         }
 
-        // Scroll to center the node
-        const treeContainer = document.querySelector('.tree-container');
-        if (treeContainer) {
-            const containerRect = treeContainer.getBoundingClientRect();
-            const nodeRect = nodeElement.getBoundingClientRect();
-            const scrollOffset = nodeRect.top - containerRect.top - (containerRect.height / 2) + (nodeRect.height / 2);
-
-            treeContainer.scrollBy({
-                top: scrollOffset,
-                behavior: 'smooth'
-            });
-        }
+        scrollToElementInTree(nodeElement);
     }
 
     function navigateDown() {
@@ -1115,7 +1003,6 @@
         if (visibleNodes.length === 0) return;
 
         if (!currentSelectedNode) {
-            // No selection yet, select first node
             selectNode(visibleNodes[0]);
         } else {
             const currentIndex = visibleNodes.indexOf(currentSelectedNode);
@@ -1130,7 +1017,6 @@
         if (visibleNodes.length === 0) return;
 
         if (!currentSelectedNode) {
-            // No selection yet, select first node
             selectNode(visibleNodes[0]);
         } else {
             const currentIndex = visibleNodes.indexOf(currentSelectedNode);
@@ -1169,63 +1055,33 @@
     }
 
     function jumpToPrevChange() {
-        if (changedNodes.length === 0) {
-            return;
-        }
+        if (changedNodes.length === 0) return;
 
-        // Move to previous changed node (with wrap-around)
         currentChangedIndex = (currentChangedIndex - 1 + changedNodes.length) % changedNodes.length;
         scrollToChange(changedNodes[currentChangedIndex]);
         updateChangeCounter();
     }
 
     function jumpToNextChange() {
-        if (changedNodes.length === 0) {
-            return;
-        }
+        if (changedNodes.length === 0) return;
 
-        // Move to next changed node
         currentChangedIndex = (currentChangedIndex + 1) % changedNodes.length;
         scrollToChange(changedNodes[currentChangedIndex]);
         updateChangeCounter();
     }
 
     function scrollToChange(targetNode) {
-        // Expand parents to reveal the node
-        let container = targetNode.closest('.tree-node-container');
-        while (container) {
-            const parent = container.parentElement.closest('.tree-node-container');
-            if (parent) {
-                const expand = parent.querySelector('.tree-expand');
-                const children = parent.querySelector('.tree-children');
-                if (expand && children && expand.classList.contains('collapsed')) {
-                    expand.classList.remove('collapsed');
-                    expand.classList.add('expanded');
-                    children.classList.remove('collapsed');
-                }
-            }
-            container = parent;
-        }
+        expandParentsToShow(targetNode);
+        scrollToElementInTree(targetNode);
+        flashHighlight(targetNode);
+    }
 
-        // Scroll to the changed node
-        const treeContainer = document.querySelector('.tree-container');
-        if (treeContainer) {
-            const containerRect = treeContainer.getBoundingClientRect();
-            const nodeRect = targetNode.getBoundingClientRect();
-            const scrollOffset = nodeRect.top - containerRect.top - (containerRect.height / 2) + (nodeRect.height / 2);
-
-            treeContainer.scrollBy({
-                top: scrollOffset,
-                behavior: 'smooth'
-            });
-
-            // Flash highlight
-            const originalBoxShadow = targetNode.style.boxShadow;
-            targetNode.style.boxShadow = '0 0 0 4px #f0ad4e, 0 0 20px rgba(240, 173, 78, 0.4)';
-            setTimeout(() => {
-                targetNode.style.boxShadow = originalBoxShadow;
-            }, 1000);
-        }
+    function flashHighlight(element) {
+        const originalBoxShadow = element.style.boxShadow;
+        element.style.boxShadow = '0 0 0 4px #f0ad4e, 0 0 20px rgba(240, 173, 78, 0.4)';
+        setTimeout(() => {
+            element.style.boxShadow = originalBoxShadow;
+        }, 1000);
     }
 
     // Start
