@@ -54,7 +54,7 @@ class PythonAnalyzer(LanguageAnalyzer):
 
         # Build symbol table by visiting AST
         symbol_table = PythonSymbolTable(module_name=module_name)
-        visitor = PythonASTVisitor(symbol_table, file_path)
+        visitor = PythonASTVisitor(symbol_table, file_path, source)
         visitor.visit(tree)
 
         return symbol_table

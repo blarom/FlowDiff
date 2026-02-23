@@ -110,10 +110,11 @@ class SymbolChangeMapper:
         This was causing false positives where unchanged functions were marked
         as modified just because they shifted.
 
-        We only compare:
+        We compare:
         - Metadata (parameters, return type, etc.)
         - Resolved calls (what the function calls)
         - Documentation (docstrings)
+        - Code content (raw source code)
 
         Args:
             before: Symbol from before ref
@@ -132,6 +133,10 @@ class SymbolChangeMapper:
 
         # Compare documentation
         if before.documentation != after.documentation:
+            return True
+
+        # Compare actual code content (catches CSS/HTML/string changes)
+        if before.code_content != after.code_content:
             return True
 
         return False

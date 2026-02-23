@@ -20,9 +20,10 @@ class PythonASTVisitor(ast.NodeVisitor):
     - Local variable bindings (type inference)
     """
 
-    def __init__(self, symbol_table: PythonSymbolTable, file_path: Path):
+    def __init__(self, symbol_table: PythonSymbolTable, file_path: Path, source_code: str):
         self.symbol_table = symbol_table
         self.file_path = file_path
+        self.source_code = source_code  # Store source code for code content extraction
         self.current_class: Optional[str] = None  # Track current class context
 
     def visit_Import(self, node: ast.Import):
@@ -136,6 +137,9 @@ class PythonASTVisitor(ast.NodeVisitor):
         # Extract docstring
         docstring = ast.get_docstring(node)
 
+        # Extract source code content for diff detection
+        code_content = ast.get_source_segment(self.source_code, node)
+
         # Extract function calls
         raw_calls = self._extract_calls(node)
 
@@ -169,7 +173,8 @@ class PythonASTVisitor(ast.NodeVisitor):
             resolved_calls=[],
             is_entry_point=False,  # Will be determined later
             has_changes=False,     # Will be populated by diff detection
-            documentation=docstring
+            documentation=docstring,
+            code_content=code_content  # Source code for diff detection
         )
 
     def _extract_calls(self, func_node: ast.FunctionDef) -> List[str]:

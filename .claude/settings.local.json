@@ -50,7 +50,9 @@
       "Bash(/Users/barlarom/PycharmProjects/Main/FlowDiff/venv/bin/pip install:*)",
       "Bash(/Users/barlarom/PycharmProjects/Main/FlowDiff/venv/bin/python:*)",
       "Bash(timeout 30 /Users/barlarom/PycharmProjects/Main/FlowDiff/venv/bin/python:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(timeout 60 venv/bin/python:*)",
+      "Bash(git rev-parse:*)"
     ]
   }
 }

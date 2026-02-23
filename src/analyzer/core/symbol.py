@@ -34,6 +34,9 @@ class Symbol:
     # Documentation
     documentation: Optional[str] = None                       # Docstring/comments for this symbol
 
+    # Source code content
+    code_content: Optional[str] = None                        # Raw source code of the symbol (for diff detection)
+
     def __hash__(self):
         return hash(self.qualified_name)
 
