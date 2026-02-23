@@ -38,19 +38,20 @@ class PythonCallResolver:
 
         # Get class instance variables if this is a method
         instance_vars = {}
+        current_class_name = None
         if calling_symbol.metadata.get("is_class_method"):
             # Extract class name from qualified name
             # e.g., "src.analyzer.StockAnalyzer.analyze" -> "StockAnalyzer"
             parts = calling_symbol.qualified_name.split('.')
             if len(parts) >= 2:
-                class_name = parts[-2]
-                class_symbol = self.symbol_table.get_class(class_name)
+                current_class_name = parts[-2]
+                class_symbol = self.symbol_table.get_class(current_class_name)
                 if class_symbol:
                     instance_vars = class_symbol.instance_vars
 
         # Strategy 1: Instance method calls (obj.method() or self.attr.method())
         if '.' in call_name:
-            result = self._resolve_method_call(call_name, local_bindings, instance_vars)
+            result = self._resolve_method_call(call_name, local_bindings, instance_vars, current_class_name)
             if result:
                 return result
 
@@ -101,7 +102,8 @@ class PythonCallResolver:
         self,
         call_name: str,
         local_bindings: Dict[str, str],
-        instance_vars: Dict[str, str]
+        instance_vars: Dict[str, str],
+        current_class_name: Optional[str] = None
     ) -> Optional[str]:
         """Resolve instance method call using type inference.
 
@@ -118,10 +120,16 @@ class PythonCallResolver:
             -> Find compute_all_metrics method
             -> Return: src.data.computation_layer.ComputationLayer.compute_all_metrics
 
+            self._private_method()
+            -> current_class_name: "DecisionTreeVisualizer"
+            -> Look up _private_method in DecisionTreeVisualizer class
+            -> Return: src.reporting.decision_tree_visualizer.DecisionTreeVisualizer._private_method
+
         Args:
             call_name: Call like "obj.method" or "self.attr.method"
             local_bindings: Map from variable names to type names
             instance_vars: Map from instance variable names to type names (from class's __init__)
+            current_class_name: Name of the class containing the calling method (for self.method() calls)
 
         Returns:
             Qualified method name if resolved
@@ -142,6 +150,16 @@ class PythonCallResolver:
                     type_name = instance_vars[attr_name]
                     return self._resolve_type_method(type_name, method_name)
 
+        # Handle self.method() pattern (including private methods like self._generate_css)
+        if obj_name == "self" and current_class_name:
+            method_name = rest
+            # Look up the method in the current class
+            class_symbol = self.symbol_table.get_class(current_class_name)
+            if class_symbol and method_name in class_symbol.methods:
+                return class_symbol.methods[method_name].qualified_name
+            # Method not found in current class
+            return None
+
         # Handle obj.method() pattern
         method_name = rest
 
@@ -150,10 +168,11 @@ class PythonCallResolver:
             type_name = local_bindings[obj_name]
             return self._resolve_type_method(type_name, method_name)
 
-        # Check if obj is self and rest is an instance variable's method
-        if obj_name == "self" and method_name in instance_vars:
-            # This shouldn't happen, but handle it gracefully
-            return None
+        # Check if obj is an instance variable (self.var was accessed as var.method())
+        # This shouldn't happen, but handle it gracefully
+        if obj_name in instance_vars:
+            type_name = instance_vars[obj_name]
+            return self._resolve_type_method(type_name, method_name)
 
         return None
 
