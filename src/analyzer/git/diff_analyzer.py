@@ -7,7 +7,7 @@ import tempfile
 from ..legacy import CallTreeNode
 from ..call_tree_adapter import CallTreeAdapter
 from .ref_resolver import GitRefResolver
-from .file_change_detector import FileChangeDetector, FileChange
+from .file_change_detector import FileChangeDetector, FileChange, ChangeType
 from .symbol_change_mapper import SymbolChangeMapper, SymbolChange
 from utils.subprocess_runner import run_piped_commands, SubprocessError
 
@@ -131,9 +131,34 @@ class GitDiffAnalyzer:
         """Build tree from an adapter with symbol tables already populated."""
 
         # Build unified symbol map
+        if self.debug_log_path:
+            with open(self.debug_log_path, 'a', encoding='utf-8') as f:
+                f.write(f"\nDEBUG: Building unified symbol map from {len(adapter.symbol_tables)} symbol tables\n")
+                for file_path, table in list(adapter.symbol_tables.items())[:3]:
+                    all_syms = table.get_all_symbols()
+                    f.write(f"  Table: {file_path}, symbols: {len(all_syms)}\n")
+                    # Show first 2 symbols
+                    for sym in list(all_syms)[:2]:
+                        f.write(f"    - {sym.qualified_name}\n")
+                    # Show symbols starting with "src."
+                    src_syms = [s for s in all_syms if s.qualified_name.startswith("src.")]
+                    f.write(f"  Symbols starting with 'src.': {len(src_syms)}\n")
+                    for sym in src_syms[:3]:
+                        f.write(f"    - {sym.qualified_name}\n")
+
         for table in adapter.symbol_tables.values():
             for symbol in table.get_all_symbols():
                 adapter.all_symbols[symbol.qualified_name] = symbol
+
+        if self.debug_log_path:
+            with open(self.debug_log_path, 'a', encoding='utf-8') as f:
+                src_count = len([q for q in adapter.all_symbols.keys() if q.startswith("src.")])
+                f.write(f"  After merging: adapter.all_symbols has {len(adapter.all_symbols)} symbols, {src_count} starting with 'src.'\n")
+                # Check if specific changed symbols are in all_symbols
+                f.write(f"  Checking if changed symbols exist in adapter.all_symbols:\n")
+                for qname in list(symbol_changes.keys())[:5]:
+                    exists = qname in adapter.all_symbols
+                    f.write(f"    '{qname}': {exists}\n")
 
         # Build called_by relationships
         adapter._build_called_by_relationships()
@@ -143,9 +168,55 @@ class GitDiffAnalyzer:
 
         # PRE-MARK symbols with changes BEFORE building tree
         # This allows the tree builder to track max depth of changed nodes
-        for qname in symbol_changes.keys():
+        # IMPORTANT: Filter symbol_changes based on is_before flag:
+        # - Before tree: mark MODIFIED and DELETED symbols (they exist in before ref)
+        # - After tree: mark MODIFIED and ADDED symbols (they exist in after ref)
+        marked_count = 0
+        if self.debug_log_path:
+            with open(self.debug_log_path, 'a', encoding='utf-8') as f:
+                f.write(f"\n{'='*60}\n")
+                f.write(f"DEBUG: Marking symbols with changes (is_before={is_before})\n")
+                f.write(f"Symbol changes count: {len(symbol_changes)}\n")
+                f.write(f"All symbols count: {len(adapter.all_symbols)}\n")
+                f.write(f"\nSample qualified names from symbol_changes (first 5):\n")
+                for i, qname in enumerate(list(symbol_changes.keys())[:5]):
+                    f.write(f"  {i+1}. '{qname}'\n")
+                f.write(f"\nSample qualified names from adapter.all_symbols (first 5):\n")
+                for i, qname in enumerate(list(adapter.all_symbols.keys())[:5]):
+                    f.write(f"  {i+1}. '{qname}'\n")
+
+        missed_count = 0
+        for qname, change in symbol_changes.items():
+            # Filter based on which tree we're building
+            if is_before:
+                # Before tree: only mark symbols that existed before (MODIFIED or DELETED)
+                if change.change_type == ChangeType.ADDED:
+                    continue  # Skip added symbols (don't exist in before tree)
+            else:
+                # After tree: only mark symbols that exist after (MODIFIED or ADDED)
+                if change.change_type == ChangeType.DELETED:
+                    continue  # Skip deleted symbols (don't exist in after tree)
+
             if qname in adapter.all_symbols:
                 adapter.all_symbols[qname].has_changes = True
+                marked_count += 1
+            else:
+                missed_count += 1
+                if self.debug_log_path and missed_count <= 5:  # Log first few misses
+                    with open(self.debug_log_path, 'a', encoding='utf-8') as f:
+                        f.write(f"    MISS #{missed_count}: '{qname}' [{change.change_type.value}] not in adapter.all_symbols\n")
+
+        if self.debug_log_path:
+            with open(self.debug_log_path, 'a', encoding='utf-8') as f:
+                f.write(f"\nMarked {marked_count} nodes with changes\n")
+                # Check if decision_tree_visualizer symbols have has_changes set
+                dviz_syms = [qn for qn in adapter.all_symbols.keys() if 'decision_tree_visualizer' in qn]
+                f.write(f"  decision_tree_visualizer symbols in adapter.all_symbols: {len(dviz_syms)}\n")
+                if dviz_syms:
+                    dviz_with_changes = [qn for qn in dviz_syms if adapter.all_symbols[qn].has_changes]
+                    f.write(f"    With has_changes=True: {len(dviz_with_changes)}\n")
+                    for qn in dviz_with_changes[:3]:
+                        f.write(f"      - {qn}\n")
 
         # Build trees from entry points in all_symbols (which now have has_changes marked)
         # This ensures we use the marked symbols, not new instances
@@ -156,6 +227,27 @@ class GitDiffAnalyzer:
                 marked_symbol = adapter.all_symbols[symbol.qualified_name]
                 tree = adapter._build_tree_recursive(marked_symbol, depth=0, visited=set())
                 trees.append(tree)
+
+        # Debug: Check if has_changes is preserved in trees
+        if self.debug_log_path:
+            with open(self.debug_log_path, 'a', encoding='utf-8') as f:
+                def count_changed_nodes(node: CallTreeNode) -> int:
+                    count = 1 if node.function.has_changes else 0
+                    for child in node.children:
+                        count += count_changed_nodes(child)
+                    return count
+                total_changed = sum(count_changed_nodes(tree) for tree in trees)
+                f.write(f"  After building trees: {total_changed} nodes have has_changes=True\n")
+                # Show sample nodes with has_changes
+                def collect_changed_nodes(node: CallTreeNode, result: list):
+                    if node.function.has_changes:
+                        result.append(node.function.qualified_name)
+                    for child in node.children:
+                        collect_changed_nodes(child, result)
+                changed_nodes = []
+                for tree in trees:
+                    collect_changed_nodes(tree, changed_nodes)
+                f.write(f"  Sample changed nodes in tree (first 5): {changed_nodes[:5]}\n")
 
         # Apply expansion state based on calculated depth
         expansion_depth = max(adapter.DEFAULT_EXPANSION_DEPTH, adapter.max_changed_depth)

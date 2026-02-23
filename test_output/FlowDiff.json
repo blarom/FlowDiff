@@ -1,0 +1,1992 @@
+{
+  "trees": [
+    {
+      "function": {
+        "name": "test_extract_imports_absolute",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_absolute",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 29,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of absolute import statements."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_imports_from",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_from",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 57,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of 'from X import Y' statements."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_imports_relative_single_dot",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_relative_single_dot",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 83,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of relative imports with single dot (same directory)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_imports_relative_double_dot",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_relative_double_dot",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 108,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of relative imports with double dot (parent directory)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_imports_malformed_file",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_malformed_file",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 132,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that malformed Python files return empty list gracefully."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_functions",
+        "qualified_name": "tests.test_parser.TestExtractFunctionsAndClasses.test_extract_functions",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 149,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_functions",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of top-level function names."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_classes",
+        "qualified_name": "tests.test_parser.TestExtractFunctionsAndClasses.test_extract_classes",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 168,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_classes",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of top-level class names."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_count_lines_of_code",
+        "qualified_name": "tests.test_parser.TestLinesOfCode.test_count_lines_of_code",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 191,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.count_lines_of_code",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test counting non-empty lines."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_resolve_absolute_import",
+        "qualified_name": "tests.test_parser.TestImportResolution.test_resolve_absolute_import",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 215,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.models.Import",
+          "parser.import_resolver.resolve_import",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that absolute imports are unchanged."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_resolve_relative_import_same_dir",
+        "qualified_name": "tests.test_parser.TestImportResolution.test_resolve_relative_import_same_dir",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 231,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.models.Import",
+          "parser.import_resolver.resolve_import",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test resolving relative import in same directory (single dot)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_resolve_relative_import_parent_dir",
+        "qualified_name": "tests.test_parser.TestImportResolution.test_resolve_relative_import_parent_dir",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 248,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.models.Import",
+          "parser.import_resolver.resolve_import",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test resolving relative import in parent directory (double dot)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_resolve_relative_import_grandparent_dir",
+        "qualified_name": "tests.test_parser.TestImportResolution.test_resolve_relative_import_grandparent_dir",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 265,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.models.Import",
+          "parser.import_resolver.resolve_import",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test resolving relative import in grandparent directory (triple dot)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_path_to_module_name_simple",
+        "qualified_name": "tests.test_parser.TestPathToModuleName.test_path_to_module_name_simple",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 286,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "pathlib.Path",
+          "parser.import_resolver.path_to_module_name"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test converting file path to module name."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_path_to_module_name_root_file",
+        "qualified_name": "tests.test_parser.TestPathToModuleName.test_path_to_module_name_root_file",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 295,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "pathlib.Path",
+          "parser.import_resolver.path_to_module_name"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test file at project root."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_path_to_module_name_init_file",
+        "qualified_name": "tests.test_parser.TestPathToModuleName.test_path_to_module_name_init_file",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 304,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "pathlib.Path",
+          "parser.import_resolver.path_to_module_name"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test __init__.py file handling."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_parse_file_complete",
+        "qualified_name": "tests.test_parser.TestParseFile.test_parse_file_complete",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 318,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.python_parser.parse_file"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test parsing a complete Python file."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_parse_file_test_detection",
+        "qualified_name": "tests.test_parser.TestParseFile.test_parse_file_test_detection",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 364,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.python_parser.parse_file",
+          "parser.python_parser.parse_file"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test detection of test files."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_filter_external_removes_external_nodes",
+        "qualified_name": "tests.test_collapser.TestFilterExternal.test_filter_external_removes_external_nodes",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 21,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that filter_external removes EXTERNAL nodes."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_filter_external_preserves_module_edges",
+        "qualified_name": "tests.test_collapser.TestFilterExternal.test_filter_external_preserves_module_edges",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 51,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that internal edges are preserved."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_apply_custom_rules_simple",
+        "qualified_name": "tests.test_collapser.TestCustomRules.test_apply_custom_rules_simple",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 75,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseRule",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test applying a simple pattern-based rule."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_apply_custom_rules_priority",
+        "qualified_name": "tests.test_collapser.TestCustomRules.test_apply_custom_rules_priority",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 113,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseRule",
+          "graph.collapse_rules.CollapseRule",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that higher priority rules are applied first."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_group_by_directory_depth_2",
+        "qualified_name": "tests.test_collapser.TestGroupByDirectory.test_group_by_directory_depth_2",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 146,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test grouping at depth=2."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_group_by_directory_depth_1",
+        "qualified_name": "tests.test_collapser.TestGroupByDirectory.test_group_by_directory_depth_1",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 174,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test grouping at depth=1 (top-level only)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_group_by_directory_preserves_edges",
+        "qualified_name": "tests.test_collapser.TestGroupByDirectory.test_group_by_directory_preserves_edges",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 194,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that edges are correctly routed through grouped folders."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_enforce_node_limit_no_merge_if_under",
+        "qualified_name": "tests.test_collapser.TestEnforceNodeLimit.test_enforce_node_limit_no_merge_if_under",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 224,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that nothing is merged if already under limit."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_enforce_node_limit_merges_folders",
+        "qualified_name": "tests.test_collapser.TestEnforceNodeLimit.test_enforce_node_limit_merges_folders",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 238,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that folders are merged when over limit."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_collapse_full_pipeline",
+        "qualified_name": "tests.test_collapser.TestEndToEndCollapse.test_collapse_full_pipeline",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 278,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test complete collapsing workflow."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_default_config_has_rules",
+        "qualified_name": "tests.test_collapser.TestDefaultConfigs.test_default_config_has_rules",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 314,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "config.default_rules.get_default_config"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that default config includes common rules."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_stockanalysis_config",
+        "qualified_name": "tests.test_collapser.TestDefaultConfigs.test_stockanalysis_config",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 323,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "config.default_rules.get_stockanalysis_config"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test StockAnalysis-specific configuration."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_build_graph_single_file",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_build_graph_single_file",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 22,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test building graph from single file with no imports."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_build_graph_with_imports",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_build_graph_with_imports",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 53,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder",
+          "parser.models.Import"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test building graph with import relationships between files."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_multiple_imports_same_module",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_multiple_imports_same_module",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 100,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder",
+          "parser.models.Import",
+          "parser.models.Import"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that multiple imports to same module increment edge weight."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_external_dependency_handling",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_external_dependency_handling",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 136,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder",
+          "parser.models.Import",
+          "parser.models.Import"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that external dependencies create EXTERNAL nodes."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_graph_metadata",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_graph_metadata",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 179,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder",
+          "parser.models.Import",
+          "parser.models.Import"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that graph metadata is populated correctly."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_discover_python_files",
+        "qualified_name": "tests.test_graph.TestGraphBuilderDiscovery.test_discover_python_files",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 221,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test discovering Python files in a directory tree."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_discover_python_files_empty_directory",
+        "qualified_name": "tests.test_graph.TestGraphBuilderDiscovery.test_discover_python_files_empty_directory",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 260,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test discovering files in empty directory."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_build_from_directory",
+        "qualified_name": "tests.test_graph.TestGraphBuilderEndToEnd.test_build_from_directory",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 274,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test complete pipeline from directory to graph."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_build_from_directory_empty",
+        "qualified_name": "tests.test_graph.TestGraphBuilderEndToEnd.test_build_from_directory_empty",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 316,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test building from directory with no Python files."
+      },
+      "children": [],
+      "depth": 0
+    }
+  ],
+  "before_trees": [
+    {
+      "function": {
+        "name": "test_extract_imports_absolute",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_absolute",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 29,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of absolute import statements."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_imports_from",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_from",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 57,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of 'from X import Y' statements."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_imports_relative_single_dot",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_relative_single_dot",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 83,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of relative imports with single dot (same directory)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_imports_relative_double_dot",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_relative_double_dot",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 108,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of relative imports with double dot (parent directory)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_imports_malformed_file",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_malformed_file",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 132,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that malformed Python files return empty list gracefully."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_functions",
+        "qualified_name": "tests.test_parser.TestExtractFunctionsAndClasses.test_extract_functions",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 149,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_functions",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of top-level function names."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_classes",
+        "qualified_name": "tests.test_parser.TestExtractFunctionsAndClasses.test_extract_classes",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 168,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_classes",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of top-level class names."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_count_lines_of_code",
+        "qualified_name": "tests.test_parser.TestLinesOfCode.test_count_lines_of_code",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 191,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.count_lines_of_code",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test counting non-empty lines."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_resolve_absolute_import",
+        "qualified_name": "tests.test_parser.TestImportResolution.test_resolve_absolute_import",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 215,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.models.Import",
+          "parser.import_resolver.resolve_import",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that absolute imports are unchanged."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_resolve_relative_import_same_dir",
+        "qualified_name": "tests.test_parser.TestImportResolution.test_resolve_relative_import_same_dir",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 231,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.models.Import",
+          "parser.import_resolver.resolve_import",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test resolving relative import in same directory (single dot)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_resolve_relative_import_parent_dir",
+        "qualified_name": "tests.test_parser.TestImportResolution.test_resolve_relative_import_parent_dir",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 248,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.models.Import",
+          "parser.import_resolver.resolve_import",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test resolving relative import in parent directory (double dot)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_resolve_relative_import_grandparent_dir",
+        "qualified_name": "tests.test_parser.TestImportResolution.test_resolve_relative_import_grandparent_dir",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 265,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.models.Import",
+          "parser.import_resolver.resolve_import",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test resolving relative import in grandparent directory (triple dot)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_path_to_module_name_simple",
+        "qualified_name": "tests.test_parser.TestPathToModuleName.test_path_to_module_name_simple",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 286,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "pathlib.Path",
+          "parser.import_resolver.path_to_module_name"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test converting file path to module name."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_path_to_module_name_root_file",
+        "qualified_name": "tests.test_parser.TestPathToModuleName.test_path_to_module_name_root_file",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 295,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "pathlib.Path",
+          "parser.import_resolver.path_to_module_name"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test file at project root."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_path_to_module_name_init_file",
+        "qualified_name": "tests.test_parser.TestPathToModuleName.test_path_to_module_name_init_file",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 304,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "pathlib.Path",
+          "parser.import_resolver.path_to_module_name"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test __init__.py file handling."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_parse_file_complete",
+        "qualified_name": "tests.test_parser.TestParseFile.test_parse_file_complete",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 318,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.python_parser.parse_file"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test parsing a complete Python file."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_parse_file_test_detection",
+        "qualified_name": "tests.test_parser.TestParseFile.test_parse_file_test_detection",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 364,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.python_parser.parse_file",
+          "parser.python_parser.parse_file"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test detection of test files."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_filter_external_removes_external_nodes",
+        "qualified_name": "tests.test_collapser.TestFilterExternal.test_filter_external_removes_external_nodes",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 21,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that filter_external removes EXTERNAL nodes."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_filter_external_preserves_module_edges",
+        "qualified_name": "tests.test_collapser.TestFilterExternal.test_filter_external_preserves_module_edges",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 51,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that internal edges are preserved."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_apply_custom_rules_simple",
+        "qualified_name": "tests.test_collapser.TestCustomRules.test_apply_custom_rules_simple",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 75,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseRule",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test applying a simple pattern-based rule."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_apply_custom_rules_priority",
+        "qualified_name": "tests.test_collapser.TestCustomRules.test_apply_custom_rules_priority",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 113,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseRule",
+          "graph.collapse_rules.CollapseRule",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that higher priority rules are applied first."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_group_by_directory_depth_2",
+        "qualified_name": "tests.test_collapser.TestGroupByDirectory.test_group_by_directory_depth_2",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 146,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test grouping at depth=2."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_group_by_directory_depth_1",
+        "qualified_name": "tests.test_collapser.TestGroupByDirectory.test_group_by_directory_depth_1",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 174,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test grouping at depth=1 (top-level only)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_group_by_directory_preserves_edges",
+        "qualified_name": "tests.test_collapser.TestGroupByDirectory.test_group_by_directory_preserves_edges",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 194,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that edges are correctly routed through grouped folders."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_enforce_node_limit_no_merge_if_under",
+        "qualified_name": "tests.test_collapser.TestEnforceNodeLimit.test_enforce_node_limit_no_merge_if_under",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 224,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that nothing is merged if already under limit."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_enforce_node_limit_merges_folders",
+        "qualified_name": "tests.test_collapser.TestEnforceNodeLimit.test_enforce_node_limit_merges_folders",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 238,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that folders are merged when over limit."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_collapse_full_pipeline",
+        "qualified_name": "tests.test_collapser.TestEndToEndCollapse.test_collapse_full_pipeline",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 278,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test complete collapsing workflow."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_default_config_has_rules",
+        "qualified_name": "tests.test_collapser.TestDefaultConfigs.test_default_config_has_rules",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 314,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "config.default_rules.get_default_config"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that default config includes common rules."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_stockanalysis_config",
+        "qualified_name": "tests.test_collapser.TestDefaultConfigs.test_stockanalysis_config",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 323,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "config.default_rules.get_stockanalysis_config"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test StockAnalysis-specific configuration."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_build_graph_single_file",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_build_graph_single_file",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 22,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test building graph from single file with no imports."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_build_graph_with_imports",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_build_graph_with_imports",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 53,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder",
+          "parser.models.Import"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test building graph with import relationships between files."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_multiple_imports_same_module",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_multiple_imports_same_module",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 100,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder",
+          "parser.models.Import",
+          "parser.models.Import"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that multiple imports to same module increment edge weight."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_external_dependency_handling",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_external_dependency_handling",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 136,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder",
+          "parser.models.Import",
+          "parser.models.Import"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that external dependencies create EXTERNAL nodes."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_graph_metadata",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_graph_metadata",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 179,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder",
+          "parser.models.Import",
+          "parser.models.Import"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that graph metadata is populated correctly."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_discover_python_files",
+        "qualified_name": "tests.test_graph.TestGraphBuilderDiscovery.test_discover_python_files",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 221,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test discovering Python files in a directory tree."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_discover_python_files_empty_directory",
+        "qualified_name": "tests.test_graph.TestGraphBuilderDiscovery.test_discover_python_files_empty_directory",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 260,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test discovering files in empty directory."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_build_from_directory",
+        "qualified_name": "tests.test_graph.TestGraphBuilderEndToEnd.test_build_from_directory",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 274,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test complete pipeline from directory to graph."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_build_from_directory_empty",
+        "qualified_name": "tests.test_graph.TestGraphBuilderEndToEnd.test_build_from_directory_empty",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 316,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test building from directory with no Python files."
+      },
+      "children": [],
+      "depth": 0
+    }
+  ],
+  "deleted_functions": [],
+  "metadata": {
+    "project": "FlowDiff",
+    "run_dir": "/Users/barlarom/PycharmProjects/Main/FlowDiff",
+    "input_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff",
+    "function_count": 38,
+    "entry_point_count": 38,
+    "before_ref": "HEAD",
+    "after_ref": "working",
+    "functions_added": 8,
+    "functions_modified": 0,
+    "functions_deleted": 0,
+    "analysis_timestamp": "2026-02-10T01:16:24.473596"
+  }
+}

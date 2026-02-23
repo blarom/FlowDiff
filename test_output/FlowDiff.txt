@@ -1,0 +1,433 @@
+================================================================================
+FlowDiff Analysis Report - FlowDiff
+================================================================================
+Generated: 2026-02-10 01:16:25
+
+SUMMARY
+--------------------------------------------------------------------------------
+Total Functions: 38
+Entry Points: 38
+
+TOP-LEVEL ENTRY POINTS
+--------------------------------------------------------------------------------
+1. tests.test_parser.TestExtractImports.test_extract_imports_absolute()
+   File: test_parser.py:29
+   Parameters: self
+
+2. tests.test_parser.TestExtractImports.test_extract_imports_from()
+   File: test_parser.py:57
+   Parameters: self
+
+3. tests.test_parser.TestExtractImports.test_extract_imports_relative_single_dot()
+   File: test_parser.py:83
+   Parameters: self
+
+4. tests.test_parser.TestExtractImports.test_extract_imports_relative_double_dot()
+   File: test_parser.py:108
+   Parameters: self
+
+5. tests.test_parser.TestExtractImports.test_extract_imports_malformed_file()
+   File: test_parser.py:132
+   Parameters: self
+
+6. tests.test_parser.TestExtractFunctionsAndClasses.test_extract_functions()
+   File: test_parser.py:149
+   Parameters: self
+
+7. tests.test_parser.TestExtractFunctionsAndClasses.test_extract_classes()
+   File: test_parser.py:168
+   Parameters: self
+
+8. tests.test_parser.TestLinesOfCode.test_count_lines_of_code()
+   File: test_parser.py:191
+   Parameters: self
+
+9. tests.test_parser.TestImportResolution.test_resolve_absolute_import()
+   File: test_parser.py:215
+   Parameters: self
+
+10. tests.test_parser.TestImportResolution.test_resolve_relative_import_same_dir()
+   File: test_parser.py:231
+   Parameters: self
+
+11. tests.test_parser.TestImportResolution.test_resolve_relative_import_parent_dir()
+   File: test_parser.py:248
+   Parameters: self
+
+12. tests.test_parser.TestImportResolution.test_resolve_relative_import_grandparent_dir()
+   File: test_parser.py:265
+   Parameters: self
+
+13. tests.test_parser.TestPathToModuleName.test_path_to_module_name_simple()
+   File: test_parser.py:286
+   Parameters: self
+
+14. tests.test_parser.TestPathToModuleName.test_path_to_module_name_root_file()
+   File: test_parser.py:295
+   Parameters: self
+
+15. tests.test_parser.TestPathToModuleName.test_path_to_module_name_init_file()
+   File: test_parser.py:304
+   Parameters: self
+
+16. tests.test_parser.TestParseFile.test_parse_file_complete()
+   File: test_parser.py:318
+   Parameters: self
+
+17. tests.test_parser.TestParseFile.test_parse_file_test_detection()
+   File: test_parser.py:364
+   Parameters: self
+
+18. tests.test_collapser.TestFilterExternal.test_filter_external_removes_external_nodes()
+   File: test_collapser.py:21
+   Parameters: self
+
+19. tests.test_collapser.TestFilterExternal.test_filter_external_preserves_module_edges()
+   File: test_collapser.py:51
+   Parameters: self
+
+20. tests.test_collapser.TestCustomRules.test_apply_custom_rules_simple()
+   File: test_collapser.py:75
+   Parameters: self
+
+21. tests.test_collapser.TestCustomRules.test_apply_custom_rules_priority()
+   File: test_collapser.py:113
+   Parameters: self
+
+22. tests.test_collapser.TestGroupByDirectory.test_group_by_directory_depth_2()
+   File: test_collapser.py:146
+   Parameters: self
+
+23. tests.test_collapser.TestGroupByDirectory.test_group_by_directory_depth_1()
+   File: test_collapser.py:174
+   Parameters: self
+
+24. tests.test_collapser.TestGroupByDirectory.test_group_by_directory_preserves_edges()
+   File: test_collapser.py:194
+   Parameters: self
+
+25. tests.test_collapser.TestEnforceNodeLimit.test_enforce_node_limit_no_merge_if_under()
+   File: test_collapser.py:224
+   Parameters: self
+
+26. tests.test_collapser.TestEnforceNodeLimit.test_enforce_node_limit_merges_folders()
+   File: test_collapser.py:238
+   Parameters: self
+
+27. tests.test_collapser.TestEndToEndCollapse.test_collapse_full_pipeline()
+   File: test_collapser.py:278
+   Parameters: self
+
+28. tests.test_collapser.TestDefaultConfigs.test_default_config_has_rules()
+   File: test_collapser.py:314
+   Parameters: self
+
+29. tests.test_collapser.TestDefaultConfigs.test_stockanalysis_config()
+   File: test_collapser.py:323
+   Parameters: self
+
+30. tests.test_graph.TestGraphBuilder.test_build_graph_single_file()
+   File: test_graph.py:22
+   Parameters: self
+
+31. tests.test_graph.TestGraphBuilder.test_build_graph_with_imports()
+   File: test_graph.py:53
+   Parameters: self
+
+32. tests.test_graph.TestGraphBuilder.test_multiple_imports_same_module()
+   File: test_graph.py:100
+   Parameters: self
+
+33. tests.test_graph.TestGraphBuilder.test_external_dependency_handling()
+   File: test_graph.py:136
+   Parameters: self
+
+34. tests.test_graph.TestGraphBuilder.test_graph_metadata()
+   File: test_graph.py:179
+   Parameters: self
+
+35. tests.test_graph.TestGraphBuilderDiscovery.test_discover_python_files()
+   File: test_graph.py:221
+   Parameters: self
+
+36. tests.test_graph.TestGraphBuilderDiscovery.test_discover_python_files_empty_directory()
+   File: test_graph.py:260
+   Parameters: self
+
+37. tests.test_graph.TestGraphBuilderEndToEnd.test_build_from_directory()
+   File: test_graph.py:274
+   Parameters: self
+
+38. tests.test_graph.TestGraphBuilderEndToEnd.test_build_from_directory_empty()
+   File: test_graph.py:316
+   Parameters: self
+
+
+FUNCTION CALL TREES
+================================================================================
+
+[1] tests.test_parser.TestExtractImports.test_extract_imports_absolute()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py:29
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[2] tests.test_parser.TestExtractImports.test_extract_imports_from()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py:57
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[3] tests.test_parser.TestExtractImports.test_extract_imports_relative_single_dot()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py:83
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[4] tests.test_parser.TestExtractImports.test_extract_imports_relative_double_dot()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py:108
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[5] tests.test_parser.TestExtractImports.test_extract_imports_malformed_file()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py:132
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[6] tests.test_parser.TestExtractFunctionsAndClasses.test_extract_functions()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py:149
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[7] tests.test_parser.TestExtractFunctionsAndClasses.test_extract_classes()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py:168
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[8] tests.test_parser.TestLinesOfCode.test_count_lines_of_code()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py:191
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[9] tests.test_parser.TestImportResolution.test_resolve_absolute_import()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py:215
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[10] tests.test_parser.TestImportResolution.test_resolve_relative_import_same_dir()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py:231
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[11] tests.test_parser.TestImportResolution.test_resolve_relative_import_parent_dir()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py:248
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[12] tests.test_parser.TestImportResolution.test_resolve_relative_import_grandparent_dir()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py:265
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[13] tests.test_parser.TestPathToModuleName.test_path_to_module_name_simple()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py:286
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[14] tests.test_parser.TestPathToModuleName.test_path_to_module_name_root_file()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py:295
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[15] tests.test_parser.TestPathToModuleName.test_path_to_module_name_init_file()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py:304
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[16] tests.test_parser.TestParseFile.test_parse_file_complete()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py:318
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[17] tests.test_parser.TestParseFile.test_parse_file_test_detection()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py:364
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[18] tests.test_collapser.TestFilterExternal.test_filter_external_removes_external_nodes()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py:21
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[19] tests.test_collapser.TestFilterExternal.test_filter_external_preserves_module_edges()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py:51
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[20] tests.test_collapser.TestCustomRules.test_apply_custom_rules_simple()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py:75
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[21] tests.test_collapser.TestCustomRules.test_apply_custom_rules_priority()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py:113
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[22] tests.test_collapser.TestGroupByDirectory.test_group_by_directory_depth_2()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py:146
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[23] tests.test_collapser.TestGroupByDirectory.test_group_by_directory_depth_1()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py:174
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[24] tests.test_collapser.TestGroupByDirectory.test_group_by_directory_preserves_edges()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py:194
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[25] tests.test_collapser.TestEnforceNodeLimit.test_enforce_node_limit_no_merge_if_under()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py:224
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[26] tests.test_collapser.TestEnforceNodeLimit.test_enforce_node_limit_merges_folders()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py:238
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[27] tests.test_collapser.TestEndToEndCollapse.test_collapse_full_pipeline()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py:278
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[28] tests.test_collapser.TestDefaultConfigs.test_default_config_has_rules()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py:314
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[29] tests.test_collapser.TestDefaultConfigs.test_stockanalysis_config()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py:323
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[30] tests.test_graph.TestGraphBuilder.test_build_graph_single_file()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py:22
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[31] tests.test_graph.TestGraphBuilder.test_build_graph_with_imports()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py:53
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[32] tests.test_graph.TestGraphBuilder.test_multiple_imports_same_module()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py:100
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[33] tests.test_graph.TestGraphBuilder.test_external_dependency_handling()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py:136
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[34] tests.test_graph.TestGraphBuilder.test_graph_metadata()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py:179
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[35] tests.test_graph.TestGraphBuilderDiscovery.test_discover_python_files()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py:221
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[36] tests.test_graph.TestGraphBuilderDiscovery.test_discover_python_files_empty_directory()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py:260
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[37] tests.test_graph.TestGraphBuilderEndToEnd.test_build_from_directory()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py:274
+    Parameters: self
+
+
+--------------------------------------------------------------------------------
+
+[38] tests.test_graph.TestGraphBuilderEndToEnd.test_build_from_directory_empty()
+    Location: /Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py:316
+    Parameters: self
+
+
+--------------------------------------------------------------------------------

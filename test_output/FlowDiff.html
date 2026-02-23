@@ -1,0 +1,4322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlowDiff - FlowDiff</title>
+    <style>
+/* FlowDiff Tree Visualization Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f7fa;
+    color: #2c3e50;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+header h1 {
+    font-size: 24px;
+    color: #2c3e50;
+    margin-bottom: 12px;
+}
+
+.header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.header-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.header-label {
+    font-weight: 600;
+    color: #7f8c8d;
+    min-width: 80px;
+}
+
+.header-value {
+    color: #2c3e50;
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 13px;
+}
+
+.stats {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    color: #7f8c8d;
+}
+
+.stats span {
+    padding: 4px 12px;
+    background: #ecf0f1;
+    border-radius: 4px;
+}
+
+.controls {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.controls-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.controls-row.filter-row {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+}
+
+.filter-section-label {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 14px;
+    margin-right: 12px;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 20px;
+}
+
+.filter-label {
+    font-weight: 500;
+    color: #555;
+    font-size: 13px;
+    min-width: 50px;
+}
+
+.filter-input {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 280px;
+    font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.filter-input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+.filter-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #666;
+    cursor: pointer;
+    user-select: none;
+}
+
+.filter-checkbox-label input[type="checkbox"] {
+    cursor: pointer;
+}
+
+.controls button {
+    padding: 8px 16px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.controls button:hover {
+    background: #2980b9;
+}
+
+.controls .toggle-btn {
+    background: #95a5a6;
+}
+
+.controls .toggle-btn:hover {
+    background: #7f8c8d;
+}
+
+.controls .toggle-btn.active {
+    background: #e74c3c;
+}
+
+.controls .diff-btn {
+    background: #9b59b6;
+}
+
+.controls .diff-btn:hover {
+    background: #8e44ad;
+}
+
+.controls #search {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+main {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    min-height: 600px;
+}
+
+.tree-container {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.call-tree {
+    padding: 10px;
+}
+
+/* Separate entry point trees */
+.entry-point-tree {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+.entry-point-tree:last-child {
+    border-bottom: none;
+}
+
+/* Tree Node Styling */
+.tree-node {
+    display: flex;
+    align-items: center;
+    padding: 4px 0;
+    cursor: pointer;
+    transition: background 0.2s;
+    min-width: 0; /* Allow flex items to shrink below content size */
+}
+
+.tree-node:hover {
+    background: #f8f9fa;
+}
+
+.tree-node.has-children {
+    font-weight: 500;
+}
+
+.tree-indent {
+    display: inline-block;
+    width: 20px;
+    flex-shrink: 0;
+}
+
+.tree-expand {
+    display: inline-block;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+    cursor: pointer;
+    user-select: none;
+    font-size: 12px;
+    color: #7f8c8d;
+}
+
+.tree-expand:hover {
+    color: #3498db;
+}
+
+.tree-expand.collapsed::before {
+    content: '▶';
+}
+
+.tree-expand.expanded::before {
+    content: '▼';
+}
+
+.tree-expand.leaf {
+    opacity: 0;
+    cursor: default;
+}
+
+.tree-icon {
+    display: inline-block;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+    margin-right: 4px;
+}
+
+.tree-label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0; /* Allow flex item to shrink */
+    overflow: hidden; /* Hide overflow */
+}
+
+.function-name {
+    color: #2c3e50;
+    font-weight: 500;
+    white-space: nowrap; /* Don't wrap to new line */
+    overflow: hidden; /* Hide overflow */
+    text-overflow: ellipsis; /* Show ... for overflow */
+    min-width: 0; /* Allow flex item to shrink */
+}
+
+.function-params {
+    color: #7f8c8d;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.function-arrow {
+    color: #95a5a6;
+    font-size: 12px;
+}
+
+.function-return {
+    color: #8e44ad;
+    font-size: 13px;
+    font-style: italic;
+}
+
+.function-file {
+    color: #95a5a6;
+    font-size: 12px;
+}
+
+/* Search highlighting */
+.search-highlight {
+    background-color: #fff3cd;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.current-match {
+    background-color: #ffc107;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+.search-match {
+    background-color: rgba(255, 243, 205, 0.3);
+}
+
+/* Info Icon */
+.info-icon,
+.diff-icon {
+    margin-left: 6px;
+    padding: 4px 8px;
+    color: white;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    opacity: 1;
+    transition: opacity 0.2s, background 0.2s;
+    flex-shrink: 0;
+}
+
+.info-icon {
+    background: #3498db;
+}
+
+.diff-icon {
+    background: #e67e22;
+}
+
+.info-icon:hover {
+    background: #2980b9;
+}
+
+.diff-icon:hover {
+    background: #d35400;
+}
+
+/* Selected node highlighting - strong consistent blue for all selected nodes */
+.tree-node.selected {
+    background: rgba(52, 152, 219, 0.15) !important;
+    border-left: 4px solid #2980b9 !important;
+    margin-left: -4px;
+    box-shadow: inset 0 0 0 2px rgba(52, 152, 219, 0.4) !important;
+}
+
+/* Changed nodes keep their yellow background, but selection gets clear blue border */
+.tree-node.has-changes.selected {
+    background: rgba(255, 193, 7, 0.2) !important;
+    border-left: 4px solid #2980b9 !important;
+    box-shadow: inset 0 0 0 2px rgba(52, 152, 219, 0.5) !important;
+}
+
+/* Tree Children */
+.tree-children {
+    margin-left: 20px;
+}
+
+.tree-children.collapsed {
+    display: none;
+}
+
+/* Info Panel */
+.info-panel {
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 400px;
+    background: white;
+    box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+    transform: translateX(0);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.info-panel.hidden {
+    transform: translateX(100%);
+}
+
+.info-panel-header {
+    position: sticky;
+    top: 0;
+    background: #2c3e50;
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+}
+
+.info-panel-header h2 {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.close-btn:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.info-panel-content {
+    padding: 20px;
+}
+
+.info-section {
+    margin-bottom: 24px;
+}
+
+.info-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.info-section > div {
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.info-section code {
+    background: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 13px;
+}
+
+.info-section a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+.info-section a:hover {
+    text-decoration: underline;
+}
+
+.info-list {
+    list-style: none;
+    padding: 0;
+}
+
+.info-list li {
+    padding: 4px 0;
+    padding-left: 16px;
+    position: relative;
+}
+
+.info-list li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: #3498db;
+}
+
+.empty-state {
+    color: #95a5a6;
+    font-style: italic;
+}
+
+/* Depth-based font sizing */
+.tree-node[data-depth="0"] .function-name {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.tree-node[data-depth="1"] .function-name {
+    font-size: 15px;
+}
+
+.tree-node[data-depth="2"] .function-name {
+    font-size: 14px;
+}
+
+.tree-node[data-depth="3"] .function-name {
+    font-size: 13px;
+}
+
+.tree-node[data-depth="4"] .function-name,
+.tree-node[data-depth="5"] .function-name,
+.tree-node[data-depth="6"] .function-name {
+    font-size: 12px;
+}
+
+/* Search highlighting */
+.tree-node.search-match {
+    background: #fff3cd;
+}
+
+.tree-node.search-highlight .function-name {
+    background: #ffc107;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+/* Path to changed function highlighting */
+.tree-node.path-to-change {
+    position: relative;
+    background: linear-gradient(to right, #fff9e6 0%, #fffdf5 100%) !important;
+    border-left: 3px solid #ffd966 !important;
+    margin-left: -3px;
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+.tree-node.path-to-change .function-name {
+    font-weight: 600;
+    color: #997404 !important;
+}
+
+.tree-node.path-to-change .tree-icon {
+    filter: brightness(1.2);
+}
+
+.tree-node.path-to-change .tree-indent {
+    color: #ffd966 !important;
+    font-weight: 700;
+}
+
+/* Changed function highlighting (stronger than path) */
+.tree-node.has-changes {
+    position: relative;
+    background: linear-gradient(to right, #fff3cd 0%, #fff9e6 100%) !important;
+    border-left: 4px solid #f0ad4e !important;
+    margin-left: -4px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    border-radius: 3px;
+    box-shadow: 0 1px 3px rgba(240, 173, 78, 0.2) !important;
+}
+
+.tree-node.has-changes .function-name {
+    font-weight: 700;
+    color: #856404 !important;
+}
+
+.tree-node.has-changes .tree-icon {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.tree-node.has-changes .tree-indent {
+    color: #f0ad4e !important;
+    font-weight: 700;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+/* Loading state */
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    font-size: 16px;
+    color: #7f8c8d;
+}
+
+.loading::before {
+    content: '⟳';
+    display: inline-block;
+    margin-right: 8px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.modal.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    background: #2c3e50;
+    color: white;
+    padding: 20px;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    font-size: 20px;
+    font-weight: 500;
+    margin: 0;
+}
+
+.modal-body {
+    padding: 30px;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #2c3e50;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.modal-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 30px;
+}
+
+.btn-primary {
+    padding: 10px 24px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary:hover {
+    background: #2980b9;
+}
+
+.btn-secondary {
+    padding: 10px 24px;
+    background: #95a5a6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #7f8c8d;
+}
+
+/* Info panel overlay for click-outside-to-close */
+.info-panel-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    z-index: 999;
+    display: none;
+}
+
+.info-panel-overlay.active {
+    display: block;
+}
+
+/* Saved Report Banner */
+.saved-report-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #27ae60;
+    color: white;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 1500;
+    animation: slideDown 0.3s ease;
+}
+
+.saved-report-banner.hidden {
+    display: none;
+}
+
+.saved-report-banner span {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.saved-report-banner a {
+    color: white;
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+.saved-report-banner a:hover {
+    color: #ecf0f1;
+}
+
+.close-banner-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s;
+    margin-left: 10px;
+}
+
+.close-banner-btn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+/* Adjust container padding when banner is visible */
+body:has(.saved-report-banner:not(.hidden)) .container {
+    padding-top: 70px;
+}
+
+/* Diff Modal Styles */
+.diff-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.diff-modal.hidden {
+    opacity: 0;
+    pointer-events: none;
+    display: none;
+}
+
+.diff-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    cursor: pointer;
+}
+
+.diff-modal-content {
+    position: relative;
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 1200px;
+    max-height: 90vh;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+    animation: slideDown 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.diff-modal-header {
+    background: #2c3e50;
+    color: white;
+    padding: 16px 24px;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.diff-modal-header h3 {
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0;
+}
+
+.diff-modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s;
+    line-height: 1;
+}
+
+.diff-modal-close:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.diff-modal-body {
+    padding: 0;
+    overflow-y: auto;
+    overflow-x: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+.diff-modal-body #diff-modal-content {
+    padding: 16px;
+}
+
+/* Override diff2html styles for better fit */
+.diff-modal-body .d2h-wrapper {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.diff-modal-body .d2h-file-wrapper {
+    border: none;
+    margin-bottom: 0;
+}
+
+.diff-modal-body .d2h-code-line {
+    padding: 2px 10px;
+}
+
+/* Force diff2html to show colors for additions and deletions */
+.diff-modal-body .d2h-del {
+    background-color: #ffdddd !important;
+    border-color: #f1c0c0 !important;
+}
+
+.diff-modal-body .d2h-ins {
+    background-color: #ddffdd !important;
+    border-color: #c0f0c0 !important;
+}
+
+.diff-modal-body .d2h-code-line-del {
+    background-color: #ffecec !important;
+}
+
+.diff-modal-body .d2h-code-line-ins {
+    background-color: #e6ffed !important;
+}
+
+.diff-modal-body .d2h-code-line del {
+    background-color: #ff9999 !important;
+    text-decoration: none;
+}
+
+.diff-modal-body .d2h-code-line ins {
+    background-color: #99ff99 !important;
+    text-decoration: none;
+}
+
+/* Fallback: style plain diff text if diff2html doesn't render */
+.diff-modal-body pre code {
+    display: block;
+    white-space: pre;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>FlowDiff - Function Call Tree</h1>
+            <div class="stats" id="stats">
+                <span id="project-name"></span>
+                <span id="function-count"></span>
+                <span id="entry-points"></span>
+            </div>
+        </header>
+
+        <div class="controls">
+            <button id="expand-all">Expand All</button>
+            <button id="collapse-all">Collapse All</button>
+            <button id="toggle-tests" class="toggle-btn">Hide Tests</button>
+            <input type="text" id="search" placeholder="Search functions..." />
+        </div>
+
+        <main>
+            <div class="tree-container">
+                <div id="call-tree" class="call-tree"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Info Panel -->
+    <div id="info-panel" class="info-panel hidden">
+        <div class="info-header">
+            <h3 id="info-title">Function Details</h3>
+            <button id="close-info" class="close-btn">&times;</button>
+        </div>
+        <div class="info-content" id="info-content"></div>
+    </div>
+
+    <!-- Info Panel Overlay -->
+    <div id="info-panel-overlay" class="info-panel-overlay"></div>
+
+    <!-- Embedded tree data -->
+    <script>
+        const TREE_DATA = {
+  "trees": [
+    {
+      "function": {
+        "name": "test_extract_imports_absolute",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_absolute",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 29,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of absolute import statements."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_imports_from",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_from",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 57,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of 'from X import Y' statements."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_imports_relative_single_dot",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_relative_single_dot",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 83,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of relative imports with single dot (same directory)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_imports_relative_double_dot",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_relative_double_dot",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 108,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of relative imports with double dot (parent directory)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_imports_malformed_file",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_malformed_file",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 132,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that malformed Python files return empty list gracefully."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_functions",
+        "qualified_name": "tests.test_parser.TestExtractFunctionsAndClasses.test_extract_functions",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 149,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_functions",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of top-level function names."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_classes",
+        "qualified_name": "tests.test_parser.TestExtractFunctionsAndClasses.test_extract_classes",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 168,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_classes",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of top-level class names."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_count_lines_of_code",
+        "qualified_name": "tests.test_parser.TestLinesOfCode.test_count_lines_of_code",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 191,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.count_lines_of_code",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test counting non-empty lines."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_resolve_absolute_import",
+        "qualified_name": "tests.test_parser.TestImportResolution.test_resolve_absolute_import",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 215,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.models.Import",
+          "parser.import_resolver.resolve_import",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that absolute imports are unchanged."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_resolve_relative_import_same_dir",
+        "qualified_name": "tests.test_parser.TestImportResolution.test_resolve_relative_import_same_dir",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 231,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.models.Import",
+          "parser.import_resolver.resolve_import",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test resolving relative import in same directory (single dot)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_resolve_relative_import_parent_dir",
+        "qualified_name": "tests.test_parser.TestImportResolution.test_resolve_relative_import_parent_dir",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 248,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.models.Import",
+          "parser.import_resolver.resolve_import",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test resolving relative import in parent directory (double dot)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_resolve_relative_import_grandparent_dir",
+        "qualified_name": "tests.test_parser.TestImportResolution.test_resolve_relative_import_grandparent_dir",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 265,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.models.Import",
+          "parser.import_resolver.resolve_import",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test resolving relative import in grandparent directory (triple dot)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_path_to_module_name_simple",
+        "qualified_name": "tests.test_parser.TestPathToModuleName.test_path_to_module_name_simple",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 286,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "pathlib.Path",
+          "parser.import_resolver.path_to_module_name"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test converting file path to module name."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_path_to_module_name_root_file",
+        "qualified_name": "tests.test_parser.TestPathToModuleName.test_path_to_module_name_root_file",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 295,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "pathlib.Path",
+          "parser.import_resolver.path_to_module_name"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test file at project root."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_path_to_module_name_init_file",
+        "qualified_name": "tests.test_parser.TestPathToModuleName.test_path_to_module_name_init_file",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 304,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "pathlib.Path",
+          "parser.import_resolver.path_to_module_name"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test __init__.py file handling."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_parse_file_complete",
+        "qualified_name": "tests.test_parser.TestParseFile.test_parse_file_complete",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 318,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.python_parser.parse_file"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test parsing a complete Python file."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_parse_file_test_detection",
+        "qualified_name": "tests.test_parser.TestParseFile.test_parse_file_test_detection",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 364,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.python_parser.parse_file",
+          "parser.python_parser.parse_file"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test detection of test files."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_filter_external_removes_external_nodes",
+        "qualified_name": "tests.test_collapser.TestFilterExternal.test_filter_external_removes_external_nodes",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 21,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that filter_external removes EXTERNAL nodes."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_filter_external_preserves_module_edges",
+        "qualified_name": "tests.test_collapser.TestFilterExternal.test_filter_external_preserves_module_edges",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 51,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that internal edges are preserved."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_apply_custom_rules_simple",
+        "qualified_name": "tests.test_collapser.TestCustomRules.test_apply_custom_rules_simple",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 75,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseRule",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test applying a simple pattern-based rule."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_apply_custom_rules_priority",
+        "qualified_name": "tests.test_collapser.TestCustomRules.test_apply_custom_rules_priority",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 113,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseRule",
+          "graph.collapse_rules.CollapseRule",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that higher priority rules are applied first."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_group_by_directory_depth_2",
+        "qualified_name": "tests.test_collapser.TestGroupByDirectory.test_group_by_directory_depth_2",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 146,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test grouping at depth=2."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_group_by_directory_depth_1",
+        "qualified_name": "tests.test_collapser.TestGroupByDirectory.test_group_by_directory_depth_1",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 174,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test grouping at depth=1 (top-level only)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_group_by_directory_preserves_edges",
+        "qualified_name": "tests.test_collapser.TestGroupByDirectory.test_group_by_directory_preserves_edges",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 194,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that edges are correctly routed through grouped folders."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_enforce_node_limit_no_merge_if_under",
+        "qualified_name": "tests.test_collapser.TestEnforceNodeLimit.test_enforce_node_limit_no_merge_if_under",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 224,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that nothing is merged if already under limit."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_enforce_node_limit_merges_folders",
+        "qualified_name": "tests.test_collapser.TestEnforceNodeLimit.test_enforce_node_limit_merges_folders",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 238,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that folders are merged when over limit."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_collapse_full_pipeline",
+        "qualified_name": "tests.test_collapser.TestEndToEndCollapse.test_collapse_full_pipeline",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 278,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test complete collapsing workflow."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_default_config_has_rules",
+        "qualified_name": "tests.test_collapser.TestDefaultConfigs.test_default_config_has_rules",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 314,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "config.default_rules.get_default_config"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that default config includes common rules."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_stockanalysis_config",
+        "qualified_name": "tests.test_collapser.TestDefaultConfigs.test_stockanalysis_config",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 323,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "config.default_rules.get_stockanalysis_config"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test StockAnalysis-specific configuration."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_build_graph_single_file",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_build_graph_single_file",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 22,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test building graph from single file with no imports."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_build_graph_with_imports",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_build_graph_with_imports",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 53,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder",
+          "parser.models.Import"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test building graph with import relationships between files."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_multiple_imports_same_module",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_multiple_imports_same_module",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 100,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder",
+          "parser.models.Import",
+          "parser.models.Import"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that multiple imports to same module increment edge weight."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_external_dependency_handling",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_external_dependency_handling",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 136,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder",
+          "parser.models.Import",
+          "parser.models.Import"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that external dependencies create EXTERNAL nodes."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_graph_metadata",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_graph_metadata",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 179,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder",
+          "parser.models.Import",
+          "parser.models.Import"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that graph metadata is populated correctly."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_discover_python_files",
+        "qualified_name": "tests.test_graph.TestGraphBuilderDiscovery.test_discover_python_files",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 221,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test discovering Python files in a directory tree."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_discover_python_files_empty_directory",
+        "qualified_name": "tests.test_graph.TestGraphBuilderDiscovery.test_discover_python_files_empty_directory",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 260,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test discovering files in empty directory."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_build_from_directory",
+        "qualified_name": "tests.test_graph.TestGraphBuilderEndToEnd.test_build_from_directory",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 274,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test complete pipeline from directory to graph."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_build_from_directory_empty",
+        "qualified_name": "tests.test_graph.TestGraphBuilderEndToEnd.test_build_from_directory_empty",
+        "file_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 316,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test building from directory with no Python files."
+      },
+      "children": [],
+      "depth": 0
+    }
+  ],
+  "before_trees": [
+    {
+      "function": {
+        "name": "test_extract_imports_absolute",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_absolute",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 29,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of absolute import statements."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_imports_from",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_from",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 57,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of 'from X import Y' statements."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_imports_relative_single_dot",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_relative_single_dot",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 83,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of relative imports with single dot (same directory)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_imports_relative_double_dot",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_relative_double_dot",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 108,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of relative imports with double dot (parent directory)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_imports_malformed_file",
+        "qualified_name": "tests.test_parser.TestExtractImports.test_extract_imports_malformed_file",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 132,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_imports",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that malformed Python files return empty list gracefully."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_functions",
+        "qualified_name": "tests.test_parser.TestExtractFunctionsAndClasses.test_extract_functions",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 149,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_functions",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of top-level function names."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_extract_classes",
+        "qualified_name": "tests.test_parser.TestExtractFunctionsAndClasses.test_extract_classes",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 168,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.extract_classes",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test extraction of top-level class names."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_count_lines_of_code",
+        "qualified_name": "tests.test_parser.TestLinesOfCode.test_count_lines_of_code",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 191,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.python_parser.count_lines_of_code",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test counting non-empty lines."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_resolve_absolute_import",
+        "qualified_name": "tests.test_parser.TestImportResolution.test_resolve_absolute_import",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 215,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.models.Import",
+          "parser.import_resolver.resolve_import",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that absolute imports are unchanged."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_resolve_relative_import_same_dir",
+        "qualified_name": "tests.test_parser.TestImportResolution.test_resolve_relative_import_same_dir",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 231,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.models.Import",
+          "parser.import_resolver.resolve_import",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test resolving relative import in same directory (single dot)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_resolve_relative_import_parent_dir",
+        "qualified_name": "tests.test_parser.TestImportResolution.test_resolve_relative_import_parent_dir",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 248,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.models.Import",
+          "parser.import_resolver.resolve_import",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test resolving relative import in parent directory (double dot)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_resolve_relative_import_grandparent_dir",
+        "qualified_name": "tests.test_parser.TestImportResolution.test_resolve_relative_import_grandparent_dir",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 265,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "parser.models.Import",
+          "parser.import_resolver.resolve_import",
+          "pathlib.Path"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test resolving relative import in grandparent directory (triple dot)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_path_to_module_name_simple",
+        "qualified_name": "tests.test_parser.TestPathToModuleName.test_path_to_module_name_simple",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 286,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "pathlib.Path",
+          "parser.import_resolver.path_to_module_name"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test converting file path to module name."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_path_to_module_name_root_file",
+        "qualified_name": "tests.test_parser.TestPathToModuleName.test_path_to_module_name_root_file",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 295,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "pathlib.Path",
+          "parser.import_resolver.path_to_module_name"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test file at project root."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_path_to_module_name_init_file",
+        "qualified_name": "tests.test_parser.TestPathToModuleName.test_path_to_module_name_init_file",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 304,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "pathlib.Path",
+          "parser.import_resolver.path_to_module_name"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test __init__.py file handling."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_parse_file_complete",
+        "qualified_name": "tests.test_parser.TestParseFile.test_parse_file_complete",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 318,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.python_parser.parse_file"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test parsing a complete Python file."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_parse_file_test_detection",
+        "qualified_name": "tests.test_parser.TestParseFile.test_parse_file_test_detection",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_parser.py",
+        "file_name": "test_parser.py",
+        "line_number": 364,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.python_parser.parse_file",
+          "parser.python_parser.parse_file"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test detection of test files."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_filter_external_removes_external_nodes",
+        "qualified_name": "tests.test_collapser.TestFilterExternal.test_filter_external_removes_external_nodes",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 21,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that filter_external removes EXTERNAL nodes."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_filter_external_preserves_module_edges",
+        "qualified_name": "tests.test_collapser.TestFilterExternal.test_filter_external_preserves_module_edges",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 51,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that internal edges are preserved."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_apply_custom_rules_simple",
+        "qualified_name": "tests.test_collapser.TestCustomRules.test_apply_custom_rules_simple",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 75,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseRule",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test applying a simple pattern-based rule."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_apply_custom_rules_priority",
+        "qualified_name": "tests.test_collapser.TestCustomRules.test_apply_custom_rules_priority",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 113,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseRule",
+          "graph.collapse_rules.CollapseRule",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that higher priority rules are applied first."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_group_by_directory_depth_2",
+        "qualified_name": "tests.test_collapser.TestGroupByDirectory.test_group_by_directory_depth_2",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 146,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test grouping at depth=2."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_group_by_directory_depth_1",
+        "qualified_name": "tests.test_collapser.TestGroupByDirectory.test_group_by_directory_depth_1",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 174,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test grouping at depth=1 (top-level only)."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_group_by_directory_preserves_edges",
+        "qualified_name": "tests.test_collapser.TestGroupByDirectory.test_group_by_directory_preserves_edges",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 194,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that edges are correctly routed through grouped folders."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_enforce_node_limit_no_merge_if_under",
+        "qualified_name": "tests.test_collapser.TestEnforceNodeLimit.test_enforce_node_limit_no_merge_if_under",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 224,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that nothing is merged if already under limit."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_enforce_node_limit_merges_folders",
+        "qualified_name": "tests.test_collapser.TestEnforceNodeLimit.test_enforce_node_limit_merges_folders",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 238,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that folders are merged when over limit."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_collapse_full_pipeline",
+        "qualified_name": "tests.test_collapser.TestEndToEndCollapse.test_collapse_full_pipeline",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 278,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "graph.models.Graph",
+          "graph.collapse_rules.CollapseConfig",
+          "graph.collapser.GraphCollapser",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Node",
+          "graph.models.Edge",
+          "graph.models.Edge",
+          "graph.models.Edge"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test complete collapsing workflow."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_default_config_has_rules",
+        "qualified_name": "tests.test_collapser.TestDefaultConfigs.test_default_config_has_rules",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 314,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "config.default_rules.get_default_config"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that default config includes common rules."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_stockanalysis_config",
+        "qualified_name": "tests.test_collapser.TestDefaultConfigs.test_stockanalysis_config",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_collapser.py",
+        "file_name": "test_collapser.py",
+        "line_number": 323,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "config.default_rules.get_stockanalysis_config"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test StockAnalysis-specific configuration."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_build_graph_single_file",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_build_graph_single_file",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 22,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test building graph from single file with no imports."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_build_graph_with_imports",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_build_graph_with_imports",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 53,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder",
+          "parser.models.Import"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test building graph with import relationships between files."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_multiple_imports_same_module",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_multiple_imports_same_module",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 100,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder",
+          "parser.models.Import",
+          "parser.models.Import"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that multiple imports to same module increment edge weight."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_external_dependency_handling",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_external_dependency_handling",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 136,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder",
+          "parser.models.Import",
+          "parser.models.Import"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that external dependencies create EXTERNAL nodes."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_graph_metadata",
+        "qualified_name": "tests.test_graph.TestGraphBuilder.test_graph_metadata",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 179,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "parser.models.FileMetadata",
+          "parser.models.FileMetadata",
+          "graph.builder.GraphBuilder",
+          "parser.models.Import",
+          "parser.models.Import"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test that graph metadata is populated correctly."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_discover_python_files",
+        "qualified_name": "tests.test_graph.TestGraphBuilderDiscovery.test_discover_python_files",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 221,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test discovering Python files in a directory tree."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_discover_python_files_empty_directory",
+        "qualified_name": "tests.test_graph.TestGraphBuilderDiscovery.test_discover_python_files_empty_directory",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 260,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test discovering files in empty directory."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_build_from_directory",
+        "qualified_name": "tests.test_graph.TestGraphBuilderEndToEnd.test_build_from_directory",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 274,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test complete pipeline from directory to graph."
+      },
+      "children": [],
+      "depth": 0
+    },
+    {
+      "function": {
+        "name": "test_build_from_directory_empty",
+        "qualified_name": "tests.test_graph.TestGraphBuilderEndToEnd.test_build_from_directory_empty",
+        "file_path": "/private/var/folders/xm/dymbz6hj6g97jgl68f5ft2xh0000gn/T/tmpu2blgk9m/checkout/tests/test_graph.py",
+        "file_name": "test_graph.py",
+        "line_number": 316,
+        "parameters": [
+          "self"
+        ],
+        "return_type": "",
+        "calls": [
+          "pathlib.Path",
+          "graph.builder.GraphBuilder"
+        ],
+        "called_by": [],
+        "local_variables": [],
+        "is_entry_point": true,
+        "has_changes": false,
+        "documentation": "Test building from directory with no Python files."
+      },
+      "children": [],
+      "depth": 0
+    }
+  ],
+  "deleted_functions": [],
+  "metadata": {
+    "project": "FlowDiff",
+    "run_dir": "/Users/barlarom/PycharmProjects/Main/FlowDiff",
+    "input_path": "/Users/barlarom/PycharmProjects/Main/FlowDiff",
+    "function_count": 38,
+    "entry_point_count": 38,
+    "before_ref": "HEAD",
+    "after_ref": "working",
+    "functions_added": 8,
+    "functions_modified": 0,
+    "functions_deleted": 0,
+    "analysis_timestamp": "2026-02-10T01:16:24.473596"
+  }
+};
+    </script>
+
+    <script>
+// FlowDiff Interactive Call Tree
+(function() {
+    'use strict';
+
+    // Make treeData global for diff-panel.js
+    window.treeData = null;
+    let expandedNodes = new Set();
+    let searchMatches = [];
+    let currentSearchIndex = 0;
+    let includeFilterRegex = null;
+    let includeFilterTopLevelOnly = false;
+    let excludeFilterRegex = null;
+    let excludeFilterTopLevelOnly = false;
+    let changedNodes = [];
+    let currentChangedIndex = 0;
+    let currentSelectedNode = null;  // Track currently selected node for keyboard nav
+    let currentTreeView = 'after';  // 'before' or 'after'
+
+    // Initialize
+    async function init() {
+        try {
+            // Fetch call tree data
+            const response = await fetch('/api/tree');
+            if (!response.ok) {
+                throw new Error('Failed to load call tree data');
+            }
+            window.treeData = await response.json();
+
+            // Update stats
+            updateStats();
+
+            // Render tree
+            renderTree();
+
+            // Setup event listeners
+            setupEventListeners();
+
+            // Load saved HTML path banner
+            await loadSavedHtmlPath();
+
+        } catch (error) {
+            console.error('Error loading tree:', error);
+            document.getElementById('call-tree').innerHTML =
+                `<div class="loading">Error loading call tree: ${error.message}</div>`;
+        }
+    }
+
+    async function loadSavedHtmlPath() {
+        try {
+            console.log('[FlowDiff] Fetching saved HTML path...');
+            const response = await fetch('/api/saved-html-path');
+
+            if (!response.ok) {
+                console.warn('[FlowDiff] API response not OK:', response.status);
+                return;
+            }
+
+            const data = await response.json();
+            console.log('[FlowDiff] Saved HTML path data:', data);
+
+            if (data.html_path && data.file_url) {
+                const banner = document.getElementById('saved-report-banner');
+                const link = document.getElementById('saved-report-link');
+
+                if (!banner || !link) {
+                    console.error('[FlowDiff] Banner elements not found in DOM');
+                    return;
+                }
+
+                // Extract just the filename for display
+                const filename = data.html_path.split('/').pop();
+                link.href = data.file_url;
+                link.textContent = filename;
+
+                // Show banner
+                banner.classList.remove('hidden');
+                console.log('[FlowDiff] Banner displayed:', filename);
+            } else {
+                console.warn('[FlowDiff] No html_path or file_url in response');
+            }
+        } catch (error) {
+            console.error('[FlowDiff] Error loading saved HTML path:', error);
+        }
+    }
+
+    function closeBanner() {
+        document.getElementById('saved-report-banner').classList.add('hidden');
+    }
+
+    function updateStats() {
+        const metadata = window.treeData.metadata;
+
+        // Update run directory (use ~ for home directory shorthand if applicable)
+        const runDir = metadata.run_dir || '';
+        const homeDir = runDir.includes('/Users/') ? runDir.replace(/^\/Users\/[^\/]+/, '~') : runDir;
+        const runDirElem = document.getElementById('run-dir');
+        if (runDirElem) {
+            runDirElem.textContent = homeDir;
+        }
+
+        // Update analysis info: "<input_path> (X functions, Y entry points)"
+        const analysisInfoElem = document.getElementById('analysis-info');
+        if (analysisInfoElem) {
+            const inputPath = metadata.input_path || metadata.project || '';
+            const shortPath = inputPath.includes('/Users/') ? inputPath.replace(/^\/Users\/[^\/]+/, '~') : inputPath;
+            const funcCount = metadata.function_count || 0;
+            const entryCount = metadata.entry_point_count || window.treeData.trees.length;
+            analysisInfoElem.textContent = `${shortPath} (${funcCount} functions, ${entryCount} entry points)`;
+        }
+
+        // Update diff info (only in diff.html)
+        const diffInfoElem = document.getElementById('diff-info');
+        const diffComparisonCard = document.getElementById('diff-comparison-card');
+
+        if (diffComparisonCard && metadata.before_ref) {
+            // Use new compact card layout
+            const beforeDesc = formatRefDescription(metadata.before_ref);
+            const afterDesc = formatRefDescription(metadata.after_ref);
+
+            document.getElementById('current-flow-desc').textContent = afterDesc;
+            document.getElementById('reference-flow-desc').textContent = beforeDesc;
+
+            // Add timestamp if available
+            const timestampElem = document.getElementById('comparison-timestamp');
+            if (metadata.analysis_timestamp && timestampElem) {
+                const timestamp = new Date(metadata.analysis_timestamp);
+                const timeAgo = getTimeAgo(timestamp);
+                timestampElem.textContent = `Analyzed ${timeAgo}`;
+            }
+
+            // Show the card
+            diffComparisonCard.style.display = 'block';
+        } else if (diffInfoElem && metadata.before_ref) {
+            // Fallback to old text format if card not found
+            const beforeDesc = formatRefDescription(metadata.before_ref);
+            const afterDesc = formatRefDescription(metadata.after_ref);
+            let diffInfo = `Current flow <strong>${afterDesc}</strong> compared with reference flow <strong>${beforeDesc}</strong>`;
+
+            // Add timestamp if available
+            if (metadata.analysis_timestamp) {
+                const timestamp = new Date(metadata.analysis_timestamp);
+                const timeAgo = getTimeAgo(timestamp);
+                diffInfo += ` <span style="color: #95a5a6; font-size: 0.9em;">(${timeAgo})</span>`;
+            }
+
+            diffInfoElem.innerHTML = diffInfo;
+        }
+    }
+
+    function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+
+        if (seconds < 60) return 'just now';
+        if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
+        if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+        const days = Math.floor(seconds / 86400);
+        if (days === 1) return 'yesterday';
+        if (days < 7) return `${days} days ago`;
+        return date.toLocaleDateString();
+    }
+
+    function formatRefDescription(ref) {
+        // Format git ref for display
+        if (ref === 'working') {
+            return 'Latest uncommitted changes';
+        } else if (ref === 'HEAD') {
+            return 'Latest commit';
+        } else if (ref.startsWith('HEAD~')) {
+            const n = ref.substring(5) || '1';
+            return `${n} commit${n === '1' ? '' : 's'} ago`;
+        } else {
+            return `Commit ${ref}`;
+        }
+    }
+
+    function renderTree() {
+        const container = document.getElementById('call-tree');
+        container.innerHTML = '';
+
+        // Choose which tree to render based on current view
+        const trees = currentTreeView === 'before' ? window.treeData.before_trees : window.treeData.trees;
+
+        // Render each entry point tree as a separate collapsed section
+        trees.forEach((tree, index) => {
+            // Apply top-level filters
+            if (includeFilterTopLevelOnly && includeFilterRegex) {
+                // Include filter: skip if root doesn't match
+                if (!includeFilterRegex.test(tree.function.name) && !includeFilterRegex.test(tree.function.file_name)) {
+                    return;
+                }
+            }
+            if (excludeFilterTopLevelOnly && excludeFilterRegex) {
+                // Exclude filter: skip if root matches
+                if (excludeFilterRegex.test(tree.function.name) || excludeFilterRegex.test(tree.function.file_name)) {
+                    return;
+                }
+            }
+
+            const treeElement = renderNode(tree, 0, `tree-${index}`);
+
+            // Only create container if node was actually rendered (not filtered out)
+            if (treeElement.childNodes.length > 0) {
+                const treeSection = document.createElement('div');
+                treeSection.className = 'entry-point-tree';
+                treeSection.appendChild(treeElement);
+                container.appendChild(treeSection);
+            }
+        });
+
+        // Mark paths to changed nodes
+        markPathsToChanges();
+
+        // Collect all changed nodes for jump navigation
+        changedNodes = Array.from(document.querySelectorAll('.tree-node.has-changes'));
+        currentChangedIndex = 0;
+
+        // Update change counter
+        updateChangeCounter();
+    }
+
+    function markPathsToChanges() {
+        // Find all nodes with changes
+        const changedNodes = document.querySelectorAll('.tree-node.has-changes');
+
+        changedNodes.forEach(changedNode => {
+            // Walk up the tree and mark all parents
+            let container = changedNode.closest('.tree-node-container');
+            while (container) {
+                const parent = container.parentElement.closest('.tree-node-container');
+                if (parent) {
+                    const parentNode = parent.querySelector('.tree-node');
+                    if (parentNode && !parentNode.classList.contains('has-changes')) {
+                        // Mark as part of path to change
+                        parentNode.classList.add('path-to-change');
+                    }
+                }
+                container = parent;
+            }
+        });
+    }
+
+    function renderNode(node, depth, path) {
+        // Apply all-nodes filters (when not top-level only)
+        if (!includeFilterTopLevelOnly && includeFilterRegex) {
+            // Include filter: skip if node doesn't match
+            if (!includeFilterRegex.test(node.function.name) && !includeFilterRegex.test(node.function.file_name)) {
+                return document.createDocumentFragment();
+            }
+        }
+        if (!excludeFilterTopLevelOnly && excludeFilterRegex) {
+            // Exclude filter: skip if node matches
+            if (excludeFilterRegex.test(node.function.name) || excludeFilterRegex.test(node.function.file_name)) {
+                return document.createDocumentFragment();
+            }
+        }
+
+        const div = document.createElement('div');
+        div.className = 'tree-node-container';
+        div.dataset.path = path;
+
+        // Create node element
+        const nodeDiv = document.createElement('div');
+        nodeDiv.className = 'tree-node';
+        nodeDiv.dataset.depth = depth;
+        if (node.children && node.children.length > 0) {
+            nodeDiv.classList.add('has-children');
+        }
+        // Highlight changed functions
+        if (node.function.has_changes) {
+            nodeDiv.classList.add('has-changes');
+        }
+
+        // Indentation
+        for (let i = 0; i < depth; i++) {
+            const indent = document.createElement('span');
+            indent.className = 'tree-indent';
+            indent.textContent = '│';
+            nodeDiv.appendChild(indent);
+        }
+
+        // Expand/collapse toggle
+        const expand = document.createElement('span');
+        expand.className = 'tree-expand';
+        if (node.children && node.children.length > 0) {
+            expand.classList.add('collapsed');
+            expand.onclick = (e) => {
+                e.stopPropagation();
+                toggleNode(path);
+            };
+        } else {
+            expand.classList.add('leaf');
+        }
+        nodeDiv.appendChild(expand);
+
+        // Icon
+        const icon = document.createElement('span');
+        icon.className = 'tree-icon';
+        // Use server icon for script entry points
+        if (node.function.name.startsWith('<script:')) {
+            icon.textContent = '🚀';  // Rocket for server scripts
+        } else {
+            icon.textContent = node.function.is_entry_point ? '🎯' : ''; //📦
+        }
+        nodeDiv.appendChild(icon);
+
+        // Label
+        const label = document.createElement('span');
+        label.className = 'tree-label';
+        label.onclick = () => {
+            // Always select the node (changed or not)
+            // selectNode already handles diff panel sync for changed nodes
+            selectNode(nodeDiv);
+
+            // Always toggle node expansion
+            toggleNode(path);
+        };
+
+        // Function name with file prefix (e.g., "test_sqlite::main")
+        const funcName = document.createElement('span');
+        funcName.className = 'function-name';
+        funcName.dataset.qualifiedName = node.function.qualified_name;  // For diff-panel click navigation
+        const fileName = node.function.file_name.replace('.py', '');
+
+        // Handle script entry points specially
+        let displayName = node.function.name;
+        if (displayName.startsWith('<script:')) {
+            // Extract script name: "<script:server>" -> "server"
+            displayName = displayName.replace('<script:', '').replace('>', '');
+            funcName.textContent = `${fileName} [script]`;
+        } else {
+            funcName.textContent = `${fileName}::${displayName}`;
+        }
+
+        label.appendChild(funcName);
+
+        // Don't show parameters, return type, or file location in tree - they're in the tooltip
+
+        nodeDiv.appendChild(label);
+
+        // Diff icon (only for changed functions)
+        if (node.function.has_changes) {
+            const diffIcon = document.createElement('span');
+            diffIcon.className = 'diff-icon';
+            diffIcon.textContent = '⎆';  // Diff symbol
+            diffIcon.title = 'View diff';
+            diffIcon.onclick = (e) => {
+                e.stopPropagation();
+                viewDiff(node.function);
+            };
+            nodeDiv.appendChild(diffIcon);
+        }
+
+        // Info icon (always shown)
+        const infoIcon = document.createElement('span');
+        infoIcon.className = 'info-icon';
+        infoIcon.textContent = 'ⓘ';
+        infoIcon.onclick = (e) => {
+            e.stopPropagation();
+            showInfo(node.function);
+        };
+        nodeDiv.appendChild(infoIcon);
+
+        div.appendChild(nodeDiv);
+
+        // Children container
+        if (node.children && node.children.length > 0) {
+            const childrenDiv = document.createElement('div');
+            childrenDiv.className = 'tree-children collapsed';
+            childrenDiv.dataset.path = path;
+
+            node.children.forEach((child, index) => {
+                const childPath = `${path}-${index}`;
+                const childElement = renderNode(child, depth + 1, childPath);
+                childrenDiv.appendChild(childElement);
+            });
+
+            div.appendChild(childrenDiv);
+        }
+
+        return div;
+    }
+
+    function toggleNode(path) {
+        const container = document.querySelector(`.tree-node-container[data-path="${path}"]`);
+        if (!container) return;
+
+        const expand = container.querySelector('.tree-expand');
+        const children = container.querySelector('.tree-children');
+
+        if (!children || !expand) return;
+
+        if (expand.classList.contains('collapsed')) {
+            // Expand
+            expand.classList.remove('collapsed');
+            expand.classList.add('expanded');
+            children.classList.remove('collapsed');
+            expandedNodes.add(path);
+        } else {
+            // Collapse
+            expand.classList.remove('expanded');
+            expand.classList.add('collapsed');
+            children.classList.add('collapsed');
+            expandedNodes.delete(path);
+        }
+    }
+
+    function showInfo(func) {
+        const panel = document.getElementById('info-panel');
+        const overlay = document.getElementById('info-panel-overlay');
+
+        panel.classList.remove('hidden');
+        overlay.classList.add('active');
+
+        // Update panel content
+        const fileName = func.file_name.replace('.py', '');
+
+        // Handle script entry points specially in title
+        let displayTitle;
+        if (func.name.startsWith('<script:')) {
+            displayTitle = `${fileName} [script entry point]`;
+        } else {
+            displayTitle = `${fileName}::${func.name}`;
+        }
+        document.getElementById('info-title').textContent = displayTitle;
+
+        // Location with wrapped path
+        document.getElementById('info-location').innerHTML = `
+            <code style="word-wrap: break-word; white-space: pre-wrap;">${func.file_path}:${func.line_number}</code>
+        `;
+
+        // Signature with return type
+        // For scripts, show a special message
+        if (func.name.startsWith('<script:')) {
+            document.getElementById('info-signature').innerHTML = `
+                <code>Script entry point (launches server/application)</code>
+            `;
+        } else {
+            const params = func.parameters.length > 0 ? func.parameters.join(', ') : '';
+            const returnType = func.return_type ? ` → ${func.return_type}` : '';
+            document.getElementById('info-signature').innerHTML = `
+                <code>${func.name}(${params})${returnType}</code>
+            `;
+        }
+
+        // Parameters
+        if (func.parameters && func.parameters.length > 0) {
+            const paramsList = func.parameters.map(p => `<li><code>${p}</code></li>`).join('');
+            document.getElementById('info-parameters').innerHTML = `
+                <ul class="info-list">${paramsList}</ul>
+            `;
+        } else {
+            document.getElementById('info-parameters').innerHTML = `
+                <span class="empty-state">No parameters</span>
+            `;
+        }
+
+        // Documentation
+        if (func.documentation && func.documentation.trim()) {
+            // Escape HTML and preserve newlines
+            const escapedDoc = func.documentation
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\n/g, '<br>');
+            document.getElementById('info-documentation').innerHTML = `
+                <div class="documentation-text">${escapedDoc}</div>
+            `;
+        } else {
+            document.getElementById('info-documentation').innerHTML = `
+                <span class="empty-state">No documentation</span>
+            `;
+        }
+
+        // Local variables
+        if (func.local_variables && func.local_variables.length > 0) {
+            const varsList = func.local_variables.map(v => `<li><code>${v}</code></li>`).join('');
+            document.getElementById('info-locals').innerHTML = `
+                <ul class="info-list">${varsList}</ul>
+            `;
+        } else {
+            document.getElementById('info-locals').innerHTML = `
+                <span class="empty-state">No local variables</span>
+            `;
+        }
+
+        // Calls
+        if (func.calls && func.calls.length > 0) {
+            const callsList = func.calls.map(c => `<li><code>${c}</code></li>`).join('');
+            document.getElementById('info-calls').innerHTML = `
+                <ul class="info-list">${callsList}</ul>
+            `;
+        } else {
+            document.getElementById('info-calls').innerHTML = `
+                <span class="empty-state">No function calls</span>
+            `;
+        }
+
+        // Called by
+        if (func.called_by && func.called_by.length > 0) {
+            const calledByList = func.called_by.map(c => `<li><code>${c}</code></li>`).join('');
+            document.getElementById('info-called-by').innerHTML = `
+                <ul class="info-list">${calledByList}</ul>
+            `;
+        } else {
+            document.getElementById('info-called-by').innerHTML = `
+                <span class="empty-state">Entry point (not called by anyone)</span>
+            `;
+        }
+    }
+
+    function closeInfoPanel() {
+        document.getElementById('info-panel').classList.add('hidden');
+        document.getElementById('info-panel-overlay').classList.remove('active');
+    }
+
+    async function viewDiff(func) {
+        try {
+            // Show loading state
+            console.log('[FlowDiff] Fetching diff for:', func.qualified_name);
+
+            // Fetch diff from server
+            const response = await fetch(`/api/diff/${encodeURIComponent(func.qualified_name)}`);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch diff: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            // If external viewer was attempted but failed, show notice
+            if (data.method === 'external' && data.viewer) {
+                console.log('[FlowDiff] Attempted to open in external viewer:', data.viewer);
+
+                // Show inline diff immediately with a notice that external viewer was tried
+                if (data.diff_content) {
+                    showInlineDiff(func, data.diff_content);
+                    // Show non-obtrusive toast
+                    showToast(`Note: Attempted ${data.viewer} (showing inline)`, 'info');
+                }
+            } else if (data.diff_content) {
+                // No external viewer, show inline diff immediately
+                showInlineDiff(func, data.diff_content);
+            } else {
+                throw new Error(data.error || 'No diff available');
+            }
+
+        } catch (error) {
+            console.error('[FlowDiff] Error viewing diff:', error);
+            showToast(`Error: ${error.message}`, 'error');
+        }
+    }
+
+    function showInlineDiff(func, diffContent) {
+        // Create or show diff modal
+        let modal = document.getElementById('diff-modal');
+        if (!modal) {
+            modal = createDiffModal();
+        }
+
+        document.getElementById('diff-modal-title').textContent = `Diff: ${func.name}`;
+
+        const contentDiv = document.getElementById('diff-modal-content');
+        contentDiv.innerHTML = ''; // Clear previous content
+
+        // Use diff2html to render the diff with syntax highlighting
+        if (window.Diff2Html) {
+            try {
+                const diffHtml = Diff2Html.html(diffContent, {
+                    drawFileList: false,
+                    matching: 'lines',
+                    outputFormat: 'line-by-line',
+                    renderNothingWhenEmpty: false,
+                    diffStyle: 'word',
+                    colorScheme: 'light'
+                });
+                contentDiv.innerHTML = diffHtml;
+
+                // Force add classes if they're missing (fallback)
+                setTimeout(() => {
+                    contentDiv.querySelectorAll('.d2h-code-line').forEach(line => {
+                        const text = line.textContent || '';
+                        if (text.startsWith('+') && !line.classList.contains('d2h-ins')) {
+                            line.classList.add('d2h-code-line-ins');
+                        } else if (text.startsWith('-') && !line.classList.contains('d2h-del')) {
+                            line.classList.add('d2h-code-line-del');
+                        }
+                    });
+                }, 100);
+            } catch (e) {
+                console.error('[FlowDiff] Error rendering diff with diff2html:', e);
+                // Fallback to plain text with manual coloring
+                contentDiv.innerHTML = `<pre><code>${escapeHtml(diffContent)}</code></pre>`;
+                applyManualDiffColors(contentDiv);
+            }
+        } else {
+            // Fallback if diff2html isn't loaded
+            console.warn('[FlowDiff] Diff2Html library not loaded, using fallback');
+            contentDiv.innerHTML = `<pre><code>${escapeHtml(diffContent)}</code></pre>`;
+            applyManualDiffColors(contentDiv);
+        }
+
+        modal.classList.remove('hidden');
+    }
+
+    function applyManualDiffColors(container) {
+        // Manually color diff lines if diff2html fails
+        const codeBlock = container.querySelector('code');
+        if (!codeBlock) return;
+
+        const lines = codeBlock.textContent.split('\n');
+        const coloredHtml = lines.map(line => {
+            if (line.startsWith('+') && !line.startsWith('+++')) {
+                return `<span style="background-color: #e6ffed; display: block;">${escapeHtml(line)}</span>`;
+            } else if (line.startsWith('-') && !line.startsWith('---')) {
+                return `<span style="background-color: #ffecec; display: block;">${escapeHtml(line)}</span>`;
+            } else if (line.startsWith('@@')) {
+                return `<span style="background-color: #e1f5fe; color: #0277bd; display: block;">${escapeHtml(line)}</span>`;
+            } else {
+                return `<span style="display: block;">${escapeHtml(line)}</span>`;
+            }
+        }).join('');
+
+        codeBlock.innerHTML = coloredHtml;
+    }
+
+    function createDiffModal() {
+        const modal = document.createElement('div');
+        modal.id = 'diff-modal';
+        modal.className = 'diff-modal';
+        modal.innerHTML = `
+            <div class="diff-modal-overlay"></div>
+            <div class="diff-modal-content">
+                <div class="diff-modal-header">
+                    <h3 id="diff-modal-title">Diff</h3>
+                    <button class="diff-modal-close" id="close-diff-modal-btn">×</button>
+                </div>
+                <div class="diff-modal-body">
+                    <div id="diff-modal-content"></div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Close on overlay click
+        modal.querySelector('.diff-modal-overlay').onclick = () => {
+            modal.classList.add('hidden');
+        };
+
+        // Close on close button click
+        modal.querySelector('#close-diff-modal-btn').onclick = () => {
+            modal.classList.add('hidden');
+        };
+
+        // Close on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+            }
+        });
+
+        return modal;
+    }
+
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+
+        let bgColor, duration;
+        if (type === 'error') {
+            bgColor = '#e74c3c';
+            duration = 3000;
+        } else {
+            bgColor = '#3498db';
+            duration = 5000; // Longer for info messages
+        }
+
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: ${bgColor};
+            color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
+            line-height: 1.4;
+        `;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function applyFilter() {
+        const includeInput = document.getElementById('filter-include-regex');
+        const includeTopLevel = document.getElementById('filter-include-top-level');
+        const excludeInput = document.getElementById('filter-exclude-regex');
+        const excludeTopLevel = document.getElementById('filter-exclude-top-level');
+
+        const includeStr = includeInput ? includeInput.value.trim() : '';
+        const excludeStr = excludeInput ? excludeInput.value.trim() : '';
+
+        includeFilterTopLevelOnly = includeTopLevel ? includeTopLevel.checked : false;
+        excludeFilterTopLevelOnly = excludeTopLevel ? excludeTopLevel.checked : false;
+
+        // Update include filter regex
+        if (includeStr) {
+            try {
+                includeFilterRegex = new RegExp(includeStr, 'i'); // Case-insensitive
+                if (includeInput) includeInput.style.borderColor = '';
+            } catch (e) {
+                // Invalid regex, show error briefly
+                if (includeInput) {
+                    includeInput.style.borderColor = '#e74c3c';
+                    setTimeout(() => {
+                        includeInput.style.borderColor = '';
+                    }, 1000);
+                }
+                return;
+            }
+        } else {
+            includeFilterRegex = null;
+        }
+
+        // Update exclude filter regex
+        if (excludeStr) {
+            try {
+                excludeFilterRegex = new RegExp(excludeStr, 'i'); // Case-insensitive
+                if (excludeInput) excludeInput.style.borderColor = '';
+            } catch (e) {
+                // Invalid regex, show error briefly
+                if (excludeInput) {
+                    excludeInput.style.borderColor = '#e74c3c';
+                    setTimeout(() => {
+                        excludeInput.style.borderColor = '';
+                    }, 1000);
+                }
+                return;
+            }
+        } else {
+            excludeFilterRegex = null;
+        }
+
+        // Re-render tree with filters applied
+        renderTree();
+    }
+
+    function setupEventListeners() {
+        // Close banner (optional)
+        const closeBannerBtn = document.getElementById('close-banner');
+        if (closeBannerBtn) {
+            closeBannerBtn.onclick = closeBanner;
+        }
+
+        // Close info panel
+        document.getElementById('close-info').onclick = closeInfoPanel;
+
+        // Click outside info panel to close
+        document.getElementById('info-panel-overlay').onclick = closeInfoPanel;
+
+        // Expand all
+        document.getElementById('expand-all').onclick = () => {
+            document.querySelectorAll('.tree-expand.collapsed').forEach(expand => {
+                const container = expand.closest('.tree-node-container');
+                if (container) {
+                    toggleNode(container.dataset.path);
+                }
+            });
+        };
+
+        // Collapse all
+        document.getElementById('collapse-all').onclick = () => {
+            document.querySelectorAll('.tree-expand.expanded').forEach(expand => {
+                const container = expand.closest('.tree-node-container');
+                if (container) {
+                    toggleNode(container.dataset.path);
+                }
+            });
+        };
+
+        // Toggle tree view (before/after)
+        const toggleBtn = document.getElementById('toggle-tree-view');
+        if (toggleBtn) {
+            toggleBtn.onclick = () => {
+                currentTreeView = currentTreeView === 'after' ? 'before' : 'after';
+
+                // Update button styling and text
+                if (currentTreeView === 'before') {
+                    toggleBtn.textContent = 'Before (Reference)';
+                    toggleBtn.style.background = '#fff';
+                    toggleBtn.style.borderColor = '#e74c3c';
+                    toggleBtn.style.color = '#e74c3c';
+                } else {
+                    toggleBtn.textContent = 'After (Current)';
+                    toggleBtn.style.background = '#fff';
+                    toggleBtn.style.borderColor = '#4CAF50';
+                    toggleBtn.style.color = '#4CAF50';
+                }
+
+                // Re-render tree with new view
+                renderTree();
+            };
+        }
+
+        // Filter controls
+        const includeRegexInput = document.getElementById('filter-include-regex');
+        const includeTopLevelCheckbox = document.getElementById('filter-include-top-level');
+        const excludeRegexInput = document.getElementById('filter-exclude-regex');
+        const excludeTopLevelCheckbox = document.getElementById('filter-exclude-top-level');
+
+        if (includeRegexInput) {
+            includeRegexInput.oninput = applyFilter;
+        }
+        if (includeTopLevelCheckbox) {
+            includeTopLevelCheckbox.onchange = applyFilter;
+        }
+        if (excludeRegexInput) {
+            excludeRegexInput.oninput = applyFilter;
+        }
+        if (excludeTopLevelCheckbox) {
+            excludeTopLevelCheckbox.onchange = applyFilter;
+        }
+
+        // Jump to next change (only in diff.html)
+        const jumpToNextChangeBtn = document.getElementById('next-change');
+        const jumpToPrevChangeBtn = document.getElementById('prev-change');
+        if (jumpToNextChangeBtn && jumpToPrevChangeBtn) {
+            jumpToNextChangeBtn.onclick = jumpToNextChange;
+            jumpToPrevChangeBtn.onclick = jumpToPrevChange;
+        }
+
+        // Diff modal elements (only in index.html)
+        const showDiffBtn = document.getElementById('show-diff');
+        if (showDiffBtn) {
+            showDiffBtn.onclick = () => {
+                document.getElementById('diff-modal').classList.remove('hidden');
+            };
+
+            document.getElementById('close-diff-modal').onclick = () => {
+                document.getElementById('diff-modal').classList.add('hidden');
+            };
+
+            document.getElementById('cancel-diff').onclick = () => {
+                document.getElementById('diff-modal').classList.add('hidden');
+            };
+
+            // Click outside modal to close
+            document.getElementById('diff-modal').onclick = (e) => {
+                if (e.target.id === 'diff-modal') {
+                    document.getElementById('diff-modal').classList.add('hidden');
+                }
+            };
+
+            // Load diff
+            document.getElementById('load-diff').onclick = async () => {
+                const beforeSelect = document.getElementById('diff-before');
+                const afterSelect = document.getElementById('diff-after');
+                const beforeCustom = document.getElementById('diff-before-custom').value.trim();
+                const afterCustom = document.getElementById('diff-after-custom').value.trim();
+
+                const beforeRef = beforeCustom || beforeSelect.value;
+                const afterRef = afterCustom || afterSelect.value;
+
+                console.log('Loading diff:', beforeRef, 'vs', afterRef);
+
+                try {
+                    const response = await fetch('/api/diff', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ before: beforeRef, after: afterRef })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to load diff');
+                    }
+
+                    const diffData = await response.json();
+                    displayDiff(diffData);
+                    document.getElementById('diff-modal').classList.add('hidden');
+                } catch (error) {
+                    alert('Error loading diff: ' + error.message);
+                }
+            };
+        }
+
+        // Search with Enter to navigate
+        const searchInput = document.getElementById('search');
+
+        searchInput.oninput = (e) => {
+            const query = e.target.value.toLowerCase();
+            performSearch(query);
+        };
+
+        searchInput.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                navigateToNextMatch();
+            }
+        };
+
+        // Global keyboard shortcuts for navigation
+        document.addEventListener('keydown', (e) => {
+            // Only if not typing in input/textarea
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            // Arrow key navigation
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                navigateDown();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                navigateUp();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                collapseCurrentNode();
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                expandCurrentNode();
+            }
+            // n/p shortcuts for change navigation (only in diff.html)
+            else if (document.getElementById('next-change')) {
+                if (e.key === 'n') {
+                    e.preventDefault();
+                    jumpToNextChange();
+                } else if (e.key === 'p') {
+                    e.preventDefault();
+                    jumpToPrevChange();
+                }
+            }
+        });
+    }
+
+    function displayDiff(diffData) {
+        // TODO: Implement diff visualization
+        // This will show before/after comparison with highlighted changes
+        console.log('Diff data:', diffData);
+        alert('Diff view coming soon! Data received: ' + JSON.stringify(diffData, null, 2));
+    }
+
+    function performSearch(query) {
+        // Clear previous highlights
+        document.querySelectorAll('.search-match, .search-highlight, .current-match').forEach(el => {
+            el.classList.remove('search-match', 'search-highlight', 'current-match');
+        });
+
+        searchMatches = [];
+        currentSearchIndex = 0;
+
+        if (query.length < 2) return;
+
+        // Try to compile as regex, fall back to literal string search
+        let searchRegex;
+        try {
+            searchRegex = new RegExp(query, 'i'); // Case-insensitive
+        } catch (e) {
+            // Invalid regex, treat as literal string
+            searchRegex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+        }
+
+        // Find matches
+        document.querySelectorAll('.function-name').forEach(el => {
+            if (searchRegex.test(el.textContent)) {
+                el.classList.add('search-highlight');
+                el.closest('.tree-node').classList.add('search-match');
+                searchMatches.push(el);
+
+                // Expand parent nodes to show match
+                let container = el.closest('.tree-node-container');
+                while (container) {
+                    const parent = container.parentElement.closest('.tree-node-container');
+                    if (parent) {
+                        const expand = parent.querySelector('.tree-expand');
+                        if (expand && expand.classList.contains('collapsed')) {
+                            toggleNode(parent.dataset.path);
+                        }
+                    }
+                    container = parent;
+                }
+            }
+        });
+
+        // Highlight first match
+        if (searchMatches.length > 0) {
+            highlightCurrentMatch();
+        }
+    }
+
+    function navigateToNextMatch() {
+        if (searchMatches.length === 0) return;
+
+        // Move to next match
+        currentSearchIndex = (currentSearchIndex + 1) % searchMatches.length;
+        highlightCurrentMatch();
+    }
+
+    function highlightCurrentMatch() {
+        // Remove previous current match highlight
+        document.querySelectorAll('.current-match').forEach(el => {
+            el.classList.remove('current-match');
+        });
+
+        // Highlight current match
+        const currentMatch = searchMatches[currentSearchIndex];
+        currentMatch.classList.add('current-match');
+
+        // Scroll to match (center it in the viewport)
+        const treeContainer = document.querySelector('.tree-container');
+        const matchNode = currentMatch.closest('.tree-node');
+
+        if (matchNode && treeContainer) {
+            const containerRect = treeContainer.getBoundingClientRect();
+            const nodeRect = matchNode.getBoundingClientRect();
+            const scrollOffset = nodeRect.top - containerRect.top - (containerRect.height / 2) + (nodeRect.height / 2);
+
+            treeContainer.scrollBy({
+                top: scrollOffset,
+                behavior: 'smooth'
+            });
+        }
+    }
+
+    function updateChangeCounter() {
+        const counterElem = document.getElementById('change-counter');
+        if (counterElem) {
+            if (changedNodes.length === 0) {
+                counterElem.textContent = 'No changes';
+                counterElem.style.color = '#aaa';
+            } else {
+                counterElem.textContent = `${currentChangedIndex + 1} of ${changedNodes.length}`;
+                counterElem.style.color = '#f0ad4e';
+                counterElem.style.fontWeight = '600';
+            }
+        }
+    }
+
+    function getVisibleTreeNodes() {
+        // Get all tree nodes that are currently visible (not in collapsed children)
+        const allNodes = document.querySelectorAll('.tree-node');
+        return Array.from(allNodes).filter(node => {
+            // Check if any parent container is collapsed
+            let parent = node.closest('.tree-children');
+            while (parent) {
+                if (parent.classList.contains('collapsed')) {
+                    return false;
+                }
+                parent = parent.parentElement.closest('.tree-children');
+            }
+            return true;
+        });
+    }
+
+    function selectNode(nodeElement) {
+        // Remove previous selection
+        document.querySelectorAll('.tree-node.selected').forEach(node => {
+            node.classList.remove('selected');
+        });
+
+        // Select the new node
+        nodeElement.classList.add('selected');
+        currentSelectedNode = nodeElement;
+
+        // Get the function data
+        const container = nodeElement.closest('.tree-node-container');
+        const funcNameElem = nodeElement.querySelector('.function-name');
+
+        if (funcNameElem && funcNameElem.dataset.qualifiedName) {
+            // Find function in tree data
+            const qualifiedName = funcNameElem.dataset.qualifiedName;
+
+            // Update change counter if this is a changed node
+            const clickedIndex = changedNodes.indexOf(nodeElement);
+            if (clickedIndex !== -1) {
+                currentChangedIndex = clickedIndex;
+                updateChangeCounter();
+            }
+
+            // Sync with diff panel if it exists
+            if (window.highlightChangeInPanel && nodeElement.classList.contains('has-changes')) {
+                window.highlightChangeInPanel(qualifiedName);
+            }
+
+            // Sync with architecture diagram if it exists
+            if (window.onFunctionSelected) {
+                window.onFunctionSelected(qualifiedName);
+            }
+        }
+
+        // Scroll to center the node
+        const treeContainer = document.querySelector('.tree-container');
+        if (treeContainer) {
+            const containerRect = treeContainer.getBoundingClientRect();
+            const nodeRect = nodeElement.getBoundingClientRect();
+            const scrollOffset = nodeRect.top - containerRect.top - (containerRect.height / 2) + (nodeRect.height / 2);
+
+            treeContainer.scrollBy({
+                top: scrollOffset,
+                behavior: 'smooth'
+            });
+        }
+    }
+
+    function navigateDown() {
+        const visibleNodes = getVisibleTreeNodes();
+        if (visibleNodes.length === 0) return;
+
+        if (!currentSelectedNode) {
+            // No selection yet, select first node
+            selectNode(visibleNodes[0]);
+        } else {
+            const currentIndex = visibleNodes.indexOf(currentSelectedNode);
+            if (currentIndex >= 0 && currentIndex < visibleNodes.length - 1) {
+                selectNode(visibleNodes[currentIndex + 1]);
+            }
+        }
+    }
+
+    function navigateUp() {
+        const visibleNodes = getVisibleTreeNodes();
+        if (visibleNodes.length === 0) return;
+
+        if (!currentSelectedNode) {
+            // No selection yet, select first node
+            selectNode(visibleNodes[0]);
+        } else {
+            const currentIndex = visibleNodes.indexOf(currentSelectedNode);
+            if (currentIndex > 0) {
+                selectNode(visibleNodes[currentIndex - 1]);
+            }
+        }
+    }
+
+    function expandCurrentNode() {
+        if (!currentSelectedNode) return;
+
+        const container = currentSelectedNode.closest('.tree-node-container');
+        if (!container) return;
+
+        const expand = container.querySelector('.tree-expand');
+        const children = container.querySelector('.tree-children');
+
+        if (expand && children && expand.classList.contains('collapsed')) {
+            toggleNode(container.dataset.path);
+        }
+    }
+
+    function collapseCurrentNode() {
+        if (!currentSelectedNode) return;
+
+        const container = currentSelectedNode.closest('.tree-node-container');
+        if (!container) return;
+
+        const expand = container.querySelector('.tree-expand');
+        const children = container.querySelector('.tree-children');
+
+        if (expand && children && expand.classList.contains('expanded')) {
+            toggleNode(container.dataset.path);
+        }
+    }
+
+    function jumpToPrevChange() {
+        if (changedNodes.length === 0) {
+            return;
+        }
+
+        // Move to previous changed node (with wrap-around)
+        currentChangedIndex = (currentChangedIndex - 1 + changedNodes.length) % changedNodes.length;
+        scrollToChange(changedNodes[currentChangedIndex]);
+        updateChangeCounter();
+    }
+
+    function jumpToNextChange() {
+        if (changedNodes.length === 0) {
+            return;
+        }
+
+        // Move to next changed node
+        currentChangedIndex = (currentChangedIndex + 1) % changedNodes.length;
+        scrollToChange(changedNodes[currentChangedIndex]);
+        updateChangeCounter();
+    }
+
+    function scrollToChange(targetNode) {
+        // Expand parents to reveal the node
+        let container = targetNode.closest('.tree-node-container');
+        while (container) {
+            const parent = container.parentElement.closest('.tree-node-container');
+            if (parent) {
+                const expand = parent.querySelector('.tree-expand');
+                const children = parent.querySelector('.tree-children');
+                if (expand && children && expand.classList.contains('collapsed')) {
+                    expand.classList.remove('collapsed');
+                    expand.classList.add('expanded');
+                    children.classList.remove('collapsed');
+                }
+            }
+            container = parent;
+        }
+
+        // Scroll to the changed node
+        const treeContainer = document.querySelector('.tree-container');
+        if (treeContainer) {
+            const containerRect = treeContainer.getBoundingClientRect();
+            const nodeRect = targetNode.getBoundingClientRect();
+            const scrollOffset = nodeRect.top - containerRect.top - (containerRect.height / 2) + (nodeRect.height / 2);
+
+            treeContainer.scrollBy({
+                top: scrollOffset,
+                behavior: 'smooth'
+            });
+
+            // Flash highlight
+            const originalBoxShadow = targetNode.style.boxShadow;
+            targetNode.style.boxShadow = '0 0 0 4px #f0ad4e, 0 0 20px rgba(240, 173, 78, 0.4)';
+            setTimeout(() => {
+                targetNode.style.boxShadow = originalBoxShadow;
+            }, 1000);
+        }
+    }
+
+    // Start
+    init();
+
+    // Expose selectNode globally for diff-panel.js to use
+    window.selectTreeNode = selectNode;
+
+    // Expose function to switch to before view and scroll to function
+    window.showInBeforeTree = function(qualifiedName) {
+        // Switch to before view if not already
+        if (currentTreeView !== 'before') {
+            currentTreeView = 'before';
+
+            // Update toggle button
+            const toggleBtn = document.getElementById('toggle-tree-view');
+            if (toggleBtn) {
+                toggleBtn.textContent = 'Before (Reference)';
+                toggleBtn.style.background = '#fff';
+                toggleBtn.style.borderColor = '#e74c3c';
+                toggleBtn.style.color = '#e74c3c';
+            }
+
+            // Re-render tree with before view
+            renderTree();
+        }
+
+        // Now find and scroll to the function
+        const functionNames = document.querySelectorAll('.function-name');
+        let found = false;
+
+        for (const nameElem of functionNames) {
+            if (nameElem.dataset.qualifiedName === qualifiedName) {
+                found = true;
+                const node = nameElem.closest('.tree-node');
+                if (node) {
+                    // Expand parent nodes to reveal the function
+                    let container = node.closest('.tree-node-container');
+                    while (container) {
+                        const parent = container.parentElement.closest('.tree-node-container');
+                        if (parent) {
+                            const expand = parent.querySelector('.tree-expand');
+                            const children = parent.querySelector('.tree-children');
+
+                            // If collapsed, expand it
+                            if (expand && children && expand.classList.contains('collapsed')) {
+                                expand.classList.remove('collapsed');
+                                expand.classList.add('expanded');
+                                children.classList.remove('collapsed');
+                            }
+                        }
+                        container = parent;
+                    }
+
+                    // Use existing selectNode function
+                    selectNode(node);
+                }
+                break;
+            }
+        }
+
+        if (!found) {
+            // Extract just the function name for display
+            const displayName = qualifiedName.split('::').pop() || qualifiedName;
+
+            showToast(`"${displayName}" was deleted but wasn't part of any active flow, so it has no representation in the flow tree`, 'info');
+        }
+    };
+})();
+
+    </script>
+</body>
+</html>
