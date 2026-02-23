@@ -39,11 +39,20 @@ class GitRefResolver:
             raise ValueError(f"Invalid git ref '{ref}': {e}")
 
     def get_ref_description(self, ref: str) -> str:
-        """Get human-readable description."""
+        """Get human-readable description with commit ID and message.
+
+        Returns format like:
+        - "HEAD~1 (main~1, b824117) - Fix bug in parser"
+        - "Working directory (uncommitted changes)"
+        """
         if ref == self.WORKING_TREE_MARKER:
             return "Working directory (uncommitted changes)"
 
         sha = self.resolve(ref)
+        short_sha = sha[:7]
+
+        # Get branch/tag name
+        branch = None
         try:
             result = run_command(
                 ["git", "name-rev", "--name-only", sha],
@@ -53,7 +62,32 @@ class GitRefResolver:
             )
             if result.returncode == 0:
                 branch = result.stdout.strip()
-                return f"{ref} ({branch}, {sha[:7]})"
-            return f"{ref} ({sha[:7]})"
         except SubprocessError:
-            return f"{ref} ({sha[:7]})"
+            pass
+
+        # Get commit message (first line)
+        commit_msg = None
+        try:
+            result = run_command(
+                ["git", "log", "-1", "--format=%s", sha],
+                cwd=self.project_root,
+                description="Get commit message",
+                check=False
+            )
+            if result.returncode == 0:
+                commit_msg = result.stdout.strip()
+                # Truncate long commit messages
+                if len(commit_msg) > 60:
+                    commit_msg = commit_msg[:57] + "..."
+        except SubprocessError:
+            pass
+
+        # Build description
+        if branch and commit_msg:
+            return f"{ref} ({branch}, {short_sha}) - {commit_msg}"
+        elif branch:
+            return f"{ref} ({branch}, {short_sha})"
+        elif commit_msg:
+            return f"{ref} ({short_sha}) - {commit_msg}"
+        else:
+            return f"{ref} ({short_sha})"
