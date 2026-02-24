@@ -248,17 +248,14 @@ def _open_external_diff(file_path: str, project_path: Path) -> Dict:
     3. Git difftool (with configured or default tool)
 
     Args:
-        file_path: Path to the file to diff
+        file_path: Relative path from project root to the file
         project_path: Root path of the git repository
 
     Returns:
         Dict with "success" bool and "viewer" name
     """
-    # Convert absolute path to relative path from project root
-    try:
-        rel_path = Path(file_path).relative_to(project_path)
-    except ValueError:
-        rel_path = file_path
+    # file_path is already relative from project root
+    rel_path = file_path.lstrip('/')
 
     # Try VS Code - check if it exists first
     if shutil.which("code"):
@@ -314,13 +311,15 @@ def _get_file_diff(file_path: str, project_path: Path) -> str:
     with diff-style formatting.
 
     Args:
-        file_path: Path to the file to diff
+        file_path: Relative path from project root to the file
         project_path: Root path of the git repository
 
     Returns:
         Diff content as string
     """
-    rel_path = Path(file_path).relative_to(project_path) if file_path.startswith(str(project_path)) else file_path
+    # file_path is already relative from project root
+    # If it starts with /, remove it to ensure it's relative
+    rel_path = file_path.lstrip('/')
     abs_path = project_path / rel_path
 
     # Get refs from metadata

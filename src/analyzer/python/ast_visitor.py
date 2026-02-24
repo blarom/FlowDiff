@@ -20,11 +20,19 @@ class PythonASTVisitor(ast.NodeVisitor):
     - Local variable bindings (type inference)
     """
 
-    def __init__(self, symbol_table: PythonSymbolTable, file_path: Path, source_code: str):
+    def __init__(self, symbol_table: PythonSymbolTable, file_path: Path, source_code: str, project_root: Path):
         self.symbol_table = symbol_table
         self.file_path = file_path
         self.source_code = source_code  # Store source code for code content extraction
         self.current_class: Optional[str] = None  # Track current class context
+        self.project_root = project_root
+
+        # Calculate relative path from project root for portable storage
+        try:
+            self.relative_path = str(file_path.relative_to(project_root))
+        except ValueError:
+            # File is outside project root, use absolute path as fallback
+            self.relative_path = str(file_path)
 
     def visit_Import(self, node: ast.Import):
         """Extract import statements: import foo, import bar as baz"""
@@ -166,7 +174,7 @@ class PythonASTVisitor(ast.NodeVisitor):
             name=func_name,
             qualified_name=qualified_name,
             language="python",
-            file_path=str(self.file_path),
+            file_path=self.relative_path,
             line_number=node.lineno,
             metadata=metadata,
             raw_calls=raw_calls,
