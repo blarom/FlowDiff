@@ -363,7 +363,9 @@
         }
 
         if (isSelected) {
-            applyHighlightStyle(shape, '#27ae60', '10', '39, 174, 96, 0.9');
+            const successColor = getComputedStyle(document.documentElement)
+                .getPropertyValue('--arch-highlight-alt').trim();
+            applyHighlightStyle(shape, successColor, '10', '39, 174, 96, 0.9');
         } else {
             removeHighlightStyle(shape);
         }
@@ -398,12 +400,14 @@
         const toast = document.createElement('div');
         toast.className = 'architecture-toast';
         toast.innerHTML = html;
+        const primaryColor = getComputedStyle(document.documentElement)
+            .getPropertyValue('--arch-highlight').trim();
         toast.style.cssText = `
             position: fixed;
             bottom: 80px;
             right: 20px;
             background: white;
-            border: 2px solid #3498db;
+            border: 2px solid ${primaryColor};
             border-radius: 8px;
             padding: 16px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -432,7 +436,9 @@
         }
 
         if (isHighlighted) {
-            applyHighlightStyle(shape, '#3498db', '8', '52, 152, 219, 0.8');
+            const primaryColor = getComputedStyle(document.documentElement)
+                .getPropertyValue('--arch-highlight').trim();
+            applyHighlightStyle(shape, primaryColor, '8', '52, 152, 219, 0.8');
             console.log(`[Architecture] Applied highlight to block: "${blockId}"`);
         } else {
             removeHighlightStyle(shape);

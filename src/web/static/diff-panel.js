@@ -58,42 +58,6 @@
         return changed;
     }
 
-    function extractDeletedFunctions(beforeTrees, afterTrees) {
-        if (!beforeTrees || !afterTrees) {
-            return [];
-        }
-
-        // Build a set of all qualified names in after_tree
-        const afterNames = new Set();
-        function collectAfterNames(node) {
-            afterNames.add(node.function.qualified_name);
-            if (node.children) {
-                node.children.forEach(child => collectAfterNames(child));
-            }
-        }
-        afterTrees.forEach(tree => collectAfterNames(tree));
-
-        // Find functions in before_tree that have changes but don't exist in after_tree
-        const deleted = [];
-        const seen = new Set();
-
-        function findDeleted(node) {
-            // If this function has changes AND doesn't exist in after tree, it's deleted
-            if (node.function.has_changes && !afterNames.has(node.function.qualified_name)) {
-                if (!seen.has(node.function.qualified_name)) {
-                    seen.add(node.function.qualified_name);
-                    deleted.push(node.function);
-                }
-            }
-            if (node.children) {
-                node.children.forEach(child => findDeleted(child));
-            }
-        }
-
-        beforeTrees.forEach(tree => findDeleted(tree));
-        return deleted;
-    }
-
     function countChanges(functions, deletedFunctions) {
         // For now, we only track modified
         // Can enhance later to distinguish added/deleted
@@ -167,8 +131,13 @@
         const seconds = Math.floor((new Date() - date) / 1000);
 
         if (seconds < 60) return 'just now';
-        if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
-        if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes} minutes ago`;
+
+        const hours = Math.floor(seconds / 3600);
+        if (hours < 24) return `${hours} hours ago`;
+
         return date.toLocaleString();
     }
 

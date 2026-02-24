@@ -8,8 +8,8 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f5f7fa;
-    color: #2c3e50;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 .container {
@@ -19,17 +19,56 @@ body {
 }
 
 header {
-    background: white;
+    background: var(--bg-panel);
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-sm);
     margin-bottom: 20px;
+    position: relative;
 }
 
 header h1 {
     font-size: 24px;
-    color: #2c3e50;
+    color: var(--text-primary);
     margin-bottom: 12px;
+}
+
+.theme-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-medium);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.theme-toggle:hover {
+    background: var(--bg-primary);
+    transform: scale(1.1);
+}
+
+.theme-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--text-primary);
+}
+
+/* Show/hide icons based on theme */
+:root[data-theme="light"] .theme-icon-moon,
+:root[data-theme="dark"] .theme-icon-sun {
+    display: block;
+}
+
+:root[data-theme="light"] .theme-icon-sun,
+:root[data-theme="dark"] .theme-icon-moon {
+    display: none;
 }
 
 .header-info {
@@ -47,12 +86,12 @@ header h1 {
 
 .header-label {
     font-weight: 600;
-    color: #7f8c8d;
+    color: var(--text-secondary);
     min-width: 80px;
 }
 
 .header-value {
-    color: #2c3e50;
+    color: var(--text-primary);
     font-family: 'Monaco', 'Menlo', monospace;
     font-size: 13px;
 }
@@ -61,20 +100,20 @@ header h1 {
     display: flex;
     gap: 20px;
     font-size: 14px;
-    color: #7f8c8d;
+    color: var(--text-secondary);
 }
 
 .stats span {
     padding: 4px 12px;
-    background: #ecf0f1;
+    background: var(--border-light);
     border-radius: 4px;
 }
 
 .controls {
-    background: white;
+    background: var(--bg-panel);
     padding: 15px 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-sm);
     margin-bottom: 20px;
     display: flex;
     flex-direction: column;
@@ -88,15 +127,15 @@ header h1 {
 }
 
 .controls-row.filter-row {
-    background: #f8f9fa;
+    background: var(--bg-tertiary);
     padding: 12px;
     border-radius: 6px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--border-light);
 }
 
 .filter-section-label {
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--text-primary);
     font-size: 14px;
     margin-right: 12px;
 }
@@ -110,23 +149,25 @@ header h1 {
 
 .filter-label {
     font-weight: 500;
-    color: #555;
+    color: var(--text-secondary);
     font-size: 13px;
     min-width: 50px;
 }
 
 .filter-input {
     padding: 6px 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-medium);
     border-radius: 4px;
     font-size: 14px;
     width: 280px;
     font-family: 'Monaco', 'Menlo', monospace;
+    background: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .filter-input:focus {
     outline: none;
-    border-color: #3498db;
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
 }
 
@@ -135,7 +176,7 @@ header h1 {
     align-items: center;
     gap: 6px;
     font-size: 13px;
-    color: #666;
+    color: var(--text-secondary);
     cursor: pointer;
     user-select: none;
 }
@@ -146,8 +187,8 @@ header h1 {
 
 .controls button {
     padding: 8px 16px;
-    background: #3498db;
-    color: white;
+    background: var(--color-primary);
+    color: var(--text-inverse);
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -156,42 +197,42 @@ header h1 {
 }
 
 .controls button:hover {
-    background: #2980b9;
+    background: var(--color-primary-hover);
 }
 
 .controls .toggle-btn {
-    background: #95a5a6;
+    background: var(--btn-secondary);
 }
 
 .controls .toggle-btn:hover {
-    background: #7f8c8d;
+    background: var(--btn-secondary-hover);
 }
 
 .controls .toggle-btn.active {
-    background: #e74c3c;
+    background: var(--btn-danger);
 }
 
 .controls .diff-btn {
-    background: #9b59b6;
+    background: var(--color-primary);
 }
 
 .controls .diff-btn:hover {
-    background: #8e44ad;
+    background: var(--color-primary-hover);
 }
 
 .controls #search {
     flex: 1;
     padding: 8px 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-medium);
     border-radius: 4px;
     font-size: 14px;
 }
 
 main {
-    background: white;
+    background: var(--bg-primary);
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: var(--shadow-sm);
     min-height: 600px;
 }
 
@@ -212,7 +253,7 @@ main {
 .entry-point-tree {
     margin-bottom: 15px;
     padding-bottom: 10px;
-    border-bottom: 2px solid #ecf0f1;
+    border-bottom: 2px solid var(--border-light);
 }
 
 .entry-point-tree:last-child {
@@ -230,7 +271,7 @@ main {
 }
 
 .tree-node:hover {
-    background: #f8f9fa;
+    background: var(--tree-hover);
 }
 
 .tree-node.has-children {
@@ -251,11 +292,11 @@ main {
     cursor: pointer;
     user-select: none;
     font-size: 12px;
-    color: #7f8c8d;
+    color: var(--text-tertiary);
 }
 
 .tree-expand:hover {
-    color: #3498db;
+    color: var(--color-primary);
 }
 
 .tree-expand.collapsed::before {
@@ -289,7 +330,7 @@ main {
 }
 
 .function-name {
-    color: #2c3e50;
+    color: var(--text-primary);
     font-weight: 500;
     white-space: nowrap; /* Don't wrap to new line */
     overflow: hidden; /* Hide overflow */
@@ -298,7 +339,7 @@ main {
 }
 
 .function-params {
-    color: #7f8c8d;
+    color: var(--text-tertiary);
     font-size: 13px;
     white-space: nowrap;
     overflow: hidden;
@@ -307,30 +348,30 @@ main {
 }
 
 .function-arrow {
-    color: #95a5a6;
+    color: var(--text-tertiary);
     font-size: 12px;
 }
 
 .function-return {
-    color: #8e44ad;
+    color: var(--text-secondary);
     font-size: 13px;
     font-style: italic;
 }
 
 .function-file {
-    color: #95a5a6;
+    color: var(--text-tertiary);
     font-size: 12px;
 }
 
 /* Search highlighting */
 .search-highlight {
-    background-color: #fff3cd;
+    background-color: var(--color-modified);
     padding: 2px 4px;
     border-radius: 3px;
 }
 
 .current-match {
-    background-color: #ffc107;
+    background-color: var(--color-modified-border);
     padding: 2px 4px;
     border-radius: 3px;
     font-weight: 600;
@@ -345,7 +386,7 @@ main {
 .diff-icon {
     margin-left: 6px;
     padding: 4px 8px;
-    color: white;
+    color: var(--text-inverse);
     border-radius: 4px;
     font-size: 12px;
     cursor: pointer;
@@ -355,7 +396,7 @@ main {
 }
 
 .info-icon {
-    background: #3498db;
+    background: var(--color-primary);
 }
 
 .diff-icon {
@@ -363,7 +404,7 @@ main {
 }
 
 .info-icon:hover {
-    background: #2980b9;
+    background: var(--color-primary-hover);
 }
 
 .diff-icon:hover {
@@ -372,16 +413,16 @@ main {
 
 /* Selected node highlighting - strong consistent blue for all selected nodes */
 .tree-node.selected {
-    background: rgba(52, 152, 219, 0.15) !important;
-    border-left: 4px solid #2980b9 !important;
+    background: var(--tree-selected-bg) !important;
+    border-left: 4px solid var(--tree-selected-border) !important;
     margin-left: -4px;
     box-shadow: inset 0 0 0 2px rgba(52, 152, 219, 0.4) !important;
 }
 
 /* Changed nodes keep their yellow background, but selection gets clear blue border */
 .tree-node.has-changes.selected {
-    background: rgba(255, 193, 7, 0.2) !important;
-    border-left: 4px solid #2980b9 !important;
+    background: var(--color-modified) !important;
+    border-left: 4px solid var(--tree-selected-border) !important;
     box-shadow: inset 0 0 0 2px rgba(52, 152, 219, 0.5) !important;
 }
 
@@ -401,7 +442,7 @@ main {
     top: 0;
     bottom: 0;
     width: 400px;
-    background: white;
+    background: var(--bg-primary);
     box-shadow: -2px 0 8px rgba(0,0,0,0.1);
     transform: translateX(0);
     transition: transform 0.3s ease;
@@ -416,8 +457,8 @@ main {
 .info-panel-header {
     position: sticky;
     top: 0;
-    background: #2c3e50;
-    color: white;
+    background: var(--panel-header-bg);
+    color: var(--panel-header-text);
     padding: 20px;
     display: flex;
     justify-content: space-between;
@@ -433,7 +474,7 @@ main {
 .close-btn {
     background: none;
     border: none;
-    color: white;
+    color: var(--panel-header-text);
     font-size: 24px;
     cursor: pointer;
     padding: 0;
@@ -461,11 +502,11 @@ main {
 .info-section h3 {
     font-size: 14px;
     font-weight: 600;
-    color: #7f8c8d;
+    color: var(--text-tertiary);
     text-transform: uppercase;
     margin-bottom: 8px;
     padding-bottom: 8px;
-    border-bottom: 1px solid #ecf0f1;
+    border-bottom: 1px solid var(--border-light);
 }
 
 .info-section > div {
@@ -474,7 +515,7 @@ main {
 }
 
 .info-section code {
-    background: #f8f9fa;
+    background: var(--bg-tertiary);
     padding: 2px 6px;
     border-radius: 3px;
     font-family: 'Monaco', 'Menlo', monospace;
@@ -482,7 +523,7 @@ main {
 }
 
 .info-section a {
-    color: #3498db;
+    color: var(--color-primary);
     text-decoration: none;
 }
 
@@ -505,11 +546,11 @@ main {
     content: '▸';
     position: absolute;
     left: 0;
-    color: #3498db;
+    color: var(--color-primary);
 }
 
 .empty-state {
-    color: #95a5a6;
+    color: var(--text-tertiary);
     font-style: italic;
 }
 
@@ -537,13 +578,13 @@ main {
     font-size: 12px;
 }
 
-/* Search highlighting */
+/* Search highlighting: match and current selection */
 .tree-node.search-match {
-    background: #fff3cd;
+    background: var(--color-modified);
 }
 
 .tree-node.search-highlight .function-name {
-    background: #ffc107;
+    background: var(--color-modified-border);
     padding: 2px 4px;
     border-radius: 3px;
 }
@@ -551,8 +592,8 @@ main {
 /* Path to changed function highlighting */
 .tree-node.path-to-change {
     position: relative;
-    background: linear-gradient(to right, #fff9e6 0%, #fffdf5 100%) !important;
-    border-left: 3px solid #ffd966 !important;
+    background: var(--path-to-change-bg) !important;
+    border-left: 3px solid var(--path-to-change-border) !important;
     margin-left: -3px;
     margin-top: 0;
     margin-bottom: 0;
@@ -560,7 +601,7 @@ main {
 
 .tree-node.path-to-change .function-name {
     font-weight: 600;
-    color: #997404 !important;
+    color: var(--color-modified-text) !important;
 }
 
 .tree-node.path-to-change .tree-icon {
@@ -568,15 +609,15 @@ main {
 }
 
 .tree-node.path-to-change .tree-indent {
-    color: #ffd966 !important;
+    color: var(--path-to-change-border) !important;
     font-weight: 700;
 }
 
 /* Changed function highlighting (stronger than path) */
 .tree-node.has-changes {
     position: relative;
-    background: linear-gradient(to right, #fff3cd 0%, #fff9e6 100%) !important;
-    border-left: 4px solid #f0ad4e !important;
+    background: var(--color-modified) !important;
+    border-left: 4px solid var(--color-modified-border) !important;
     margin-left: -4px;
     margin-top: 0;
     margin-bottom: 0;
@@ -586,7 +627,7 @@ main {
 
 .tree-node.has-changes .function-name {
     font-weight: 700;
-    color: #856404 !important;
+    color: var(--color-modified-text) !important;
 }
 
 .tree-node.has-changes .tree-icon {
@@ -594,7 +635,7 @@ main {
 }
 
 .tree-node.has-changes .tree-indent {
-    color: #f0ad4e !important;
+    color: var(--color-modified-border) !important;
     font-weight: 700;
 }
 
@@ -610,7 +651,7 @@ main {
     justify-content: center;
     min-height: 400px;
     font-size: 16px;
-    color: #7f8c8d;
+    color: var(--text-tertiary);
 }
 
 .loading::before {
@@ -632,7 +673,7 @@ main {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--modal-overlay);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -647,11 +688,11 @@ main {
 }
 
 .modal-content {
-    background: white;
+    background: var(--bg-primary);
     border-radius: 8px;
     width: 90%;
     max-width: 600px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    box-shadow: var(--shadow-lg);
     animation: slideDown 0.3s ease;
 }
 
@@ -667,8 +708,8 @@ main {
 }
 
 .modal-header {
-    background: #2c3e50;
-    color: white;
+    background: var(--panel-header-bg);
+    color: var(--panel-header-text);
     padding: 20px;
     border-radius: 8px 8px 0 0;
     display: flex;
@@ -694,13 +735,13 @@ main {
     display: block;
     font-weight: 600;
     margin-bottom: 8px;
-    color: #2c3e50;
+    color: var(--text-primary);
 }
 
 .form-control {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-medium);
     border-radius: 4px;
     font-size: 14px;
     font-family: inherit;
@@ -708,7 +749,7 @@ main {
 
 .form-control:focus {
     outline: none;
-    border-color: #3498db;
+    border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
@@ -721,8 +762,8 @@ main {
 
 .btn-primary {
     padding: 10px 24px;
-    background: #3498db;
-    color: white;
+    background: var(--color-primary);
+    color: var(--text-inverse);
     border: none;
     border-radius: 4px;
     font-size: 14px;
@@ -732,13 +773,13 @@ main {
 }
 
 .btn-primary:hover {
-    background: #2980b9;
+    background: var(--color-primary-hover);
 }
 
 .btn-secondary {
     padding: 10px 24px;
-    background: #95a5a6;
-    color: white;
+    background: var(--btn-secondary);
+    color: var(--text-inverse);
     border: none;
     border-radius: 4px;
     font-size: 14px;
@@ -748,7 +789,7 @@ main {
 }
 
 .btn-secondary:hover {
-    background: #7f8c8d;
+    background: var(--btn-secondary-hover);
 }
 
 /* Info panel overlay for click-outside-to-close */
@@ -773,8 +814,8 @@ main {
     top: 0;
     left: 0;
     right: 0;
-    background: #27ae60;
-    color: white;
+    background: var(--btn-success);
+    color: var(--text-inverse);
     padding: 12px 20px;
     display: flex;
     align-items: center;
@@ -795,19 +836,19 @@ main {
 }
 
 .saved-report-banner a {
-    color: white;
+    color: var(--text-inverse);
     text-decoration: underline;
     font-weight: 600;
 }
 
 .saved-report-banner a:hover {
-    color: #ecf0f1;
+    color: var(--border-light);
 }
 
 .close-banner-btn {
     background: none;
     border: none;
-    color: white;
+    color: var(--text-inverse);
     font-size: 24px;
     cursor: pointer;
     padding: 0;
@@ -857,26 +898,26 @@ body:has(.saved-report-banner:not(.hidden)) .container {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
+    background: var(--modal-overlay);
     cursor: pointer;
 }
 
 .diff-modal-content {
     position: relative;
-    background: white;
+    background: var(--bg-primary);
     border-radius: 8px;
     width: 90%;
     max-width: 1200px;
     max-height: 90vh;
-    box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+    box-shadow: var(--shadow-lg);
     animation: slideDown 0.3s ease;
     display: flex;
     flex-direction: column;
 }
 
 .diff-modal-header {
-    background: #2c3e50;
-    color: white;
+    background: var(--panel-header-bg);
+    color: var(--panel-header-text);
     padding: 16px 24px;
     border-radius: 8px 8px 0 0;
     display: flex;
@@ -894,7 +935,7 @@ body:has(.saved-report-banner:not(.hidden)) .container {
 .diff-modal-close {
     background: none;
     border: none;
-    color: white;
+    color: var(--panel-header-text);
     font-size: 28px;
     cursor: pointer;
     padding: 0;
@@ -940,30 +981,30 @@ body:has(.saved-report-banner:not(.hidden)) .container {
 
 /* Force diff2html to show colors for additions and deletions */
 .diff-modal-body .d2h-del {
-    background-color: #ffdddd !important;
-    border-color: #f1c0c0 !important;
+    background-color: var(--diff-deleted-line) !important;
+    border-color: var(--diff-deleted-text) !important;
 }
 
 .diff-modal-body .d2h-ins {
-    background-color: #ddffdd !important;
-    border-color: #c0f0c0 !important;
+    background-color: var(--diff-added-line) !important;
+    border-color: var(--diff-added-text) !important;
 }
 
 .diff-modal-body .d2h-code-line-del {
-    background-color: #ffecec !important;
+    background-color: var(--diff-deleted-bg) !important;
 }
 
 .diff-modal-body .d2h-code-line-ins {
-    background-color: #e6ffed !important;
+    background-color: var(--diff-added-bg) !important;
 }
 
 .diff-modal-body .d2h-code-line del {
-    background-color: #ff9999 !important;
+    background-color: var(--diff-deleted-text) !important;
     text-decoration: none;
 }
 
 .diff-modal-body .d2h-code-line ins {
-    background-color: #99ff99 !important;
+    background-color: var(--diff-added-text) !important;
     text-decoration: none;
 }
 
@@ -974,4 +1015,10 @@ body:has(.saved-report-banner:not(.hidden)) .container {
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 13px;
     line-height: 1.5;
+}
+
+/* Architecture diagram dark mode adjustments */
+/* Use a lighter background so black lines and text are visible */
+:root[data-theme="dark"] #architecture-svg-container {
+    background: #e8e8e8;
 }

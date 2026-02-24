@@ -1,0 +1,141 @@
+/* FlowDiff Theme Colors - Light and Dark Mode Support */
+
+/* Light theme (default) - :root alone provides the fallback when no data-theme is set */
+:root {
+    /* Background colors */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f7fa;
+    --bg-tertiary: #f8f9fa;
+    --bg-panel: #ffffff;
+    --bg-header: #ffffff;
+
+    /* Text colors */
+    --text-primary: #2c3e50;
+    --text-secondary: #7f8c8d;
+    --text-tertiary: #95a5a6;
+    --text-inverse: #ffffff;
+
+    /* Border colors */
+    --border-light: #ecf0f1;
+    --border-medium: #ddd;
+    --border-dark: #2c3e50;
+
+    /* Primary actions */
+    --color-primary: #3498db;
+    --color-primary-hover: #2980b9;
+
+    /* Change indicators */
+    --color-added: #d4edda;
+    --color-added-text: #155724;
+    --color-deleted: #f8d7da;
+    --color-deleted-text: #721c24;
+    --color-modified: #fff3cd;
+    --color-modified-text: #856404;
+    --color-modified-border: #f0ad4e;
+
+    /* Diff colors */
+    --diff-added-bg: #e6ffed;
+    --diff-added-line: #ddffdd;
+    --diff-added-text: #99ff99;
+    --diff-deleted-bg: #ffecec;
+    --diff-deleted-line: #ffdddd;
+    --diff-deleted-text: #ff9999;
+
+    /* Tree highlighting */
+    --tree-hover: #f8f9fa;
+    --tree-selected-bg: rgba(52, 152, 219, 0.15);
+    --tree-selected-border: #2980b9;
+    --path-to-change-bg: linear-gradient(to right, #fff9e6 0%, #fffdf5 100%);
+    --path-to-change-border: #ffd966;
+
+    /* Modals & Panels */
+    --modal-overlay: rgba(0, 0, 0, 0.5);
+    --panel-header-bg: #2c3e50;
+    --panel-header-text: #ffffff;
+
+    /* Buttons */
+    --btn-secondary: #95a5a6;
+    --btn-secondary-hover: #7f8c8d;
+    --btn-danger: #e74c3c;
+    --btn-success: #27ae60;
+
+    /* Architecture diagram */
+    --arch-bg: #fafafa;
+    --arch-highlight: #3498db;
+    --arch-highlight-alt: #27ae60;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 8px rgba(0,0,0,0.1);
+    --shadow-lg: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+/* Dark theme */
+:root[data-theme="dark"] {
+    /* Background colors */
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #242424;
+    --bg-tertiary: #2d2d2d;
+    --bg-panel: #1e1e1e;
+    --bg-header: #1a1a1a;
+
+    /* Text colors */
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --text-tertiary: #888888;
+    --text-inverse: #1a1a1a;
+
+    /* Border colors */
+    --border-light: #3a3a3a;
+    --border-medium: #4a4a4a;
+    --border-dark: #e0e0e0;
+
+    /* Primary actions */
+    --color-primary: #4a9eff;
+    --color-primary-hover: #3a8eef;
+
+    /* Change indicators */
+    --color-added: #1e3a1e;
+    --color-added-text: #6cc66c;
+    --color-deleted: #3a1e1e;
+    --color-deleted-text: #ff6b6b;
+    --color-modified: #4a3e1a;
+    --color-modified-text: #ffd966;
+    --color-modified-border: #d4a017;
+
+    /* Diff colors */
+    --diff-added-bg: #1a2e1a;
+    --diff-added-line: #1e3a1e;
+    --diff-added-text: #4d994d;
+    --diff-deleted-bg: #2e1a1a;
+    --diff-deleted-line: #3a1e1e;
+    --diff-deleted-text: #cc6666;
+
+    /* Tree highlighting */
+    --tree-hover: #2d2d2d;
+    --tree-selected-bg: rgba(74, 158, 255, 0.2);
+    --tree-selected-border: #4a9eff;
+    --path-to-change-bg: linear-gradient(to right, #4a3e1a 0%, #3a3a1a 100%);
+    --path-to-change-border: #d4a017;
+
+    /* Modals & Panels */
+    --modal-overlay: rgba(0, 0, 0, 0.8);
+    --panel-header-bg: #1a1a1a;
+    --panel-header-text: #e0e0e0;
+
+    /* Buttons */
+    --btn-secondary: #555555;
+    --btn-secondary-hover: #666666;
+    --btn-danger: #cc5555;
+    --btn-success: #55aa55;
+
+    /* Architecture diagram */
+    --arch-bg: #1e1e1e;
+    --arch-highlight: #4a9eff;
+    --arch-highlight-alt: #55aa55;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.6);
+}

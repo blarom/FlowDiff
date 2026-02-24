@@ -143,12 +143,17 @@
         const seconds = Math.floor((new Date() - date) / 1000);
 
         if (seconds < 60) return 'just now';
-        if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
-        if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes} min ago`;
+
+        const hours = Math.floor(seconds / 3600);
+        if (hours < 24) return `${hours} hours ago`;
 
         const days = Math.floor(seconds / 86400);
         if (days === 1) return 'yesterday';
         if (days < 7) return `${days} days ago`;
+
         return date.toLocaleDateString();
     }
 
@@ -318,7 +323,8 @@
     function appendLabel(nodeDiv, node, path) {
         const label = document.createElement('span');
         label.className = 'tree-label';
-        label.onclick = () => {
+        label.onclick = (e) => {
+            e.preventDefault();
             selectNode(nodeDiv);
             toggleNode(path);
         };
@@ -586,7 +592,9 @@
         toast.className = `toast toast-${type}`;
         toast.textContent = message;
 
-        const bgColor = type === 'error' ? '#e74c3c' : '#3498db';
+        const bgColor = type === 'error'
+            ? getComputedStyle(document.documentElement).getPropertyValue('--btn-danger').trim()
+            : getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
         const duration = type === 'error' ? 3000 : 5000;
 
         toast.style.cssText = `
@@ -721,14 +729,12 @@
     function updateToggleButtonStyle(toggleBtn) {
         if (currentTreeView === 'before') {
             toggleBtn.textContent = 'Before (Reference)';
-            toggleBtn.style.background = '#fff';
-            toggleBtn.style.borderColor = '#e74c3c';
-            toggleBtn.style.color = '#e74c3c';
+            toggleBtn.classList.remove('after');
+            toggleBtn.classList.add('before');
         } else {
             toggleBtn.textContent = 'After (Current)';
-            toggleBtn.style.background = '#fff';
-            toggleBtn.style.borderColor = '#4CAF50';
-            toggleBtn.style.color = '#4CAF50';
+            toggleBtn.classList.remove('before');
+            toggleBtn.classList.add('after');
         }
     }
 
@@ -997,7 +1003,7 @@
             }
         }
 
-        scrollToElementInTree(nodeElement);
+        // No automatic scrolling - let the caller decide
     }
 
     function navigateDown() {
@@ -1094,24 +1100,16 @@
 
     // Expose function to switch to before view and scroll to function
     window.showInBeforeTree = function(qualifiedName) {
-        // Switch to before view if not already
         if (currentTreeView !== 'before') {
             currentTreeView = 'before';
-
-            // Update toggle button
             const toggleBtn = document.getElementById('toggle-tree-view');
             if (toggleBtn) {
-                toggleBtn.textContent = 'Before (Reference)';
-                toggleBtn.style.background = '#fff';
-                toggleBtn.style.borderColor = '#e74c3c';
-                toggleBtn.style.color = '#e74c3c';
+                updateToggleButtonStyle(toggleBtn);
             }
-
-            // Re-render tree with before view
             renderTree();
         }
 
-        // Now find and scroll to the function
+        // Find and scroll to the function
         const functionNames = document.querySelectorAll('.function-name');
         let found = false;
 
@@ -1120,25 +1118,7 @@
                 found = true;
                 const node = nameElem.closest('.tree-node');
                 if (node) {
-                    // Expand parent nodes to reveal the function
-                    let container = node.closest('.tree-node-container');
-                    while (container) {
-                        const parent = container.parentElement.closest('.tree-node-container');
-                        if (parent) {
-                            const expand = parent.querySelector('.tree-expand');
-                            const children = parent.querySelector('.tree-children');
-
-                            // If collapsed, expand it
-                            if (expand && children && expand.classList.contains('collapsed')) {
-                                expand.classList.remove('collapsed');
-                                expand.classList.add('expanded');
-                                children.classList.remove('collapsed');
-                            }
-                        }
-                        container = parent;
-                    }
-
-                    // Use existing selectNode function
+                    expandParentsToShow(node);
                     selectNode(node);
                 }
                 break;
@@ -1146,9 +1126,7 @@
         }
 
         if (!found) {
-            // Extract just the function name for display
             const displayName = qualifiedName.split('::').pop() || qualifiedName;
-
             showToast(`"${displayName}" was deleted but wasn't part of any active flow, so it has no representation in the flow tree`, 'info');
         }
     };
