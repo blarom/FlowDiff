@@ -86,6 +86,8 @@ def build_tree_data(
         "entry_point_count": len(after_trees),
         "before_ref": diff_result.before_ref,
         "after_ref": diff_result.after_ref,
+        "before_description": diff_result.before_description,
+        "after_description": diff_result.after_description,
         "functions_added": diff_result.functions_added,
         "functions_modified": diff_result.functions_modified,
         "functions_deleted": diff_result.functions_deleted

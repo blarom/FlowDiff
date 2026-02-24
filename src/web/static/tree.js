@@ -109,8 +109,10 @@
 
         const diffComparisonCard = document.getElementById('diff-comparison-card');
         const diffInfoElem = document.getElementById('diff-info');
-        const beforeDesc = formatRefDescription(metadata.before_ref);
-        const afterDesc = formatRefDescription(metadata.after_ref);
+
+        // Use full descriptions if available, otherwise format the ref
+        const beforeDesc = metadata.before_description || formatRefDescription(metadata.before_ref);
+        const afterDesc = metadata.after_description || formatRefDescription(metadata.after_ref);
 
         if (diffComparisonCard) {
             document.getElementById('current-flow-desc').textContent = afterDesc;
