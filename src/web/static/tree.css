@@ -198,7 +198,7 @@ main {
 .tree-container {
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     font-size: 14px;
-    line-height: 1.6;
+    line-height: 1.3;
     max-height: 70vh;
     overflow-y: auto;
     padding-right: 10px;
@@ -210,8 +210,8 @@ main {
 
 /* Separate entry point trees */
 .entry-point-tree {
-    margin-bottom: 30px;
-    padding-bottom: 20px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
     border-bottom: 2px solid #ecf0f1;
 }
 
@@ -223,7 +223,7 @@ main {
 .tree-node {
     display: flex;
     align-items: center;
-    padding: 4px 0;
+    padding: 1px 0;
     cursor: pointer;
     transition: background 0.2s;
     min-width: 0; /* Allow flex items to shrink below content size */
@@ -554,8 +554,8 @@ main {
     background: linear-gradient(to right, #fff9e6 0%, #fffdf5 100%) !important;
     border-left: 3px solid #ffd966 !important;
     margin-left: -3px;
-    margin-top: 1px;
-    margin-bottom: 1px;
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
 .tree-node.path-to-change .function-name {
@@ -578,8 +578,8 @@ main {
     background: linear-gradient(to right, #fff3cd 0%, #fff9e6 100%) !important;
     border-left: 4px solid #f0ad4e !important;
     margin-left: -4px;
-    margin-top: 2px;
-    margin-bottom: 2px;
+    margin-top: 0;
+    margin-bottom: 0;
     border-radius: 3px;
     box-shadow: 0 1px 3px rgba(240, 173, 78, 0.2) !important;
 }
